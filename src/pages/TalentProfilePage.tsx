@@ -22,9 +22,8 @@ export default function TalentProfilePage() {
 
   const handleUpdateComplete = async () => {
     setIsUpdateModalOpen(false);
-    notificationManager.showSuccess("Talent profile updated successfully!");
-    // Force page reload to refresh data
-    window.location.reload();
+    // Refetch will happen automatically via React Query
+    await refetch();
   };
 
   const handleAvatarUpdate = async (avatarUrl: string) => {
@@ -61,7 +60,7 @@ export default function TalentProfilePage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Error</h2>
           <p className="text-gray-600 mb-6">{error.message}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => refetch()}
             className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
           >
             Retry

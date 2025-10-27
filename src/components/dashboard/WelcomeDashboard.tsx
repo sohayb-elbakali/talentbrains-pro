@@ -8,107 +8,71 @@ import {
   Sparkles,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
 
 export default function WelcomeDashboard() {
   const { profile, user } = useAuth();
-  const [dashboardStats, setDashboardStats] = useState({
-    profileCompletion: 0,
-    availableJobs: 0,
-    aiMatches: 0,
-    loading: true,
-  });
 
-  // Calculate profile completion percentage
-  const calculateProfileCompletion = async (profileData: any) => {
-    if (!profileData) return 0;
+  // Use React Query for dashboard stats with proper caching
+  const { data: dashboardStats, isLoading: loading } = useQuery({
+    queryKey: ['welcome-dashboard', user?.id, profile?.role],
+    queryFn: async () => {
+      if (!profile || !user) return { profileCompletion: 0, availableJobs: 0, aiMatches: 0 };
 
-    // Basic profile fields (weight: 40%)
-    const basicFields = ["full_name", "email"];
-    const filledBasicFields = basicFields.filter(
-      (field) => profileData[field] && profileData[field].trim() !== ""
-    );
-    const basicScore = (filledBasicFields.length / basicFields.length) * 40;
+      // Calculate profile completion
+      const basicFields = ["full_name", "email"];
+      const filledBasicFields = basicFields.filter(
+        (field) => profile[field] && profile[field].trim() !== ""
+      );
+      const basicScore = (filledBasicFields.length / basicFields.length) * 40;
 
-    // Optional profile fields (weight: 20%)
-    const optionalFields = ["avatar_url"];
-    const filledOptionalFields = optionalFields.filter(
-      (field) => profileData[field] && profileData[field].trim() !== ""
-    );
-    const optionalScore =
-      (filledOptionalFields.length / optionalFields.length) * 20;
+      const optionalFields = ["avatar_url"];
+      const filledOptionalFields = optionalFields.filter(
+        (field) => profile[field] && profile[field].trim() !== ""
+      );
+      const optionalScore = (filledOptionalFields.length / optionalFields.length) * 20;
 
-    // Role-specific completion (weight: 40%)
-    let roleScore = 0;
-    try {
-      if (profileData.role === "talent" && user) {
+      let roleScore = 0;
+      if (profile.role === "talent") {
         const { data: talentData } = await db.getTalent(user.id);
         if (talentData) {
           const talentFields = ["title", "bio", "experience_level", "location"];
           const filledTalentFields = talentFields.filter(
-            (field) =>
-              talentData[field] && talentData[field].toString().trim() !== ""
+            (field) => talentData[field] && talentData[field].toString().trim() !== ""
           );
           roleScore = (filledTalentFields.length / talentFields.length) * 40;
         }
-      } else if (profileData.role === "company" && user) {
+      } else if (profile.role === "company") {
         const { data: companyData } = await db.getCompany(user.id);
         if (companyData) {
           const companyFields = ["name", "description", "industry", "location"];
           const filledCompanyFields = companyFields.filter(
-            (field) =>
-              companyData[field] && companyData[field].toString().trim() !== ""
+            (field) => companyData[field] && companyData[field].toString().trim() !== ""
           );
           roleScore = (filledCompanyFields.length / companyFields.length) * 40;
         }
       }
-    } catch (error) {
-      console.error("Error calculating role-specific completion:", error);
-    }
 
-    return Math.round(basicScore + optionalScore + roleScore);
-  };
+      const profileCompletion = Math.round(basicScore + optionalScore + roleScore);
 
-  // Load dashboard data
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setDashboardStats((prev) => ({ ...prev, loading: true }));
+      // Get available jobs and matches in parallel
+      const [jobsResult, matchesResult] = await Promise.all([
+        db.getJobs({ status: "active" }),
+        profile.role === "talent" ? db.getMatches({ talent_id: user.id }) : Promise.resolve({ data: [] })
+      ]);
 
-        // Calculate profile completion
-        const profileCompletion = await calculateProfileCompletion(profile);
-
-        // Get available jobs count
-        const { data: jobsData } = await db.getJobs({ status: "active" });
-        const availableJobs = jobsData?.length || 0;
-
-        // Get AI matches count for this user
-        let aiMatches = 0;
-        if (user && profile?.role === "talent") {
-          const { data: matchesData } = await db.getMatches({
-            talent_id: user.id,
-          });
-          aiMatches = matchesData?.length || 0;
-        }
-
-        setDashboardStats({
-          profileCompletion,
-          availableJobs,
-          aiMatches,
-          loading: false,
-        });
-      } catch (error) {
-        console.error("Error loading dashboard data:", error);
-        setDashboardStats((prev) => ({ ...prev, loading: false }));
-      }
-    };
-
-    if (profile) {
-      loadDashboardData();
-    }
-  }, [profile, user]);
+      return {
+        profileCompletion,
+        availableJobs: jobsResult.data?.length || 0,
+        aiMatches: matchesResult.data?.length || 0,
+      };
+    },
+    enabled: !!profile && !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
 
   const welcomeSteps = [
     {
@@ -180,9 +144,7 @@ export default function WelcomeDashboard() {
             <div>
               <p className="text-sm opacity-90">Profile Completion</p>
               <p className="text-2xl font-bold">
-                {dashboardStats.loading
-                  ? "..."
-                  : `${dashboardStats.profileCompletion}%`}
+                {loading ? "..." : `${dashboardStats?.profileCompletion || 0}%`}
               </p>
             </div>
             <div className="p-3 bg-white bg-opacity-20 rounded-full">
@@ -193,7 +155,7 @@ export default function WelcomeDashboard() {
             <div className="w-full bg-white bg-opacity-20 rounded-full h-2">
               <div
                 className="bg-white h-2 rounded-full transition-all duration-500"
-                style={{ width: `${dashboardStats.profileCompletion}%` }}
+                style={{ width: `${dashboardStats?.profileCompletion || 0}%` }}
               ></div>
             </div>
           </div>
@@ -204,9 +166,7 @@ export default function WelcomeDashboard() {
             <div>
               <p className="text-sm opacity-90">Available Jobs</p>
               <p className="text-2xl font-bold">
-                {dashboardStats.loading
-                  ? "..."
-                  : dashboardStats.availableJobs.toLocaleString()}
+                {loading ? "..." : (dashboardStats?.availableJobs || 0).toLocaleString()}
               </p>
             </div>
             <div className="p-3 bg-white bg-opacity-20 rounded-full">
@@ -214,7 +174,7 @@ export default function WelcomeDashboard() {
             </div>
           </div>
           <p className="text-sm opacity-90 mt-2">
-            {dashboardStats.availableJobs > 0
+            {(dashboardStats?.availableJobs || 0) > 0
               ? "Ready to explore!"
               : "New jobs added daily"}
           </p>
@@ -225,7 +185,7 @@ export default function WelcomeDashboard() {
             <div>
               <p className="text-sm opacity-90">AI Matches</p>
               <p className="text-2xl font-bold">
-                {dashboardStats.loading ? "..." : dashboardStats.aiMatches}
+                {loading ? "..." : dashboardStats?.aiMatches || 0}
               </p>
             </div>
             <div className="p-3 bg-white bg-opacity-20 rounded-full">
@@ -233,8 +193,8 @@ export default function WelcomeDashboard() {
             </div>
           </div>
           <p className="text-sm opacity-90 mt-2">
-            {dashboardStats.aiMatches > 0
-              ? `${dashboardStats.aiMatches} perfect matches found!`
+            {(dashboardStats?.aiMatches || 0) > 0
+              ? `${dashboardStats?.aiMatches} perfect matches found!`
               : "Complete profile to get matches"}
           </p>
         </div>

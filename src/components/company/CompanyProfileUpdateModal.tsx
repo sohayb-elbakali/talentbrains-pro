@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { notificationManager } from "../../utils/notificationManager";
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
@@ -25,6 +26,7 @@ export default function CompanyProfileUpdateModal({
 }: CompanyProfileUpdateModalProps) {
   const { user } = useAuth();
   const { data, refetch } = useUserData(user?.id);
+  const queryClient = useQueryClient();
   const company = data?.company;
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -225,14 +227,24 @@ export default function CompanyProfileUpdateModal({
         throw error;
       }
 
-      // Refetch user data to update the cache
-      await refetch();
+      // Invalidate all related queries to refresh data everywhere
+      await Promise.all([
+        refetch(),
+        queryClient.invalidateQueries({ queryKey: ['user-data'] }),
+        queryClient.invalidateQueries({ queryKey: ['company'] }),
+        queryClient.invalidateQueries({ queryKey: ['company-jobs'] }),
+        queryClient.invalidateQueries({ queryKey: ['company-applications'] }),
+        queryClient.invalidateQueries({ queryKey: ['welcome-dashboard'] }),
+      ]);
 
-      toast.success("Company profile updated successfully!");
+      notificationManager.showSuccess("Company profile updated successfully!");
       setHasUnsavedChanges(false);
 
       if (onUpdate && data) {
         onUpdate(data);
+      } else {
+        // Call onUpdate without data to trigger parent refetch
+        onUpdate?.(data);
       }
 
       onClose();

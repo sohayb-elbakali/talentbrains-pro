@@ -39,57 +39,48 @@ export default function TalentDashboard() {
   const profile = data?.profile;
 
   const loadDashboardData = useCallback(async () => {
-    if (!user) return;
+    if (!user || !talent) return;
     try {
-      // Use talent from useUserData
-      if (talent) {
-        // Load applications using the talent ID - limit to 4 most recent
-        const { data: applicationsData } =
-          await db.getApplications({
-            talent_id: talent.id,
-          });
-        if (applicationsData) {
-          setApplications(applicationsData.slice(0, 4));
-        }
+      // Load all data in parallel for better performance
+      const [applicationsResult, matchesResult, analyticsResult, jobsResult] = await Promise.all([
+        db.getApplications({ talent_id: talent.id }),
+        db.getMatches({ talent_id: user.id }),
+        db.getAnalytics(user.id, "talent").catch(() => null),
+        db.getJobs({})
+      ]);
+
+      if (applicationsResult.data) {
+        setApplications(applicationsResult.data.slice(0, 4));
       }
-      // Load matches (using user.id as the database functions will handle the mapping)
-      const { data: matchesData } = await db.getMatches({
-        talent_id: user.id,
-      });
-      if (matchesData) {
-        setMatches(matchesData.slice(0, 5));
+
+      if (matchesResult.data) {
+        setMatches(matchesResult.data.slice(0, 5));
       }
-      // Load analytics
-      try {
-        const analyticsResult = await db.getAnalytics(user.id, "talent");
-        if (analyticsResult && !analyticsResult.error) {
-          const analyticsData =
-            "data" in analyticsResult ? analyticsResult.data : analyticsResult;
-          setAnalytics({
-            profileViews: analyticsData.profileViews || 0,
-            applications: analyticsData.applications || 0,
-            matches: analyticsData.matches || 0,
-            messages: analyticsData.messages || 0,
-          });
-        }
-      } catch (analyticsError) {
-        // Don't let analytics errors break the dashboard
+
+      if (analyticsResult && !analyticsResult.error) {
+        const analyticsData = "data" in analyticsResult ? analyticsResult.data : analyticsResult;
+        setAnalytics({
+          profileViews: analyticsData.profileViews || 0,
+          applications: analyticsData.applications || 0,
+          matches: analyticsData.matches || 0,
+          messages: analyticsData.messages || 0,
+        });
       }
-      // Load all jobs for offers section
-      const { data: jobsData } = await db.getJobs({});
-      if (jobsData) {
-        setAllJobs(jobsData);
+
+      if (jobsResult.data) {
+        setAllJobs(jobsResult.data);
       }
     } catch (error) {
-      toast.error("Failed to load dashboard data");
+      notificationManager.showError("Failed to load dashboard data");
     }
   }, [user, talent]);
 
+  // Load data only once when component mounts or when user/talent changes
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  useDataRefresh(loadDashboardData, [user?.id, talent?.id]);
+  // REMOVED: useDataRefresh - it was causing unnecessary reloads
 
   // Real-time subscription disabled - can be enabled when Supabase Realtime is configured
   // useEffect(() => {

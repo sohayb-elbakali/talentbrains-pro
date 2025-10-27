@@ -26,8 +26,9 @@ export const useDataRefresh = (
     }
 
     const now = Date.now();
-    // Prevent rapid successive refreshes (debounce for 1 second)
-    if (now - lastRefreshRef.current < 1000) {
+    // Prevent rapid successive refreshes (debounce for 30 seconds)
+    if (now - lastRefreshRef.current < 30000) {
+      console.log('⏭️ Data refresh throttled');
       return;
     }
 

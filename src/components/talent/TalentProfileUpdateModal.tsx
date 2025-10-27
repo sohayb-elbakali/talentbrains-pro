@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { notificationManager } from "../../utils/notificationManager";
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
@@ -31,6 +32,7 @@ export default function TalentProfileUpdateModal({
 }: TalentProfileUpdateModalProps) {
   const { user } = useAuth();
   const { data, refetch } = useUserData(user?.id);
+  const queryClient = useQueryClient();
   const talent = data?.talent;
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -252,14 +254,25 @@ export default function TalentProfileUpdateModal({
         }
       }
 
-      // Refetch user data to update the cache
-      await refetch();
+      // Invalidate all related queries to refresh data everywhere
+      await Promise.all([
+        refetch(),
+        queryClient.invalidateQueries({ queryKey: ['user-data'] }),
+        queryClient.invalidateQueries({ queryKey: ['talent'] }),
+        queryClient.invalidateQueries({ queryKey: ['talent-applications'] }),
+        queryClient.invalidateQueries({ queryKey: ['talent-matches'] }),
+        queryClient.invalidateQueries({ queryKey: ['talent-analytics'] }),
+        queryClient.invalidateQueries({ queryKey: ['welcome-dashboard'] }),
+      ]);
 
       notificationManager.showSuccess("Talent profile updated successfully!");
       setHasUnsavedChanges(false);
 
       if (onUpdate && result.data) {
         onUpdate(result.data);
+      } else {
+        // Call onUpdate without data to trigger parent refetch
+        onUpdate?.(result.data);
       }
 
       onClose();

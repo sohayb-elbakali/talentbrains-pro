@@ -1,12 +1,12 @@
 import { BrainCircuit, Briefcase, Plus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
 import type { Job } from "../../types/database";
 import CompanyProfileUpdateModal from "./CompanyProfileUpdateModal";
 import ModernJobCard from "./ModernJobCard";
-import { notificationManager } from "../../utils/notificationManager";
 import CompanyLogo from "../CompanyLogo";
 
 // A small component for the stat cards to avoid repetition
@@ -71,61 +71,54 @@ const StatCard = ({
 
 const CompanyDashboard = () => {
   const { profile } = useAuth();
-  const [activeJobs, setActiveJobs] = useState(0);
-  const [totalApplicants, setTotalApplicants] = useState(0);
-  const [recentJobs, setRecentJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
+  // Get company ID first
   useEffect(() => {
     if (!profile?.id) return;
-
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // First get the company record to get the actual company ID
-        const { data: companyData, error: companyError } = await db.getCompany(
-          profile.id
-        );
-        if (companyError || !companyData) {
-          notificationManager.showError("Failed to load company profile");
-          return;
-        }
-
-        const [jobsResponse, appsResponse] = await Promise.all([
-          db.getJobs({ company_id: companyData.id }),
-          db.getApplications({ company_id: companyData.id }),
-        ]);
-
-        if (jobsResponse.error) {
-          throw jobsResponse.error;
-        }
-        if (appsResponse.error) {
-          throw appsResponse.error;
-        }
-
-        const activeJobsCount =
-          jobsResponse.data?.filter((job: any) => job.status === "active").length ||
-          0;
-        const applicantsCount = appsResponse.data?.length || 0;
-        const recentJobsData =
-          jobsResponse.data
-            ?.filter((job: any) => job.status === "active")
-            .slice(0, 5) || [];
-
-        setActiveJobs(activeJobsCount);
-        setTotalApplicants(applicantsCount);
-        setRecentJobs(recentJobsData);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setLoading(false);
+    
+    const getCompanyId = async () => {
+      const { data: companyData } = await db.getCompany(profile.id);
+      if (companyData) {
+        setCompanyId(companyData.id);
       }
     };
+    
+    getCompanyId();
+  }, [profile?.id]);
 
-    fetchData();
-  }, [profile]);
+  // Use React Query for data fetching with proper caching
+  const { data: jobsData, isLoading: jobsLoading } = useQuery({
+    queryKey: ['company-jobs', companyId],
+    queryFn: async () => {
+      if (!companyId) return [];
+      const { data, error } = await db.getJobs({ company_id: companyId });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!companyId,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: applicationsData, isLoading: appsLoading } = useQuery({
+    queryKey: ['company-applications', companyId],
+    queryFn: async () => {
+      if (!companyId) return [];
+      const { data, error } = await db.getApplications({ company_id: companyId });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!companyId,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const loading = jobsLoading || appsLoading;
+  const activeJobs = jobsData?.filter((job: any) => job.status === "active").length || 0;
+  const totalApplicants = applicationsData?.length || 0;
+  const recentJobs = jobsData?.filter((job: any) => job.status === "active").slice(0, 5) || [];
 
 
 

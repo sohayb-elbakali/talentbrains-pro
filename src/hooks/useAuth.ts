@@ -48,7 +48,6 @@ const handleAuthError = async (error: any, clearAuthFn: () => void) => {
 
 export const useAuth = () => {
   const [loading, setLoading] = useState(true);
-  const [sessionValidated, setSessionValidated] = useState(false);
   const {
     user,
     profile,
@@ -92,49 +91,27 @@ export const useAuth = () => {
     }
   }, [user, clearAuth]);
 
-  // Add session validation on route changes and app focus
-  useEffect(() => {
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === "visible" && user && !sessionValidated) {
-        console.log("🔍 App became visible, validating session...");
-        await validateSession();
-      }
-    };
-
-    const handleFocus = async () => {
-      if (user && !sessionValidated) {
-        console.log("🔍 App focused, validating session...");
-        await validateSession();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [user, sessionValidated]);
-
-  // Validate session on route changes
-  useEffect(() => {
-    if (user && !sessionValidated) {
-      console.log("🔍 Route changed, validating session...");
-      validateSession();
-    }
-  }, [location.pathname, user, sessionValidated]);
+  // REMOVED: Duplicate session validation listeners
+  // The main auth listener below already handles session validation
 
   useEffect(() => {
-    // Set up window focus/visibility event handlers to refresh session
+    // Set up SINGLE window focus/visibility event handler with throttling
+    let lastValidation = 0;
+    const VALIDATION_THROTTLE = 30000; // Only validate once per 30 seconds
+    
     const handleWindowFocus = async () => {
+      const now = Date.now();
+      if (now - lastValidation < VALIDATION_THROTTLE) {
+        console.log("🔍 Validation throttled, skipping...");
+        return;
+      }
+      lastValidation = now;
       console.log("🔄 Window focused, validating session...");
       await validateSession();
     };
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        // Page became visible
         handleWindowFocus();
       }
     };
@@ -170,7 +147,6 @@ export const useAuth = () => {
           if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
             if (session?.user) {
               setUser(session.user);
-              setSessionValidated(true);
               // For auth state listener, don't show error notifications to avoid duplicates
               await loadUserProfile(
                 session.user.id,
@@ -183,12 +159,10 @@ export const useAuth = () => {
             } else {
               // No user session found.
               console.log("No session found, clearing auth state");
-              setSessionValidated(false);
               clearAuth();
             }
           } else if (event === "SIGNED_OUT") {
             console.log("User signed out, clearing auth state");
-            setSessionValidated(false);
             clearAuth();
             notificationManager.showSignOutSuccess();
             // Reset persistent sign-in notification tracker
@@ -200,12 +174,10 @@ export const useAuth = () => {
             // Just update the user object, profile is likely the same.
             console.log("Token refreshed successfully");
             setUser(session.user);
-            setSessionValidated(true);
           } else if (event === "TOKEN_REFRESH_FAILED") {
             // Token refresh failed - this is the key event we need to handle!
             console.log("Token refresh failed, signing out user");
             notificationManager.showError("Your session has expired. Please sign in again.");
-            setSessionValidated(false);
             clearAuth();
             // Force sign out to clear any corrupted session data
             await auth.signOut();
@@ -213,7 +185,6 @@ export const useAuth = () => {
         } catch (error) {
           console.error("Critical error in auth state change handler:", error);
           // Clear everything to be safe
-          setSessionValidated(false);
           clearAuth();
         } finally {
           // Once the initial auth state is determined, stop loading.
@@ -536,9 +507,9 @@ export const useAuth = () => {
   const signOut = async () => {
     try {
       setLoading(true);
-      console.log("🚪 Starting comprehensive sign out process...");
+      console.log("🚪 Starting sign out process...");
 
-      // Step 1: Clear React Query cache first
+      // Step 1: Clear React Query cache
       try {
         const queryClient = (window as any).queryClient;
         if (queryClient) {
@@ -549,28 +520,24 @@ export const useAuth = () => {
         console.warn("Failed to clear query cache:", cacheError);
       }
 
-      // Step 2: Clear auth state immediately (don't wait for Supabase)
-      setSessionValidated(false);
-      clearAuth();
-
-      // Step 3: Use session manager for complete cleanup
-      sessionManager.clearAllAuthData();
-
-      // Step 4: Clear Supabase session (do this after clearing local state)
+      // Step 2: Clear Supabase session
       try {
         const { error } = await auth.signOut();
         if (error) {
           console.error("Supabase sign out error:", error);
-          // Continue with cleanup even if Supabase signOut fails
         }
       } catch (supabaseError) {
         console.error("Supabase sign out failed:", supabaseError);
-        // Continue with cleanup
       }
 
-      // Step 5: Additional cleanup - clear any remaining auth data
+      // Step 3: Clear local auth state (auth listener will handle this automatically)
+      clearAuth();
+
+      // Step 4: Use session manager for cleanup
+      sessionManager.clearAllAuthData();
+
+      // Step 5: Clear auth-related storage
       try {
-        // Clear all localStorage items that might contain auth data
         Object.keys(localStorage).forEach((key) => {
           if (
             key.includes("auth") ||
@@ -581,7 +548,6 @@ export const useAuth = () => {
           }
         });
 
-        // Clear all sessionStorage items that might contain auth data
         Object.keys(sessionStorage).forEach((key) => {
           if (
             key.includes("auth") ||
@@ -592,32 +558,20 @@ export const useAuth = () => {
           }
         });
       } catch (cleanupError) {
-        console.warn("Additional cleanup failed:", cleanupError);
+        console.warn("Storage cleanup failed:", cleanupError);
       }
 
-      console.log("✅ Comprehensive sign out completed successfully");
+      console.log("✅ Sign out completed successfully");
 
-      // Step 6: Force page reload to ensure completely clean state
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 100);
+      // Step 6: Navigate to home (NO PAGE RELOAD - React Router handles this)
+      navigate("/", { replace: true });
 
       return { success: true };
     } catch (error: any) {
       console.error("Sign out error:", error);
-
-      // Force cleanup even if there's an error
-      try {
-        clearAuth();
-        sessionManager.forceLogout();
-      } catch (cleanupError) {
-        console.error("Emergency cleanup failed:", cleanupError);
-        // Last resort - clear everything and reload
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = "/";
-      }
-
+      clearAuth();
+      sessionManager.forceLogout();
+      navigate("/", { replace: true });
       return { success: false, error };
     } finally {
       setLoading(false);
@@ -673,28 +627,26 @@ export const useAuth = () => {
 
   // Session validation function
   const validateSession = async () => {
-    // Throttle: only allow once per 2 seconds
+    // Throttle: only allow once per 30 seconds (increased from 2s)
     const now = Date.now();
-    if (now - lastSessionValidation < 2000) {
+    if (now - lastSessionValidation < 30000) {
+      console.log("⏭️ Session validation throttled");
       return true;
     }
     lastSessionValidation = now;
     try {
       console.log("🔍 Validating current session...");
-      setSessionValidated(false); // Reset validation state
 
       const { user: currentUser, error } = await auth.getCurrentUser();
 
       if (error) {
         console.error("Session validation error:", error);
-        setSessionValidated(false);
         clearAuth();
         return false;
       }
 
       if (!currentUser) {
         console.log("No valid session found");
-        setSessionValidated(false);
         if (user) {
           clearAuth();
           notificationManager.showError("Your session has expired. Please sign in again.");
@@ -712,11 +664,9 @@ export const useAuth = () => {
       }
 
       console.log("✅ Session validation successful");
-      setSessionValidated(true);
       return true;
     } catch (error) {
       console.error("Session validation failed:", error);
-      setSessionValidated(false);
       clearAuth();
       return false;
     }

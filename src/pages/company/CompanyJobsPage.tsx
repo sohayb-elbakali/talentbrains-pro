@@ -48,7 +48,7 @@ const CompanyJobsPage: React.FC = () => {
       const { data, error } = await db.getJobs({ company_id: companyData.id });
       if (error) throw error;
       
-      // Get application counts for each job
+      // Get application counts in parallel for better performance
       const jobsWithCounts = await Promise.all(
         (data || []).map(async (job: Job) => {
           const { data: count } = await db.getJobApplicationCount(job.id);
@@ -61,7 +61,7 @@ const CompanyJobsPage: React.FC = () => {
       return jobsWithCounts;
     },
     enabled: !!companyData?.id,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 5 * 60 * 1000, // Increased to 5 minutes (was 2)
     table: 'jobs',
     filter: `company_id=eq.${companyData?.id}`,
   });

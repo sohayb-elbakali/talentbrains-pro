@@ -17,14 +17,14 @@ const AuthErrorHandler: React.FC<AuthErrorHandlerProps> = ({ children }) => {
     // Global error handler for unhandled promise rejections
     const handleUnhandledRejection = async (event: PromiseRejectionEvent) => {
       const error = event.reason;
-      
+
       if (isAuthError(error)) {
         console.log('Unhandled auth error detected:', error);
         event.preventDefault(); // Prevent the error from being logged to console
-        
+
         toast.error("Your session has expired. Please sign in again.");
         clearAuth();
-        
+
         // Force sign out to clear any corrupted session data
         try {
           const { auth } = await import('../../lib/supabase');
@@ -38,14 +38,14 @@ const AuthErrorHandler: React.FC<AuthErrorHandlerProps> = ({ children }) => {
     // Global error handler for window errors
     const handleWindowError = async (event: ErrorEvent) => {
       const error = event.error;
-      
+
       if (isAuthError(error)) {
         console.log('Window auth error detected:', error);
         event.preventDefault(); // Prevent the error from being logged to console
-        
+
         toast.error("Your session has expired. Please sign in again.");
         clearAuth();
-        
+
         // Force sign out to clear any corrupted session data
         try {
           const { auth } = await import('../../lib/supabase');
@@ -73,10 +73,10 @@ const AuthErrorHandler: React.FC<AuthErrorHandlerProps> = ({ children }) => {
 // Helper function to detect authentication errors
 const isAuthError = (error: any): boolean => {
   if (!error) return false;
-  
+
   const errorMessage = error.message?.toLowerCase() || '';
   const errorCode = error.code || '';
-  
+
   // Common authentication error patterns
   return (
     errorCode === '401' ||

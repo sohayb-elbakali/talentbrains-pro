@@ -8,104 +8,27 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { notificationManager } from "../../utils/notificationManager";
+import { useQuery } from "@tanstack/react-query";
 import supabase from "../../lib/supabase";
-import { AdminStats } from "../../types/admin";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<AdminStats>({
-    totalUsers: 0,
-    totalCompanies: 0,
-    totalJobs: 0,
-    totalApplications: 0,
-    activeMatches: 0,
-    systemHealth: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<any[]>([]);
-  const [usersLoading, setUsersLoading] = useState(true);
-
-  useEffect(() => {
-    loadAdminData();
-    loadUsers();
-
-    const handleWindowFocus = () => {
-      loadAdminData();
-      loadUsers();
-    };
-
-    window.addEventListener("focus", handleWindowFocus);
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        handleWindowFocus();
-      }
-    });
-
-    return () => {
-      window.removeEventListener("focus", handleWindowFocus);
-      document.removeEventListener("visibilitychange", handleWindowFocus);
-    };
-  }, []);
-
-  const loadUsers = async () => {
-    try {
-      setUsersLoading(true);
-      const { data: profilesData, error } = await supabase
-        .from("profiles")
-        .select(
-          "id, email, full_name, role, is_active, is_verified, created_at, last_login_at"
-        )
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      if (error) {
-        toast.error("Failed to load users");
-        return;
-      }
-
-      setUsers(profilesData || []);
-    } catch (error) {
-      toast.error("Failed to load users");
-    } finally {
-      setUsersLoading(false);
-    }
-  };
-
-  const loadAdminData = async () => {
-    try {
-      setLoading(true);
-
-      // Load real system statistics from database with individual error handling
+  // Use React Query for all data fetching with proper caching
+  const { data: stats, isLoading: loading } = useQuery({
+    queryKey: ['admin-stats'],
+    queryFn: async () => {
       const results = await Promise.allSettled([
-        supabase
-          .from("profiles")
-          .select("id, email, full_name, role, is_active, created_at"),
-        supabase.from("companies").select("id, name, created_at"),
-        supabase.from("jobs").select("id, title, created_at"),
-        supabase.from("applications").select("id, created_at"),
-        supabase.from("matches").select("id, created_at"),
+        supabase.from("profiles").select("id"),
+        supabase.from("companies").select("id"),
+        supabase.from("jobs").select("id"),
+        supabase.from("applications").select("id"),
+        supabase.from("matches").select("id"),
       ]);
-      const profilesData =
-        results[0].status === "fulfilled" ? results[0].value.data : null;
-      const companiesData =
-        results[1].status === "fulfilled" ? results[1].value.data : null;
-      const jobsData =
-        results[2].status === "fulfilled" ? results[2].value.data : null;
-      const applicationsData =
-        results[3].status === "fulfilled" ? results[3].value.data : null;
-      const matchesData =
-        results[4].status === "fulfilled" ? results[4].value.data : null;
 
-      // Log any failed requests
-
-
-      // Calculate system health based on data availability and recent activity
-      const totalUsers = profilesData?.length || 0;
-      const totalCompanies = companiesData?.length || 0;
-      const totalJobs = jobsData?.length || 0;
-      const totalApplications = applicationsData?.length || 0;
-      const activeMatches = matchesData?.length || 0;
+      const totalUsers = results[0].status === "fulfilled" ? results[0].value.data?.length || 0 : 0;
+      const totalCompanies = results[1].status === "fulfilled" ? results[1].value.data?.length || 0 : 0;
+      const totalJobs = results[2].status === "fulfilled" ? results[2].value.data?.length || 0 : 0;
+      const totalApplications = results[3].status === "fulfilled" ? results[3].value.data?.length || 0 : 0;
+      const activeMatches = results[4].status === "fulfilled" ? results[4].value.data?.length || 0 : 0;
 
       let systemHealth = 85;
       if (totalUsers > 0) systemHealth += 5;
@@ -113,34 +36,36 @@ export default function AdminDashboard() {
       if (totalJobs > 0) systemHealth += 3;
       if (totalApplications > 0) systemHealth += 2;
       if (activeMatches > 0) systemHealth += 2;
-
-      // Cap at 100%
       systemHealth = Math.min(systemHealth, 100);
 
-      setStats({
+      return {
         totalUsers,
         totalCompanies,
         totalJobs,
         totalApplications,
         activeMatches,
         systemHealth,
-      });
-    } catch (error) {
-      toast.error("Failed to load admin data");
+      };
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
 
-      // Set fallback stats in case of error
-      setStats({
-        totalUsers: 0,
-        totalCompanies: 0,
-        totalJobs: 0,
-        totalApplications: 0,
-        activeMatches: 0,
-        systemHealth: 0,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, email, full_name, role, is_active, is_verified, created_at, last_login_at")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
   if (loading) {
     return (
@@ -172,7 +97,7 @@ export default function AdminDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-600">Total Users</p>
               <p className="text-2xl font-bold text-gray-900">
-                {stats.totalUsers}
+                {stats?.totalUsers || 0}
               </p>
             </div>
             <div className="p-3 bg-purple-100 rounded-full">
@@ -192,7 +117,7 @@ export default function AdminDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-600">Companies</p>
               <p className="text-2xl font-bold text-gray-900">
-                {stats.totalCompanies}
+                {stats?.totalCompanies || 0}
               </p>
             </div>
             <div className="p-3 bg-blue-100 rounded-full">
@@ -212,7 +137,7 @@ export default function AdminDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-600">Active Jobs</p>
               <p className="text-2xl font-bold text-gray-900">
-                {stats.totalJobs}
+                {stats?.totalJobs || 0}
               </p>
             </div>
             <div className="p-3 bg-green-100 rounded-full">
@@ -232,7 +157,7 @@ export default function AdminDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-600">Applications</p>
               <p className="text-2xl font-bold text-gray-900">
-                {stats.totalApplications}
+                {stats?.totalApplications || 0}
               </p>
             </div>
             <div className="p-3 bg-orange-100 rounded-full">
@@ -252,7 +177,7 @@ export default function AdminDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-600">AI Matches</p>
               <p className="text-2xl font-bold text-gray-900">
-                {stats.activeMatches}
+                {stats?.activeMatches || 0}
               </p>
             </div>
             <div className="p-3 bg-indigo-100 rounded-full">
@@ -274,7 +199,7 @@ export default function AdminDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-600">System Health</p>
               <p className="text-2xl font-bold text-gray-900">
-                {stats.systemHealth}%
+                {stats?.systemHealth || 0}%
               </p>
             </div>
             <div className="p-3 bg-green-100 rounded-full">

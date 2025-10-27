@@ -16,9 +16,8 @@ export default function CompanyProfilePage() {
 
   const handleUpdateComplete = async () => {
     setIsUpdateModalOpen(false);
-    notificationManager.showSuccess("Company profile updated successfully!");
-    // Force page reload to refresh data
-    window.location.reload();
+    // Refetch will happen automatically via React Query
+    await refetch();
   };
 
   const handleAvatarUpdate = async (avatarUrl: string) => {
