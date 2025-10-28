@@ -49,12 +49,20 @@ const JobDetailPage: React.FC = () => {
 
   // Transform job skills for SkillsDisplay component
   const transformedJobSkills = useMemo(() => {
-    return jobSkills.map((item: any) => ({
-      skill_id: item.skill?.id || item.skill_id,
-      skill_name: item.skill?.name || item.skill_name,
-      proficiency_level: item.proficiency_level || 3,
-      is_required: item.is_required !== undefined ? item.is_required : true,
-    }));
+    console.log("🔍 Transforming job skills:", jobSkills);
+    const transformed = jobSkills.map((item: any) => {
+      const skillName = item.skill?.name || item.skill_name || "Unknown Skill";
+      console.log("🔍 Skill item:", item, "-> name:", skillName);
+      return {
+        skill_id: item.skill?.id || item.skill_id,
+        skill_name: skillName,
+        name: skillName, // Add both for compatibility
+        proficiency_level: item.proficiency_level || 3,
+        is_required: item.is_required !== undefined ? item.is_required : true,
+      };
+    });
+    console.log("🔍 Transformed skills:", transformed);
+    return transformed;
   }, [jobSkills]);
 
   useEffect(() => {
@@ -69,7 +77,9 @@ const JobDetailPage: React.FC = () => {
         setJob(data);
 
         // Fetch job skills
-        const { data: skillsData } = await db.getJobSkills(jobId);
+        const { data: skillsData, error: skillsError } = await db.getJobSkills(jobId);
+        console.log("🔍 Job skills data:", skillsData);
+        console.log("🔍 Job skills error:", skillsError);
         setJobSkills(skillsData || []);
       } catch (err) {
         notificationManager.showError("An unexpected error occurred");
@@ -84,14 +94,14 @@ const JobDetailPage: React.FC = () => {
   useEffect(() => {
     const checkExistingApplication = async () => {
       if (!jobId || !talent?.id) return;
-      
+
       setCheckingApplication(true);
       try {
         const { data, error } = await db.getApplications({
           job_id: jobId,
           talent_id: talent.id,
         });
-        
+
         if (!error && data && data.length > 0) {
           setExistingApplication(data[0]);
         }
@@ -101,7 +111,7 @@ const JobDetailPage: React.FC = () => {
         setCheckingApplication(false);
       }
     };
-    
+
     checkExistingApplication();
   }, [jobId, talent?.id]);
 
@@ -654,7 +664,7 @@ const JobDetailPage: React.FC = () => {
                   Resume / CV
                   <span className="text-red-500 ml-1">*</span>
                 </label>
-                
+
                 {/* Resume Upload */}
                 <div className="mb-4">
                   <div className="border-2 border-dashed border-purple-300 rounded-xl p-6 text-center hover:border-purple-500 hover:bg-purple-50 transition-all cursor-pointer">

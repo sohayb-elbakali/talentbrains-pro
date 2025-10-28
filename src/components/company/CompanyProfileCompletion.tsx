@@ -156,16 +156,28 @@ export default function CompanyProfileCompletion() {
 
     setLoading(true)
     try {
-      const slug = formData.name
+      // Generate a unique slug by appending a random string
+      const baseSlug = formData.name
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9-]/g, "");
+      
+      // Add timestamp or random string to ensure uniqueness
+      const uniqueSlug = `${baseSlug}-${Date.now().toString(36)}`;
 
       const { data: existingCompany } = await db.getCompany(user.id);
 
+      // Ensure social_links is a proper object (not undefined or null)
+      const socialLinks = {
+        linkedin: formData.social_links?.linkedin || "",
+        twitter: formData.social_links?.twitter || "",
+        facebook: formData.social_links?.facebook || "",
+        website: formData.social_links?.website || "",
+      };
+
       const companyData = {
         name: formData.name,
-        slug,
+        slug: existingCompany ? existingCompany.slug : uniqueSlug, // Keep existing slug if updating
         description: formData.description,
         website: formData.website || null,
         industry: formData.industry,
@@ -174,9 +186,9 @@ export default function CompanyProfileCompletion() {
         founded_year: formData.founded_year
           ? Number(formData.founded_year)
           : null,
-        culture_values: formData.culture_values,
-        benefits: formData.benefits,
-        social_links: formData.social_links,
+        culture_values: formData.culture_values || [],
+        benefits: formData.benefits || [],
+        social_links: socialLinks,
       };
 
       let result;
@@ -190,17 +202,34 @@ export default function CompanyProfileCompletion() {
       }
       
       if (result.error) {
-        throw result.error;
+        console.error('Database error:', result.error);
+        
+        // Provide specific error messages based on error code
+        let errorMessage = 'Failed to save company profile';
+        
+        if (result.error.code === '23505') {
+          // Unique constraint violation
+          errorMessage = 'A company with this name already exists. Please try a different name.';
+        } else if (result.error.code === '406' || result.error.status === 406) {
+          errorMessage = 'Invalid data format. Please check your inputs.';
+        } else if (result.error.code === '409' || result.error.status === 409) {
+          errorMessage = 'This company profile conflicts with an existing one.';
+        } else if (result.error.message) {
+          errorMessage = result.error.message;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // Force refresh of profile completion status
       await checkProfileCompletion(true)
 
-      toast.success("Company profile completed successfully!");
+      notificationManager.showSuccess("Company profile completed successfully!");
       navigate('/company')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating company profile:', error)
-      toast.error("Failed to save company profile. Please try again.");
+      const errorMessage = error?.message || 'Failed to save company profile. Please try again.';
+      notificationManager.showError(errorMessage);
     } finally {
       setLoading(false)
     }

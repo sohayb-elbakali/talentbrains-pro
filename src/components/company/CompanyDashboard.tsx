@@ -2,7 +2,7 @@ import { BrainCircuit, Briefcase, Plus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
 import type { Job } from "../../types/database";
 import CompanyProfileUpdateModal from "./CompanyProfileUpdateModal";
@@ -70,9 +70,13 @@ const StatCard = ({
 };
 
 const CompanyDashboard = () => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
+  const { data: userData } = useUserData(user?.id);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  // Get company name - ONLY from companies table, not from profile.full_name
+  const companyName = userData?.company?.name || 'Company';
 
   // Get company ID first
   useEffect(() => {
@@ -135,7 +139,7 @@ const CompanyDashboard = () => {
                   <div className="relative w-20 h-20 rounded-2xl border-4 border-white shadow-2xl overflow-hidden">
                     <CompanyLogo
                       avatarUrl={profile?.avatar_url}
-                      companyName={profile?.full_name || 'Company'}
+                      companyName={companyName}
                       size="xl"
                       className="w-full h-full"
                     />
@@ -143,7 +147,7 @@ const CompanyDashboard = () => {
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                    Welcome, {profile?.full_name || "Company"}! 🚀
+                    Welcome, {companyName}! 🚀
                   </h1>
                   <p className="text-gray-600 text-lg">
                     Manage your recruitment pipeline with powerful insights.

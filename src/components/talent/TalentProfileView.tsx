@@ -1,5 +1,4 @@
 import { Calendar, Clock, DollarSign, MapPin, Star, User } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
 import ProfileViewCard, {
@@ -9,6 +8,7 @@ import ProfileViewCard, {
   ProfileTags,
 } from "../profile/ProfileViewCard";
 import SkillsDisplay from "../skills/SkillsDisplay";
+import { useQuery } from "@tanstack/react-query";
 
 interface TalentProfileViewProps {
   onEdit?: () => void;
@@ -20,30 +20,18 @@ export default function TalentProfileView({ onEdit, onAvatarEdit }: TalentProfil
   const { data, isLoading: loading } = useUserData(user?.id);
   const talent = data?.talent;
   const profile = data?.profile;
-  const [skills, setSkills] = useState<any[]>([]);
-  const [loadingSkills, setLoadingSkills] = useState(true);
 
-  // Fetch talent skills
-  useEffect(() => {
-    const fetchSkills = async () => {
-      if (!talent?.id) {
-        setLoadingSkills(false);
-        return;
-      }
-
-      setLoadingSkills(true);
-      try {
-        const { data: skillsData } = await db.getTalentSkills(talent.id);
-        setSkills(skillsData || []);
-      } catch (error) {
-        console.error('Error fetching skills:', error);
-      } finally {
-        setLoadingSkills(false);
-      }
-    };
-
-    fetchSkills();
-  }, [talent?.id]);
+  // Fetch talent skills using React Query for automatic refresh
+  const { data: skills = [], isLoading: loadingSkills } = useQuery({
+    queryKey: ['talent-skills', talent?.id],
+    queryFn: async () => {
+      if (!talent?.id) return [];
+      const { data: skillsData } = await db.getTalentSkills(talent.id);
+      return skillsData || [];
+    },
+    enabled: !!talent?.id,
+    staleTime: 0, // Always fetch fresh data
+  });
 
   const formatExperienceLevel = (level: string) => {
     const levels = {

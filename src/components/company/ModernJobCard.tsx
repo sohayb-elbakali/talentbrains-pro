@@ -6,9 +6,8 @@ import {
     DollarSign,
     Eye,
     MapPin,
-    Star,
-    TrendingUp,
     Users,
+    ArrowRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import CompanyLogo from "../CompanyLogo";
@@ -36,12 +35,12 @@ export default function ModernJobCard({
 
     const getStatusColor = (status: string) => {
         const colors: any = {
-            active: "from-green-400 to-emerald-500",
-            draft: "from-yellow-400 to-orange-400",
-            closed: "from-gray-400 to-gray-500",
-            archived: "from-red-400 to-pink-400",
+            active: "from-green-500 to-emerald-600",
+            draft: "from-yellow-500 to-orange-500",
+            closed: "from-gray-500 to-gray-600",
+            archived: "from-red-500 to-pink-600",
         };
-        return colors[status] || "from-blue-400 to-cyan-400";
+        return colors[status] || "from-blue-500 to-cyan-600";
     };
 
     const getStatusLabel = (status: string) => {
@@ -55,63 +54,63 @@ export default function ModernJobCard({
     };
 
     return (
-        <Link to={`/company/jobs/${job.id}`} className="block">
+        <Link to={`/company/jobs/${job.id}`} className="block h-full group/card">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                whileHover={{ y: -4, scale: 1.01 }}
-                transition={{ duration: 0.2 }}
-                className="group relative bg-gradient-to-br from-white via-white to-purple-50/20 rounded-2xl shadow-lg border-2 border-gray-100 overflow-hidden hover:shadow-2xl hover:border-purple-300 transition-all duration-300"
+                whileHover={{ y: -4 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="relative bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden h-full flex flex-col hover:shadow-xl hover:border-purple-300 transition-all duration-300"
             >
-                {/* Decorative background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-blue-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                {/* Top colored bar */}
+                <div className="h-2 bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500"></div>
 
                 {/* Status Badge */}
-                <div className={`absolute top-4 right-4 px-3 py-1 bg-gradient-to-r ${getStatusColor(job.status)} text-white text-xs font-bold rounded-full shadow-md z-10`}>
+                <div className={`absolute top-6 right-4 px-3 py-1.5 bg-gradient-to-r ${getStatusColor(job.status)} text-white text-xs font-bold rounded-full shadow-md z-10 flex items-center gap-1.5`}>
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
                     {getStatusLabel(job.status)}
                 </div>
 
-                <div className="p-6 relative z-10">
-                    {/* Header */}
-                    <div className="flex items-start gap-4 mb-4">
+                <div className="p-6 flex-1 flex flex-col">
+                    {/* Header with Logo and Title */}
+                    <div className="flex items-start gap-4 mb-5">
                         {showCompany && job.company_name && (
                             <div className="relative flex-shrink-0">
-                                <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-blue-400 rounded-xl blur opacity-30"></div>
-                                <div className="relative">
+                                <div className="w-16 h-16 rounded-xl border-2 border-gray-100 shadow-sm overflow-hidden bg-white group-hover/card:border-purple-300 transition-colors">
                                     <CompanyLogo
                                         avatarUrl={job.avatar_url}
                                         companyName={job.company_name}
-                                        size="md"
+                                        size="lg"
                                     />
                                 </div>
                             </div>
                         )}
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-blue-600 transition-all line-clamp-2 mb-1">
+                            <h3 className="text-lg font-bold text-gray-900 line-clamp-2 mb-2 leading-snug group-hover/card:text-purple-600 transition-colors">
                                 {job.title}
                             </h3>
                             {showCompany && job.company_name && (
-                                <p className="text-sm text-gray-600 font-medium flex items-center gap-1">
-                                    <Building className="h-3.5 w-3.5" />
+                                <p className="text-sm text-gray-600 font-medium flex items-center gap-1.5">
+                                    <Building className="h-3.5 w-3.5 text-gray-400" />
                                     {job.company_name}
                                 </p>
                             )}
                         </div>
                     </div>
 
-                    {/* Details Grid */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
+                    {/* Job Details */}
+                    <div className="space-y-3 mb-5 flex-1">
                         {job.location && (
-                            <div className="flex items-center gap-2 text-sm text-gray-700">
-                                <div className="p-2 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                            <div className="flex items-center gap-3 text-sm text-gray-700">
+                                <div className="flex-shrink-0 w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
                                     <MapPin className="h-4 w-4 text-purple-600" />
                                 </div>
-                                <span className="font-medium truncate">{job.location}</span>
+                                <span className="font-medium">{job.location}</span>
                             </div>
                         )}
                         {job.employment_type && (
-                            <div className="flex items-center gap-2 text-sm text-gray-700">
-                                <div className="p-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                            <div className="flex items-center gap-3 text-sm text-gray-700">
+                                <div className="flex-shrink-0 w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
                                     <Briefcase className="h-4 w-4 text-blue-600" />
                                 </div>
                                 <span className="font-medium capitalize">
@@ -120,40 +119,29 @@ export default function ModernJobCard({
                             </div>
                         )}
                         {formatSalary() && (
-                            <div className="flex items-center gap-2 text-sm">
-                                <div className="p-2 bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg">
+                            <div className="flex items-center gap-3 text-sm">
+                                <div className="flex-shrink-0 w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
                                     <DollarSign className="h-4 w-4 text-green-600" />
                                 </div>
                                 <span className="font-bold text-green-700">{formatSalary()}</span>
-                            </div>
-                        )}
-                        {job.created_at && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <div className="p-2 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
-                                    <Calendar className="h-4 w-4 text-gray-600" />
-                                </div>
-                                <span className="text-xs">
-                                    {new Date(job.created_at).toLocaleDateString()}
-                                </span>
                             </div>
                         )}
                     </div>
 
                     {/* Skills */}
                     {job.required_skills && job.required_skills.length > 0 && (
-                        <div className="mb-4">
+                        <div className="mb-5 pb-5 border-b border-gray-100">
                             <div className="flex flex-wrap gap-2">
                                 {job.required_skills.slice(0, 3).map((skill: string, index: number) => (
                                     <span
                                         key={index}
-                                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 rounded-lg text-xs font-semibold"
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-md text-xs font-semibold border border-purple-100"
                                     >
-                                        <Star className="h-3 w-3" />
                                         {skill}
                                     </span>
                                 ))}
                                 {job.required_skills.length > 3 && (
-                                    <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold">
+                                    <span className="inline-flex items-center px-2.5 py-1 bg-gray-50 text-gray-600 rounded-md text-xs font-semibold border border-gray-200">
                                         +{job.required_skills.length - 3}
                                     </span>
                                 )}
@@ -161,38 +149,42 @@ export default function ModernJobCard({
                         </div>
                     )}
 
-                    {/* Stats */}
-                    {showStats && (
-                        <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
-                            <div className="flex items-center gap-1.5 text-sm">
-                                <div className="p-1.5 bg-blue-100 rounded-lg">
-                                    <Eye className="h-3.5 w-3.5 text-blue-600" />
+                    {/* Footer */}
+                    <div className="mt-auto">
+                        {showStats ? (
+                            <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-1.5">
+                                        <Eye className="h-3.5 w-3.5" />
+                                        <span className="font-medium">{job.views_count || 0}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Users className="h-3.5 w-3.5" />
+                                        <span className="font-medium">{job.applications_count || 0}</span>
+                                    </div>
                                 </div>
-                                <span className="font-semibold text-gray-700">
-                                    {job.views_count || 0}
-                                </span>
-                                <span className="text-gray-500 text-xs">views</span>
+                                {job.created_at && (
+                                    <div className="flex items-center gap-1.5">
+                                        <Calendar className="h-3.5 w-3.5" />
+                                        <span>{new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                    </div>
+                                )}
                             </div>
-                            <div className="flex items-center gap-1.5 text-sm">
-                                <div className="p-1.5 bg-green-100 rounded-lg">
-                                    <Users className="h-3.5 w-3.5 text-green-600" />
+                        ) : (
+                            job.created_at && (
+                                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
+                                    <Calendar className="h-3.5 w-3.5" />
+                                    <span>Posted {new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                                 </div>
-                                <span className="font-semibold text-gray-700">
-                                    {job.applications_count || 0}
-                                </span>
-                                <span className="text-gray-500 text-xs">applicants</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-sm ml-auto">
-                                <TrendingUp className="h-3.5 w-3.5 text-purple-600" />
-                                <span className="text-xs font-semibold text-purple-600">
-                                    {job.match_rate || 0}% match
-                                </span>
-                            </div>
-                        </div>
-                    )}
+                            )
+                        )}
 
-                    {/* Hover Action */}
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                        {/* View Button */}
+                        <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:from-purple-700 hover:to-blue-700 transition-all group-hover/card:gap-3">
+                            <span>View Details</span>
+                            <ArrowRight className="h-4 w-4 transition-transform" />
+                        </button>
+                    </div>
                 </div>
             </motion.div>
         </Link>

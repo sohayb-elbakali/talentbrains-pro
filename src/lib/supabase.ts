@@ -260,40 +260,54 @@ export const db = {
   },
 
   createCompany: async (companyData: any) => {
-    try {
-      const { data, error } = await supabase
-        .from("companies")
-        .insert(companyData)
-        .select()
-        .single();
+    return handleApiCall(async () => {
+      try {
+        console.log('Creating company with data:', companyData);
+        
+        const { data, error } = await supabase
+          .from("companies")
+          .insert(companyData)
+          .select()
+          .single();
 
-      if (error) {
-        return { data: null, error };
+        if (error) {
+          console.error('Create company error:', error);
+          return { data: null, error };
+        }
+
+        console.log('Company created successfully:', data);
+        return { data, error: null };
+      } catch (error) {
+        console.error('Exception in createCompany:', error);
+        return { data: null, error: { message: "Failed to create company" } };
       }
-
-      return { data, error: null };
-    } catch (error) {
-      return { data: null, error: { message: "Failed to create company" } };
-    }
+    });
   },
 
   updateCompany: async (profileId: string, updates: any) => {
-    try {
-      const { data, error } = await supabase
-        .from("companies")
-        .update(updates)
-        .eq("profile_id", profileId)
-        .select()
-        .single();
+    return handleApiCall(async () => {
+      try {
+        console.log('Updating company for profile:', profileId, 'with data:', updates);
+        
+        const { data, error } = await supabase
+          .from("companies")
+          .update(updates)
+          .eq("profile_id", profileId)
+          .select()
+          .single();
 
-      if (error) {
-        return { data: null, error };
+        if (error) {
+          console.error('Update company error:', error);
+          return { data: null, error };
+        }
+
+        console.log('Company updated successfully:', data);
+        return { data, error: null };
+      } catch (error) {
+        console.error('Exception in updateCompany:', error);
+        return { data: null, error: { message: "Failed to update company" } };
       }
-
-      return { data, error: null };
-    } catch (error) {
-      return { data: null, error: { message: "Failed to update company" } };
-    }
+    });
   },
 
   // Get all companies (for admin stats)
@@ -463,10 +477,20 @@ export const db = {
     return handleApiCall(async () => {
       console.log("🔍 Inside handleApiCall for getJobs");
 
-      // Simple query without joins for now
+      // Query with company information and profile avatar joined
       let query = supabase
         .from("jobs")
-        .select("*")
+        .select(`
+          *,
+          companies!inner(
+            name,
+            logo_url,
+            profile_id,
+            profiles!inner(
+              avatar_url
+            )
+          )
+        `)
         .order("created_at", { ascending: false });
 
       console.log("🔍 Base query created");
@@ -492,8 +516,17 @@ export const db = {
 
       console.log("🔍 Executing query...");
       const { data, error } = await query;
-      console.log("🔍 Query result:", { data: data?.length, error });
-      return { data, error };
+
+      // Transform data to flatten company info for backward compatibility
+      // Use profile avatar_url if logo_url is not set
+      const transformedData = data?.map((job: any) => ({
+        ...job,
+        company_name: job.companies?.name,
+        avatar_url: job.companies?.logo_url || job.companies?.profiles?.avatar_url,
+      }));
+
+      console.log("🔍 Query result:", { data: transformedData?.length, error });
+      return { data: transformedData, error };
     });
   },
 
@@ -556,7 +589,17 @@ export const db = {
     try {
       const { data, error } = await supabase
         .from("jobs")
-        .select("*")
+        .select(`
+          *,
+          companies!inner(
+            name,
+            logo_url,
+            profile_id,
+            profiles!inner(
+              avatar_url
+            )
+          )
+        `)
         .eq("id", jobId)
         .single();
 
@@ -564,7 +607,15 @@ export const db = {
         return { data: null, error };
       }
 
-      return { data, error: null };
+      // Transform data to flatten company info
+      // Use profile avatar_url if logo_url is not set
+      const transformedData = data ? {
+        ...data,
+        company_name: data.companies?.name,
+        avatar_url: data.companies?.logo_url || data.companies?.profiles?.avatar_url,
+      } : null;
+
+      return { data: transformedData, error: null };
     } catch (error) {
       return { data: null, error: { message: "Failed to fetch job" } };
     }
@@ -866,6 +917,87 @@ export const db = {
         return {
           data: null,
           error: { message: "Failed to get talent skills" },
+        };
+      }
+    });
+  },
+
+  // Get job skills
+  getJobSkills: async (jobId: string) => {
+    return handleApiCall(async () => {
+      try {
+        console.log("🔍 getJobSkills called for jobId:", jobId);
+
+        // Test: Check if skills table has any data at all
+        const { data: allSkills } = await supabase
+          .from("skills")
+          .select("id, name")
+          .limit(5);
+        console.log("🔍 TEST - Sample skills from database:", allSkills);
+
+        // First, get the job_skills records
+        const { data: jobSkillsData, error: jobSkillsError } = await supabase
+          .from("job_skills")
+          .select("*")
+          .eq("job_id", jobId);
+
+        console.log("🔍 job_skills data (FULL):", JSON.stringify(jobSkillsData, null, 2));
+        console.log("🔍 job_skills error:", jobSkillsError);
+
+        if (jobSkillsError) {
+          console.error("🔍 getJobSkills error details:", jobSkillsError);
+          return { data: null, error: jobSkillsError };
+        }
+
+        if (!jobSkillsData || jobSkillsData.length === 0) {
+          console.log("🔍 No job skills found");
+          return { data: [], error: null };
+        }
+
+        // Get all skill IDs
+        const skillIds = jobSkillsData.map((js: any) => js.skill_id);
+        console.log("🔍 Skill IDs to fetch:", skillIds, "Types:", skillIds.map((id: any) => typeof id));
+
+        // Fetch the actual skills
+        const { data: skillsData, error: skillsError } = await supabase
+          .from("skills")
+          .select("id, name, category")
+          .in("id", skillIds);
+
+        console.log("🔍 skills data (FULL):", JSON.stringify(skillsData, null, 2));
+        console.log("🔍 skills error:", skillsError);
+        console.log("🔍 Skills found:", skillsData?.length || 0);
+
+        if (skillsError) {
+          console.error("🔍 skills fetch error:", skillsError);
+          return { data: null, error: skillsError };
+        }
+
+        // Create a map of skills by ID
+        const skillsMap = new Map(skillsData?.map((s: any) => [s.id, s]) || []);
+        console.log("🔍 Skills map:", Array.from(skillsMap.entries()));
+
+        // Combine the data
+        const transformedSkills = jobSkillsData.map((item: any) => {
+          const skillData: any = skillsMap.get(item.skill_id);
+          console.log(`🔍 Looking for skill_id: "${item.skill_id}" (type: ${typeof item.skill_id}), found:`, skillData);
+          return {
+            skill_id: item.skill_id,
+            skill_name: skillData?.name || `Unknown (ID: ${item.skill_id})`,
+            category: skillData?.category,
+            proficiency_level: item.proficiency_level,
+            is_required: item.is_required,
+            skill: skillData,
+          };
+        });
+
+        console.log("🔍 getJobSkills final transformed:", JSON.stringify(transformedSkills, null, 2));
+        return { data: transformedSkills, error: null };
+      } catch (error) {
+        console.error("🔍 getJobSkills exception:", error);
+        return {
+          data: null,
+          error: { message: "Failed to get job skills" },
         };
       }
     });

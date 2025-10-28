@@ -3,15 +3,18 @@ import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { JobCard, type Job } from "../components/JobCard";
 import { db } from "../lib/supabase";
+import { useAuth } from "../hooks/useAuth";
 
 const JobsPage: React.FC = () => {
+  const { user } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [applications, setApplications] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const fetchJobs = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         console.log("🔍 Fetching jobs for talent view...");
@@ -47,8 +50,35 @@ const JobsPage: React.FC = () => {
 
         setJobs(data || []);
         console.log("✅ Jobs set successfully:", data?.length || 0, "jobs");
+
+        // Fetch user's applications if user is logged in
+        if (user?.id) {
+          try {
+            console.log("📋 Fetching talent applications...");
+            const { data: talentData } = await db.getTalent(user.id);
+            
+            if (talentData?.id) {
+              const { data: applicationsData } = await db.getApplications({ 
+                talent_id: talentData.id 
+              });
+              
+              if (applicationsData) {
+                // Create a map of job_id -> application for quick lookup
+                const appMap = new Map();
+                applicationsData.forEach((app: any) => {
+                  appMap.set(app.job_id, app);
+                });
+                setApplications(appMap);
+                console.log("✅ Applications loaded:", applicationsData.length);
+              }
+            }
+          } catch (appErr) {
+            console.error("⚠️ Error fetching applications:", appErr);
+            // Don't fail the whole page if applications fail to load
+          }
+        }
       } catch (err: any) {
-        console.error("💥 Exception in fetchJobs:", err);
+        console.error("💥 Exception in fetchData:", err);
         // Check if this is a 304 Not Modified response (cached data)
         if (
           err.status === 304 ||
@@ -67,8 +97,8 @@ const JobsPage: React.FC = () => {
       }
     };
 
-    fetchJobs();
-  }, []);
+    fetchData();
+  }, [user?.id]);
 
   const filteredJobs = jobs.filter(
     (job) =>
@@ -145,16 +175,23 @@ const JobsPage: React.FC = () => {
           >
             {filteredJobs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredJobs.map((job, index) => (
-                  <motion.div
-                    key={job.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <JobCard job={job} linkTo={`/jobs/${job.id}`} />
-                  </motion.div>
-                ))}
+                {filteredJobs.map((job, index) => {
+                  const application = applications.get(job.id);
+                  return (
+                    <motion.div
+                      key={job.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <JobCard 
+                        job={job} 
+                        linkTo={`/jobs/${job.id}`} 
+                        application={application}
+                      />
+                    </motion.div>
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-20">

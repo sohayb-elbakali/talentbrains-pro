@@ -259,6 +259,7 @@ export default function TalentProfileUpdateModal({
         refetch(),
         queryClient.invalidateQueries({ queryKey: ['user-data'] }),
         queryClient.invalidateQueries({ queryKey: ['talent'] }),
+        queryClient.invalidateQueries({ queryKey: ['talent-skills'] }),
         queryClient.invalidateQueries({ queryKey: ['talent-applications'] }),
         queryClient.invalidateQueries({ queryKey: ['talent-matches'] }),
         queryClient.invalidateQueries({ queryKey: ['talent-analytics'] }),

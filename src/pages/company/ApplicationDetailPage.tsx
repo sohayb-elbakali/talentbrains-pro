@@ -10,6 +10,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ApplicationDetail {
   id: string;
@@ -52,6 +53,7 @@ const ApplicationDetailPage = () => {
   const { applicationId } = useParams<{ applicationId: string }>();
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [application, setApplication] = useState<ApplicationDetail | null>(null);
   const [talentSkills, setTalentSkills] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,10 +148,13 @@ const ApplicationDetailPage = () => {
       
       if (error) throw error;
       
-      toast.success(`Status updated to ${confirmModal.status}`);
+      // Invalidate cache to refresh all application lists
+      queryClient.invalidateQueries({ queryKey: ['company-applications'] });
+      
+      notificationManager.showSuccess(`Status updated to ${confirmModal.status}`);
       fetchApplicationDetail();
     } catch (err: any) {
-      toast.error("Failed to update status");
+      notificationManager.showError("Failed to update status");
     } finally {
       setUpdatingStatus(false);
     }
@@ -320,35 +325,53 @@ const ApplicationDetailPage = () => {
               transition={{ delay: 0.1 }}
               className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl shadow-2xl border-2 border-purple-200 p-8 text-white"
             >
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                  <Send size={24} />
-                </div>
-                Quick Actions
-              </h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold flex items-center gap-3">
+                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <Send size={24} />
+                  </div>
+                  Quick Actions
+                </h3>
+                {updatingStatus && (
+                  <div className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm font-semibold">Updating...</span>
+                  </div>
+                )}
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
                   onClick={() => openConfirmModal('interview')}
-                  disabled={updatingStatus || application.status === 'interview'}
+                  disabled={updatingStatus}
                   className="group relative overflow-hidden bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/30 rounded-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <div className="relative">
-                    <Calendar className="h-8 w-8 mb-3 mx-auto" />
+                    <Calendar className="h-8 w-8 mb-3 mx-auto group-hover:rotate-12 transition-transform duration-300" />
                     <p className="font-bold text-sm">Schedule Interview</p>
+                    {application.status === 'interview' && (
+                      <span className="absolute top-0 right-0 bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded-full">
+                        ✓ Active
+                      </span>
+                    )}
                   </div>
                 </button>
 
                 <button
                   onClick={() => openConfirmModal('offer')}
-                  disabled={updatingStatus || application.status === 'offer'}
+                  disabled={updatingStatus}
                   className="group relative overflow-hidden bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/30 rounded-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <div className="relative">
-                    <Star className="h-8 w-8 mb-3 mx-auto" />
+                    <Star className="h-8 w-8 mb-3 mx-auto group-hover:scale-110 transition-transform duration-300" />
                     <p className="font-bold text-sm">Make Offer</p>
+                    {application.status === 'offer' && (
+                      <span className="absolute top-0 right-0 bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded-full">
+                        ✓ Active
+                      </span>
+                    )}
                   </div>
                 </button>
 
@@ -359,10 +382,30 @@ const ApplicationDetailPage = () => {
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <div className="relative">
-                    <XCircle className="h-8 w-8 mb-3 mx-auto" />
+                    <XCircle className="h-8 w-8 mb-3 mx-auto group-hover:rotate-90 transition-transform duration-300" />
                     <p className="font-bold text-sm">Reject</p>
+                    {application.status === 'rejected' && (
+                      <span className="absolute top-0 right-0 bg-red-400 text-red-900 text-xs font-bold px-2 py-1 rounded-full">
+                        ✓ Done
+                      </span>
+                    )}
                   </div>
                 </button>
+              </div>
+
+              {/* Status Description */}
+              <div className="mt-6 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                <p className="text-sm">
+                  <span className="font-semibold">Current Status:</span>{' '}
+                  {statusConfig.label}
+                </p>
+                <p className="text-xs text-white/80 mt-1">
+                  {application.status === 'pending' && '⏳ Review this application to move it forward'}
+                  {application.status === 'reviewed' && '✓ Application reviewed - Ready for next steps'}
+                  {application.status === 'interview' && '📅 Interview phase - Schedule or conduct meeting'}
+                  {application.status === 'offer' && '🎉 Offer extended - Awaiting candidate response'}
+                  {application.status === 'rejected' && '❌ Application has been declined'}
+                </p>
               </div>
 
               <div className="mt-6 pt-6 border-t-2 border-white/20">

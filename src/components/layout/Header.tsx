@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth, useUserData } from "../../hooks/useAuth";
 import { sessionManager } from "../../utils/sessionManager";
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -74,7 +74,22 @@ export default function Header() {
     }
   ];
 
-  const { isAuthenticated, profile, signOut } = useAuth();
+  const { isAuthenticated, profile, signOut, user } = useAuth();
+  const { data: userData } = useUserData(user?.id);
+
+  // Get display name based on role
+  const getDisplayName = () => {
+    if (!profile) return 'User';
+    
+    // For company users, ONLY show company name (not full_name from profile)
+    if (profile.role === 'company') {
+      return userData?.company?.name || 'Company';
+    }
+    
+    return profile.full_name || 'User';
+  };
+
+  const displayName = getDisplayName();
 
   // Get the appropriate home URL based on user role
   const getHomeUrl = () => {
@@ -353,26 +368,26 @@ export default function Header() {
                         <div className="w-9 h-9 rounded-lg overflow-hidden border-2 border-purple-200 group-hover:border-purple-400 transition-colors">
                           <CompanyLogo
                             avatarUrl={profile?.avatar_url}
-                            companyName={profile?.full_name || 'Company'}
+                            companyName={displayName}
                             size="sm"
                             className="w-full h-full"
                           />
                         </div>
                       ) : (
-                        <img
-                          src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
-                          alt={profile?.full_name}
-                          className="w-9 h-9 rounded-full object-cover border-2 border-purple-200 group-hover:border-purple-400 transition-colors"
+                          <img
+                          src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                          alt={displayName}
+                          className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:ring-purple-500 transition-all"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'User')}&background=8B5CF6&color=fff&size=128&bold=true`;
+                            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8B5CF6&color=fff&size=128&bold=true`;
                           }}
                         />
                       )}
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                     </div>
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-purple-600 transition-colors">
-                      {profile?.full_name}
+                    <span className="text-base font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                      {displayName}
                     </span>
                   </button>
 
@@ -393,19 +408,19 @@ export default function Header() {
                                 <div className="w-14 h-14 rounded-xl overflow-hidden border-2 border-white/30 shadow-lg">
                                   <CompanyLogo
                                     avatarUrl={profile?.avatar_url}
-                                    companyName={profile?.full_name || 'Company'}
+                                    companyName={displayName}
                                     size="md"
                                     className="w-full h-full"
                                   />
                                 </div>
                               ) : (
                                 <img
-                                  src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
-                                  alt={profile?.full_name}
-                                  className="w-14 h-14 rounded-xl object-cover border-2 border-white/30 shadow-lg"
+                                  src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                                  alt={displayName}
+                                  className="w-16 h-16 rounded-full object-cover shadow-lg ring-4 ring-white"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
-                                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'User')}&background=8B5CF6&color=fff&size=128&bold=true`;
+                                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8B5CF6&color=fff&size=128&bold=true`;
                                   }}
                                 />
                               )}
@@ -413,7 +428,7 @@ export default function Header() {
                             </div>
                             <div>
                               <p className="text-base font-bold text-white">
-                                {profile?.full_name || 'User'}
+                                {displayName || 'User'}
                               </p>
                               <p className="text-xs text-purple-100 capitalize font-medium">
                                 {profile?.role} Account
@@ -543,19 +558,19 @@ export default function Header() {
                             <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-purple-200 shadow-md">
                               <CompanyLogo
                                 avatarUrl={profile?.avatar_url}
-                                companyName={profile?.full_name || 'Company'}
+                                companyName={displayName}
                                 size="lg"
                                 className="w-full h-full"
                               />
                             </div>
                           ) : (
-                            <img
-                              src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
-                              alt={profile?.full_name}
-                              className="w-16 h-16 rounded-xl object-cover border-2 border-purple-200 shadow-md"
+                              <img
+                              src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                              alt={displayName}
+                              className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'User')}&background=8B5CF6&color=fff&size=128&bold=true`;
+                                target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8B5CF6&color=fff&size=128&bold=true`;
                               }}
                             />
                           )}
@@ -563,7 +578,7 @@ export default function Header() {
                         </div>
                         <div>
                           <p className="font-bold text-gray-900">
-                            {profile?.full_name || 'User'}
+                            {displayName || 'User'}
                           </p>
                           <p className="text-sm text-gray-500 capitalize">
                             {profile?.role} Account

@@ -22,6 +22,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from '../../lib/supabase';
 import type { Application } from '../../types/database';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ApplicationWithDetails extends Application {
   job: {
@@ -65,6 +66,7 @@ interface ApplicationWithDetails extends Application {
 const CompanyApplicantDetailPage = () => {
   const { applicationId } = useParams<{ applicationId: string }>();
   const { profile } = useAuth();
+  const queryClient = useQueryClient();
   const {
     data,
     isLoading: userDataLoading,
@@ -139,10 +141,16 @@ const CompanyApplicantDetailPage = () => {
 
       if (error) throw error;
 
+      // Update local state immediately
       setApplication((prev) => (prev ? { ...prev, ...updates } : null));
-      toast.success(`Application status updated to ${newStatus}`);
+      
+      // Invalidate React Query cache to refresh data
+      queryClient.invalidateQueries({ queryKey: ['company-applications'] });
+      
+      // Show success notification
+      notificationManager.showSuccess(`Application status updated to ${newStatus}`);
     } catch (err: any) {
-      toast.error("Failed to update application status");
+      notificationManager.showError("Failed to update application status");
       console.error(err);
     } finally {
       setUpdating(false);
@@ -166,9 +174,13 @@ const CompanyApplicantDetailPage = () => {
       if (error) throw error;
 
       setApplication((prev) => (prev ? { ...prev, ...updates } : null));
-      toast.success("Notes and feedback saved successfully");
+      
+      // Invalidate cache
+      queryClient.invalidateQueries({ queryKey: ['company-applications'] });
+      
+      notificationManager.showSuccess("Notes and feedback saved successfully");
     } catch (err: any) {
-      toast.error("Failed to save notes and feedback");
+      notificationManager.showError("Failed to save notes and feedback");
       console.error(err);
     } finally {
       setUpdating(false);
@@ -481,30 +493,76 @@ const CompanyApplicantDetailPage = () => {
           </div>
 
           {/* Status Actions */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Update Status</h3>
+          <div className="bg-gradient-to-br from-white to-purple-50 rounded-2xl shadow-xl border-2 border-purple-100 p-6 hover:shadow-2xl transition-shadow duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                Update Application Status
+              </h3>
+              {updating && (
+                <div className="flex items-center space-x-2 text-purple-600">
+                  <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm font-medium">Updating...</span>
+                </div>
+              )}
+            </div>
             <div className="space-y-3">
               <button
                 onClick={() => handleStatusUpdate('interview')}
                 disabled={updating || application.status === 'interview'}
-                className="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group w-full px-5 py-3.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-purple-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2"
               >
-                Schedule Interview
+                <Calendar className="h-5 w-5" />
+                <span>Schedule Interview</span>
               </button>
               <button
                 onClick={() => handleStatusUpdate('offer')}
                 disabled={updating || application.status === 'offer'}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group w-full px-5 py-3.5 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-green-700 hover:to-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2"
               >
-                Make Offer
+                <CheckCircle className="h-5 w-5" />
+                <span>Make Offer</span>
               </button>
               <button
                 onClick={() => handleStatusUpdate('rejected')}
                 disabled={updating || application.status === 'rejected'}
-                className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group w-full px-5 py-3.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2"
               >
-                Reject Application
+                <XCircle className="h-5 w-5" />
+                <span>Reject Application</span>
               </button>
+            </div>
+            
+            {/* Status Description */}
+            <div className="mt-4 p-4 bg-white/50 backdrop-blur-sm rounded-xl border border-purple-200">
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold text-gray-900">Current Status:</span>{' '}
+                {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+              </p>
+              {application.status === 'pending' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  ⏳ Awaiting review - Take action to move this application forward
+                </p>
+              )}
+              {application.status === 'reviewed' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  ✓ Reviewed - Ready for next steps
+                </p>
+              )}
+              {application.status === 'interview' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  📅 Interview scheduled - Prepare for candidate meeting
+                </p>
+              )}
+              {application.status === 'offer' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  🎉 Offer extended - Awaiting candidate response
+                </p>
+              )}
+              {application.status === 'rejected' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  ❌ Application declined
+                </p>
+              )}
             </div>
           </div>
 

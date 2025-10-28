@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
-import CompanyLogo from "../../components/CompanyLogo";
 import { useRealtimeQuery } from "../../hooks/useRealtimeQuery";
 
 interface Application {
@@ -19,7 +18,6 @@ interface Application {
     salary_max?: number;
     companies: {
       name: string;
-      logo_url?: string;
     };
   };
 }
@@ -45,9 +43,9 @@ const TalentApplicationsPage = () => {
     filter: `profile_id=eq.${profile?.id}`,
   });
 
-  // Fetch applications with real-time updates
+  // Fetch applications with real-time updates (already includes company avatars)
   const { data: applications = [], isLoading: loading, error } = useRealtimeQuery({
-    queryKey: ['applications', talentData?.id],
+    queryKey: ['applications-v2', talentData?.id],
     queryFn: async () => {
       if (!talentData?.id) return [];
       const { data, error } = await db.getApplications({ talent_id: talentData.id });
@@ -55,7 +53,7 @@ const TalentApplicationsPage = () => {
       return data || [];
     },
     enabled: !!talentData?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes - longer since we have real-time
+    staleTime: 0,
     table: 'applications',
     filter: `talent_id=eq.${talentData?.id}`,
   });
@@ -81,45 +79,45 @@ const TalentApplicationsPage = () => {
 
   const getStatusConfig = (status: Application["status"]) => {
     const configs = {
-      pending: { 
-        icon: Clock, 
-        class: "bg-gradient-to-r from-yellow-400 to-orange-400 text-white", 
+      pending: {
+        icon: Clock,
+        class: "bg-gradient-to-r from-yellow-400 to-orange-400 text-white",
         label: "Pending Review",
         bgClass: "bg-yellow-50 border-yellow-200"
       },
-      reviewed: { 
-        icon: Eye, 
-        class: "bg-gradient-to-r from-blue-400 to-cyan-400 text-white", 
+      reviewed: {
+        icon: Eye,
+        class: "bg-gradient-to-r from-blue-400 to-cyan-400 text-white",
         label: "Reviewed",
         bgClass: "bg-blue-50 border-blue-200"
       },
-      interview: { 
-        icon: Calendar, 
-        class: "bg-gradient-to-r from-purple-400 to-pink-400 text-white", 
+      interview: {
+        icon: Calendar,
+        class: "bg-gradient-to-r from-purple-400 to-pink-400 text-white",
         label: "Interview Scheduled",
         bgClass: "bg-purple-50 border-purple-200"
       },
-      offer: { 
-        icon: CheckCircle, 
-        class: "bg-gradient-to-r from-green-400 to-emerald-400 text-white", 
+      offer: {
+        icon: CheckCircle,
+        class: "bg-gradient-to-r from-green-400 to-emerald-400 text-white",
         label: "Offer Received",
         bgClass: "bg-green-50 border-green-200"
       },
-      accepted: { 
-        icon: CheckCircle, 
-        class: "bg-gradient-to-r from-green-500 to-teal-500 text-white", 
+      accepted: {
+        icon: CheckCircle,
+        class: "bg-gradient-to-r from-green-500 to-teal-500 text-white",
         label: "Accepted",
         bgClass: "bg-green-50 border-green-200"
       },
-      rejected: { 
-        icon: XCircle, 
-        class: "bg-gradient-to-r from-red-400 to-pink-400 text-white", 
+      rejected: {
+        icon: XCircle,
+        class: "bg-gradient-to-r from-red-400 to-pink-400 text-white",
         label: "Not Selected",
         bgClass: "bg-red-50 border-red-200"
       },
-      withdrawn: { 
-        icon: XCircle, 
-        class: "bg-gradient-to-r from-gray-400 to-gray-500 text-white", 
+      withdrawn: {
+        icon: XCircle,
+        class: "bg-gradient-to-r from-gray-400 to-gray-500 text-white",
         label: "Withdrawn",
         bgClass: "bg-gray-50 border-gray-200"
       },
@@ -232,8 +230,8 @@ const TalentApplicationsPage = () => {
             <Briefcase className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">No applications found</h3>
             <p className="text-gray-500 text-lg mb-6">
-              {searchTerm || statusFilter !== "all" 
-                ? "Try adjusting your filters" 
+              {searchTerm || statusFilter !== "all"
+                ? "Try adjusting your filters"
                 : "Start applying to jobs to see them here"}
             </p>
             <button
@@ -248,7 +246,7 @@ const TalentApplicationsPage = () => {
             {filteredApplications.map((app: Application, index: number) => {
               const statusConfig = getStatusConfig(app.status);
               const StatusIcon = statusConfig.icon;
-              
+
               return (
                 <motion.div
                   key={app.id}
@@ -259,22 +257,8 @@ const TalentApplicationsPage = () => {
                   className={`group relative bg-white rounded-2xl shadow-lg border-2 ${statusConfig.bgClass} p-6 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
                 >
                   <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-100 to-blue-100 opacity-0 group-hover:opacity-20 rounded-full -mr-32 -mt-32 transition-opacity duration-300"></div>
-                  
-                  <div className="relative flex flex-col sm:flex-row items-start gap-6">
-                    <div className="relative">
-                      <div className="w-20 h-20 rounded-2xl border-4 border-white shadow-lg ring-2 ring-purple-100 overflow-hidden">
-                        <CompanyLogo
-                          avatarUrl={app.job?.companies?.logo_url}
-                          companyName={app.job?.companies?.name || 'Company'}
-                          size="xl"
-                          className="w-full h-full"
-                        />
-                      </div>
-                      <div className={`absolute -bottom-2 -right-2 p-2 rounded-xl ${statusConfig.class} shadow-lg`}>
-                        <StatusIcon size={16} />
-                      </div>
-                    </div>
-                    
+
+                  <div className="relative">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div>

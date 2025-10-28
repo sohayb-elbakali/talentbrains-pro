@@ -250,7 +250,7 @@ export default function CompanyProfileUpdateModal({
       onClose();
     } catch (error) {
       console.error("Error updating company profile:", error);
-      toast.error("Failed to update company profile. Please try again.");
+      notificationManager.showError("Failed to update company profile. Please try again.");
     } finally {
       setLoading(false);
     }

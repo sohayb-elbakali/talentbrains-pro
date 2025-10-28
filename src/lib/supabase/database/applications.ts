@@ -3,8 +3,10 @@ import { handleApiCall } from "../client";
 
 export const applications = {
   getApplications: async (filters: any = {}) => {
+    console.log("🔍🔍🔍 getApplications called with filters:", filters);
     return handleApiCall(async () => {
       try {
+        console.log("🔍🔍🔍 Inside handleApiCall");
         let query = supabase
           .from("applications")
           .select(
@@ -35,8 +37,7 @@ export const applications = {
             employment_type,
             companies:companies!inner(
               id,
-              name,
-              logo_url
+              name
             )
           )
         `
@@ -72,6 +73,11 @@ export const applications = {
         }
 
         const { data, error } = await query;
+        
+        if (error) {
+          return { data: null, error };
+        }
+
         return { data, error };
       } catch (error) {
         return {

@@ -108,6 +108,7 @@ export const skills = {
   getJobSkills: async (jobId: string) => {
     return handleApiCall(async () => {
       try {
+        console.log("🔍 getJobSkills called for jobId:", jobId);
         const { data, error } = await supabase
           .from("job_skills")
           .select(
@@ -123,19 +124,30 @@ export const skills = {
           )
           .eq("job_id", jobId);
 
+        console.log("🔍 Raw job skills data:", data);
+        console.log("🔍 Error:", error);
+
         if (error) {
           return { data: null, error };
         }
 
-        const skillsData = data?.map((item: any) => ({
-          id: item.skill.id,
-          name: item.skill.name,
-          category: item.skill.category,
-          proficiency_level: item.proficiency_level,
-          is_required: item.is_required
-        })) || [];
+        const skillsData = data?.map((item: any) => {
+          console.log("🔍 Processing item:", item);
+          return {
+            skill_id: item.skill?.id,
+            skill_name: item.skill?.name, // Add skill_name for compatibility
+            name: item.skill?.name, // Keep name as well
+            category: item.skill?.category,
+            proficiency_level: item.proficiency_level,
+            is_required: item.is_required,
+            skill: item.skill // Include the full skill object
+          };
+        }) || [];
+        
+        console.log("🔍 Transformed skills data:", skillsData);
         return { data: skillsData, error: null };
       } catch (error) {
+        console.error("🔍 getJobSkills error:", error);
         return {
           data: null,
           error: { message: "Failed to get job skills" },
