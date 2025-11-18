@@ -59,13 +59,11 @@ const CreateJobPage: React.FC = () => {
             skill.is_required !== undefined ? skill.is_required : true
           );
         } catch (skillError) {
-          console.error("Error adding skill:", skillError);
           // Continue with other skills even if one fails
         }
       }
     }
 
-    console.log("Job created successfully:", createdJob);
     notificationManager.showSuccess("Job posted successfully!");
     navigate("/company/jobs");
   };

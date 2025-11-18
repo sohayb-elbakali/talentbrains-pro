@@ -104,7 +104,6 @@ export const fetchJobs = async (params: {
       totalCount: data?.length || 0,
     };
   } catch (error) {
-    console.error('Error fetching jobs:', error);
     throw error;
   }
 };
@@ -159,7 +158,6 @@ export const fetchTalents = async (params: {
       totalCount: data?.length || 0,
     };
   } catch (error) {
-    console.error('Error fetching talents:', error);
     throw error;
   }
 };
@@ -195,7 +193,6 @@ export const fetchApplications = async (params: {
       totalCount: data?.length || 0,
     };
   } catch (error) {
-    console.error('Error fetching applications:', error);
     throw error;
   }
 };

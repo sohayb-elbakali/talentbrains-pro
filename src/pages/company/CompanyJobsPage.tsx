@@ -91,7 +91,14 @@ const CompanyJobsPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="text-center p-8">Loading your job postings...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-lg font-medium text-gray-700">Loading jobs...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {

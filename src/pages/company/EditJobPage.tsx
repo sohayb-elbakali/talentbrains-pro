@@ -75,7 +75,7 @@ export default function EditJobPage() {
                             skill.is_required !== undefined ? skill.is_required : true
                         );
                     } catch (skillError) {
-                        console.error("Error adding skill:", skillError);
+                        // Silently handle skill addition errors
                     }
                 }
             }

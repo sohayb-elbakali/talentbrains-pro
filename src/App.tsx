@@ -35,6 +35,7 @@ import SettingsPage from "./pages/SettingsPage";
 import TalentApplicationsPage from "./pages/talent/TalentApplicationsPage";
 import TalentProfilePage from "./pages/TalentProfilePage";
 import TalentsPage from "./pages/TalentsPage";
+import TalentPublicProfilePage from "./pages/TalentPublicProfilePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -230,6 +231,14 @@ function AppContent() {
           element={
             <ProtectedRoute allowedRoles={["company"]}>
               <TalentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/talents/:profileId"
+          element={
+            <ProtectedRoute allowedRoles={["company"]}>
+              <TalentPublicProfilePage />
             </ProtectedRoute>
           }
         />

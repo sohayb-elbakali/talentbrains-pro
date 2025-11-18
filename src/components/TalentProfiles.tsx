@@ -1,47 +1,22 @@
 import { Award, Filter, Heart, MapPin, MessageCircle, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TalentWithProfile } from '../types/talent';
 import { db } from '../lib/supabase';
-import ProfileModal from './ProfileModal';
 import LoadingSpinner from './LoadingSpinner';
 
 export default function TalentProfiles() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTalent, setSelectedTalent] = useState<TalentWithProfile | null>(null);
   const [talents, setTalents] = useState<TalentWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  const handleViewProfile = (talent: TalentWithProfile) => {
-    setSelectedTalent(talent);
-    setIsModalOpen(true);
-  };
-
-  // Convert TalentWithProfile to Profile for the modal
-  const convertToProfile = (talent: TalentWithProfile) => {
-    const skills = getSkills(talent);
-    return {
-      id: parseInt(talent.id.slice(-8), 16), // Convert UUID to number for compatibility
-      name: talent.profile.full_name,
-      tagline: talent.title,
-      location: talent.location || 'Location not specified',
-      rate: formatHourlyRate(talent),
-      skills: skills,
-      about: talent.bio || 'No bio available',
-      avatar: talent.profile.avatar_url,
-      experience: getExperienceDisplay(talent),
-      education: talent.education?.map(edu => `${edu.degree} from ${edu.institution}`) || [],
-      certifications: talent.certifications?.map(cert => cert.name) || []
-    };
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedTalent(null);
+  const handleViewProfile = (talentId: string) => {
+    navigate(`/talents/${talentId}`);
   };
 
   // Fetch talents from database
@@ -74,15 +49,11 @@ export default function TalentProfiles() {
 
       const { data, error: fetchError } = await db.getTalents(filters);
 
-      console.log('Talents fetch result:', { data, error: fetchError, filters });
-
       if (fetchError) {
-        console.error('Talents fetch error:', fetchError);
         throw new Error(fetchError.message || 'Failed to fetch talents');
       }
 
       const newTalents = data || [];
-      console.log('New talents:', newTalents);
 
       if (reset) {
         setTalents(newTalents);
@@ -180,19 +151,8 @@ export default function TalentProfiles() {
 
   return (
     <>
-      <section className="py-20 bg-white">
+      <section className="pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Meet Our{' '}
-              <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Top Talents
-              </span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Connect with verified professionals who have the skills and experience to bring your projects to life.
-            </p>
-          </div>
 
           {/* Search and Filters */}
           <div className="mb-8 space-y-4 lg:space-y-0 lg:flex lg:items-center lg:justify-between">
@@ -369,7 +329,7 @@ export default function TalentProfiles() {
                         {/* Actions */}
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => handleViewProfile(talent)}
+                            onClick={() => handleViewProfile(talent.profile_id)}
                             className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium text-sm"
                           >
                             View Profile
@@ -426,13 +386,6 @@ export default function TalentProfiles() {
           )}
         </div>
       </section>
-      {selectedTalent && (
-        <ProfileModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          profile={convertToProfile(selectedTalent)}
-        />
-      )}
     </>
   );
 }

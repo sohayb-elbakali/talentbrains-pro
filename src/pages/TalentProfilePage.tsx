@@ -1,8 +1,7 @@
-import { Camera, Edit, User } from "lucide-react";
+import { Edit, User } from "lucide-react";
 import { useState } from "react";
 import { notificationManager } from "../utils/notificationManager";
 import AvatarSelector from "../components/AvatarSelector";
-import LoadingSpinner from "../components/LoadingSpinner";
 import TalentProfileUpdateModal from "../components/talent/TalentProfileUpdateModal";
 import TalentProfileView from "../components/talent/TalentProfileView";
 import { useAuth, useUserData } from "../hooks/useAuth";
@@ -14,11 +13,7 @@ export default function TalentProfilePage() {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
 
-  // Debug logging
-  console.log("TalentProfilePage - user:", user?.id);
-  console.log("TalentProfilePage - data:", data);
-  console.log("TalentProfilePage - isLoading:", isLoading);
-  console.log("TalentProfilePage - error:", error);
+
 
   const handleUpdateComplete = async () => {
     setIsUpdateModalOpen(false);
@@ -44,13 +39,21 @@ export default function TalentProfilePage() {
       await refetch();
       notificationManager.showSuccess("Avatar updated successfully!");
     } catch (error) {
-      console.error("Avatar update error:", error);
       notificationManager.showError("Failed to update avatar");
     }
   };
 
   if (isLoading) {
-    return <LoadingSpinner fullScreen text="Loading talent profile..." />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative inline-block mb-4">
+            <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+          </div>
+          <p className="text-lg font-medium text-gray-700">Loading profile...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -72,11 +75,6 @@ export default function TalentProfilePage() {
 
   const talentData = data?.talent;
   const profile = data?.profile;
-
-  console.log("TalentProfilePage - talentData:", talentData);
-  console.log("TalentProfilePage - profile:", profile);
-
-  // Show debug info if no data
   if (!data) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

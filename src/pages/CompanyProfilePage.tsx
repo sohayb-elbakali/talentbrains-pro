@@ -1,10 +1,9 @@
-import { Building, Camera, Edit } from "lucide-react";
+import { Building, Edit } from "lucide-react";
 import { useState } from "react";
 import { notificationManager } from "../utils/notificationManager";
 import AvatarSelector from "../components/AvatarSelector";
 import CompanyProfileUpdateModal from "../components/company/CompanyProfileUpdateModal";
 import CompanyProfileView from "../components/company/CompanyProfileView";
-import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth, useUserData } from "../hooks/useAuth";
 import { db } from "../lib/supabase";
 
@@ -38,13 +37,21 @@ export default function CompanyProfilePage() {
       await refetch();
       notificationManager.showSuccess("Avatar updated successfully!");
     } catch (error) {
-      console.error("Avatar update error:", error);
       notificationManager.showError("Failed to update avatar");
     }
   };
 
   if (isLoading) {
-    return <LoadingSpinner fullScreen text="Loading company profile..." />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative inline-block mb-4">
+            <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+          </div>
+          <p className="text-lg font-medium text-gray-700">Loading profile...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {

@@ -76,10 +76,7 @@ const JobDetailPage: React.FC = () => {
         }
         setJob(data);
 
-        // Fetch job skills
-        const { data: skillsData, error: skillsError } = await db.getJobSkills(jobId);
-        console.log("🔍 Job skills data:", skillsData);
-        console.log("🔍 Job skills error:", skillsError);
+        const { data: skillsData } = await db.getJobSkills(jobId);
         setJobSkills(skillsData || []);
       } catch (err) {
         notificationManager.showError("An unexpected error occurred");
@@ -106,7 +103,7 @@ const JobDetailPage: React.FC = () => {
           setExistingApplication(data[0]);
         }
       } catch (err) {
-        console.error("Error checking application:", err);
+        // Silently handle error
       } finally {
         setCheckingApplication(false);
       }
@@ -188,8 +185,6 @@ const JobDetailPage: React.FC = () => {
             .upload(fileName, resumeFile);
 
           if (uploadError) {
-            console.error("Resume upload error:", uploadError);
-
             // If bucket doesn't exist, inform user to use URL instead
             if (uploadError.message.includes("not found") || uploadError.message.includes("does not exist")) {
               notificationManager.showError("Resume upload not configured. Please use a resume URL instead (Google Drive, Dropbox, etc.)");
@@ -232,7 +227,6 @@ const JobDetailPage: React.FC = () => {
 
       const { data: newApplication, error } = await db.createApplication(applicationData);
       if (error) {
-        console.error("Application error:", error);
         notificationManager.showError(
           "Failed to submit application: " + (error.message || "Unknown error")
         );
@@ -245,7 +239,6 @@ const JobDetailPage: React.FC = () => {
         setResumeFile(null);
       }
     } catch (err: any) {
-      console.error("Unexpected error during application:", err);
       notificationManager.showError("An unexpected error occurred.");
     } finally {
       setSubmitting(false);
@@ -276,10 +269,10 @@ const JobDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading job details...</p>
+          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-lg font-medium text-gray-700">Loading job...</p>
         </div>
       </div>
     );

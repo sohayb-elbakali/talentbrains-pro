@@ -22,8 +22,6 @@ export class CustomError extends Error {
 }
 
 export const handleError = (error: any, operation: string) => {
-  console.error(`${operation} error:`, error);
-
   // Check if this is a 304 Not Modified response that should be treated as success
   if (
     error?.statusCode === 304 ||
@@ -116,9 +114,7 @@ export const logError = (
     url: window.location.href,
   };
 
-  // In production, you would send this to your logging service
-  console.error("Error Log:", errorLog);
-
+  // In production, send this to your logging service
   // Example: Send to logging service
   // sendToLoggingService(errorLog)
 };

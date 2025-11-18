@@ -57,7 +57,6 @@ const JobDetailPage: React.FC = () => {
         const { data, error } = await db.getJob(jobId);
 
         if (error) {
-          console.error("Error fetching job:", error);
           notificationManager.showError("Failed to load job details");
           return;
         }
@@ -75,7 +74,6 @@ const JobDetailPage: React.FC = () => {
         const { data: skillsData } = await db.getJobSkills(jobId);
         setJobSkills(skillsData || []);
       } catch (error) {
-        console.error("Unexpected error:", error);
         notificationManager.showError("An unexpected error occurred");
       } finally {
         setLoading(false);
@@ -104,7 +102,6 @@ const JobDetailPage: React.FC = () => {
       const { error } = await db.deleteJob(jobId!);
 
       if (error) {
-        console.error("Error deleting job:", error);
         notificationManager.showError("Failed to delete job");
         return;
       }
@@ -112,7 +109,6 @@ const JobDetailPage: React.FC = () => {
       notificationManager.showSuccess("Job deleted successfully");
       navigate("/company/jobs");
     } catch (error) {
-      console.error("Unexpected error:", error);
       notificationManager.showError("An unexpected error occurred");
     }
   };
@@ -126,7 +122,6 @@ const JobDetailPage: React.FC = () => {
       const { error } = await db.updateJob(jobId!, { status: newStatus });
 
       if (error) {
-        console.error("Error updating job status:", error);
         notificationManager.showError("Failed to update job status");
         return;
       }
@@ -136,7 +131,6 @@ const JobDetailPage: React.FC = () => {
         `Job ${newStatus === "active" ? "activated" : "paused"} successfully`
       );
     } catch (error) {
-      console.error("Unexpected error:", error);
       notificationManager.showError("An unexpected error occurred");
     }
   };
