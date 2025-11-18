@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Briefcase, DollarSign, MapPin, User, FileText, Award, Link2, Linkedin, Github, Globe, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { useState } from 'react';
-import { notificationManager } from '../../utils/notificationManager';
+import { notify } from "../../utils/notify";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { db } from '../../lib/supabase/index';
@@ -169,7 +169,7 @@ export default function TalentProfileCompletion() {
       }
 
       await checkProfileCompletion(true);
-      notificationManager.showProfileCompletionSuccess();
+      notify.showProfileCompletionSuccess();
       navigate('/talent');
     } catch (error: any) {
       console.error('Profile completion error:', error);

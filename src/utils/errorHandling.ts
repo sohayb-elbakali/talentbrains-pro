@@ -1,4 +1,4 @@
-import { notificationManager } from './notificationManager'
+import { notify } from './notify'
 
 export interface AppError {
   message: string
@@ -59,13 +59,13 @@ export const handleError = (error: any, operation: string) => {
 
   const friendlyMessage = userFriendlyMessages[message] || message;
 
-  notificationManager.showError(friendlyMessage);
+  notify.showError(friendlyMessage);
 
   return { success: false, error: { message: friendlyMessage } };
 };
 
 export const handleSuccess = (message: string) => {
-  notificationManager.showSuccess(message);
+  notify.showSuccess(message);
   return { success: true };
 };
 
@@ -139,12 +139,12 @@ export const handleNetworkError = (error: any): void => {
   }
 
   if (!navigator.onLine) {
-    notificationManager.showError("You are offline. Please check your internet connection.");
+    notify.showError("You are offline. Please check your internet connection.");
     return;
   }
 
   if (error?.code === "NETWORK_ERROR" || error?.message?.includes("fetch")) {
-    notificationManager.showNetworkError();
+    notify.showNetworkError();
     return;
   }
 
@@ -157,40 +157,40 @@ export const handleValidationError = (errors: string[]): void => {
     ? errors[0]
     : `Multiple validation errors: ${errors.join(', ')}`
 
-  notificationManager.showError(message)
+  notify.showError(message)
 }
 
 // Rate limiting error handling
 export const handleRateLimitError = (): void => {
-  notificationManager.showError('Too many requests. Please wait a moment before trying again.')
+  notify.showError('Too many requests. Please wait a moment before trying again.')
 }
 
 // Permission error handling
 export const handlePermissionError = (): void => {
-  notificationManager.showError('You do not have permission to perform this action.')
+  notify.showError('You do not have permission to perform this action.')
 }
 
 // File upload error handling
 export const handleFileUploadError = (error: any): void => {
   if (error?.code === 'file-too-large') {
-    notificationManager.showError('File is too large. Please choose a smaller file.')
+    notify.showError('File is too large. Please choose a smaller file.')
   } else if (error?.code === 'invalid-file-type') {
-    notificationManager.showError('Invalid file type. Please choose a supported file format.')
+    notify.showError('Invalid file type. Please choose a supported file format.')
   } else {
-    notificationManager.showUploadError('file')
+    notify.showUploadError('file')
   }
 }
 
 // Database error handling
 export const handleDatabaseError = (error: any): void => {
   if (error?.code === '23505') { // Unique constraint violation
-    notificationManager.showError('This record already exists.')
+    notify.showError('This record already exists.')
   } else if (error?.code === '23503') { // Foreign key constraint violation
-    notificationManager.showError('Cannot delete this record as it is referenced by other data.')
+    notify.showError('Cannot delete this record as it is referenced by other data.')
   } else if (error?.code === '42501') { // Insufficient privilege
-    notificationManager.showError('You do not have permission to perform this operation.')
+    notify.showError('You do not have permission to perform this operation.')
   } else {
-    notificationManager.showError('Database error occurred. Please try again.')
+    notify.showError('Database error occurred. Please try again.')
   }
 }
 

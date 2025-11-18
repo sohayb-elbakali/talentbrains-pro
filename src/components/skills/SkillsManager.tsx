@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Plus, Star, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { notificationManager } from '../../utils/notificationManager';
+import { notify } from "../../utils/notify";
 import { db } from '../../lib/supabase';
 
 interface Skill {
@@ -60,7 +60,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
             }
         } catch (err) {
             console.error('Error fetching skills:', err);
-            notificationManager.showError('Failed to load skills');
+            notify.showError('Failed to load skills');
         } finally {
             setLoading(false);
         }
@@ -68,7 +68,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
 
     const handleAddSkill = async () => {
         if (!selectedSkill) {
-            notificationManager.showError('Please select a skill');
+            notify.showError('Please select a skill');
             return;
         }
 
@@ -79,14 +79,14 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                 await db.addJobSkill?.(entityId, selectedSkill, proficiencyLevel, isRequired);
             }
 
-            notificationManager.showSuccess('Skill added successfully!');
+            notify.showSuccess('Skill added successfully!');
             setShowAddModal(false);
             resetForm();
             fetchData();
             onSkillsChange?.();
         } catch (err) {
             console.error('Error adding skill:', err);
-            notificationManager.showError('Failed to add skill');
+            notify.showError('Failed to add skill');
         }
     };
 

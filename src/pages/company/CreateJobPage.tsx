@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import React from 'react';
-import { notificationManager } from "../../utils/notificationManager";
+import { notify } from "../../utils/notify";
 import { useNavigate } from "react-router-dom";
 import JobForm from '../../components/company/JobForm';
 import { useAuth } from "../../hooks/useAuth";
@@ -13,18 +13,18 @@ const CreateJobPage: React.FC = () => {
 
   const handleSubmit = async (data: any) => {
     if (!user || !profile) {
-      notificationManager.showError("You must be signed in as a company to post a job.");
+      notify.showError("You must be signed in as a company to post a job.");
       return;
     }
     if (profile.role !== "company") {
-      notificationManager.showError("Only company accounts can post jobs.");
+      notify.showError("Only company accounts can post jobs.");
       return;
     }
     // Look up the company_id from the companies table using the user's profile id
     const { data: company, error: companyError } = await db.getCompany(user.id);
     if (!company || companyError) {
       console.error("Company lookup error:", companyError);
-      notificationManager.showError(
+      notify.showError(
         "Could not find your company profile. Please complete your company profile first."
       );
       return;
@@ -44,7 +44,7 @@ const CreateJobPage: React.FC = () => {
     const { data: createdJob, error } = await db.createJob(jobData);
     if (error) {
       console.error("Job creation error:", error);
-      notificationManager.showError(error.message || "Failed to create job");
+      notify.showError(error.message || "Failed to create job");
       return;
     }
 
@@ -64,7 +64,7 @@ const CreateJobPage: React.FC = () => {
       }
     }
 
-    notificationManager.showSuccess("Job posted successfully!");
+    notify.showSuccess("Job posted successfully!");
     navigate("/company/jobs");
   };
 

@@ -6,7 +6,8 @@ import {
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
-import { notificationManager } from "./utils/notificationManager";
+import { Toaster } from "sonner";
+import { notify } from "./utils/notify";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import CompanyDashboard from "./components/company/CompanyDashboard";
 import CompanyProfileCompletion from "./components/company/CompanyProfileCompletion";
@@ -304,7 +305,7 @@ function App() {
   useEffect(() => {
     const handleError = (event: any) => {
       if (event?.error?.message?.includes("message port closed")) {
-        notificationManager.showError(
+        notify.showError(
           "A browser extension or session error occurred. Try disabling extensions or clearing storage."
         );
         event.preventDefault();
@@ -312,7 +313,7 @@ function App() {
     };
     const handleUnhandledRejection = (event: any) => {
       if (event?.reason?.message?.includes("message port closed")) {
-        notificationManager.showError(
+        notify.showError(
           "A browser extension or session error occurred. Try disabling extensions or clearing storage."
         );
         event.preventDefault();
@@ -332,6 +333,22 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
+        <Toaster 
+          position="top-right" 
+          richColors 
+          expand={false} 
+          closeButton
+          offset="80px"
+          toastOptions={{
+            style: {
+              borderRadius: '16px',
+              padding: '16px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+            className: 'sonner-toast',
+          }}
+        />
         <Router>
           <AppContent />
         </Router>

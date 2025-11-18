@@ -1,6 +1,6 @@
 import { BarChart3, Brain, Clock, MessageSquare, Shield, Target, Users, Zap } from 'lucide-react';
 import React from 'react';
-import { notificationManager } from '../utils/notificationManager';
+import { notify } from "../utils/notify";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AuthModal from './auth/AuthModal';

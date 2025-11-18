@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Bookmark, BookmarkCheck, Briefcase, Building, Clock, DollarSign, Filter, MapPin, Search, Sparkles, TrendingUp, Users } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { notificationManager } from "../utils/notificationManager";
+import { notify } from "../utils/notify";
 import { Link } from 'react-router-dom';
 import { useAuth } from "../hooks/useAuth";
 import AuthModal from './auth/AuthModal';
@@ -119,7 +119,7 @@ export default function JobListings() {
     if (!user) {
       setAuthMode("signup");
       setIsAuthModalOpen(true);
-      notificationManager.showInfo("Please sign in to continue.");
+      notify.showInfo("Please sign in to continue.");
       return;
     }
     action();
@@ -131,10 +131,10 @@ export default function JobListings() {
         const newSet = new Set(prev);
         if (newSet.has(jobId)) {
           newSet.delete(jobId);
-          notificationManager.showSuccess('Job removed from saved');
+          notify.showSuccess('Job removed from saved');
         } else {
           newSet.add(jobId);
-          notificationManager.showSuccess('Job saved successfully!');
+          notify.showSuccess('Job saved successfully!');
         }
         return newSet;
       });

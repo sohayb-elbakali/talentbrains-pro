@@ -1,6 +1,6 @@
 import { Edit, User } from "lucide-react";
 import { useState } from "react";
-import { notificationManager } from "../utils/notificationManager";
+import { notify } from "../utils/notify";
 import AvatarSelector from "../components/AvatarSelector";
 import TalentProfileUpdateModal from "../components/talent/TalentProfileUpdateModal";
 import TalentProfileView from "../components/talent/TalentProfileView";
@@ -31,15 +31,15 @@ export default function TalentProfilePage() {
       });
 
       if (error) {
-        notificationManager.showError("Failed to update avatar");
+        notify.showError("Failed to update avatar");
         return;
       }
 
       // Refetch user data
       await refetch();
-      notificationManager.showSuccess("Avatar updated successfully!");
+      notify.showSuccess("Avatar updated successfully!");
     } catch (error) {
-      notificationManager.showError("Failed to update avatar");
+      notify.showError("Failed to update avatar");
     }
   };
 

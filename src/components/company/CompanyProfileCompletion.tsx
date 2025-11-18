@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { notificationManager } from "../../utils/notificationManager";
+import { notify } from "../../utils/notify";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { db } from '../../lib/supabase';
@@ -224,12 +224,12 @@ export default function CompanyProfileCompletion() {
       // Force refresh of profile completion status
       await checkProfileCompletion(true)
 
-      notificationManager.showSuccess("Company profile completed successfully!");
+      notify.showSuccess("Company profile completed successfully!");
       navigate('/company')
     } catch (error: any) {
       console.error('Error updating company profile:', error)
       const errorMessage = error?.message || 'Failed to save company profile. Please try again.';
-      notificationManager.showError(errorMessage);
+      notify.showError(errorMessage);
     } finally {
       setLoading(false)
     }

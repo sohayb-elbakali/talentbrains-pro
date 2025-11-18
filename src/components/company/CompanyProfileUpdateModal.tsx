@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { notificationManager } from "../../utils/notificationManager";
+import { notify } from "../../utils/notify";
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
 import { Company, CompanyUpdateData } from "../../types/database";
@@ -237,7 +237,7 @@ export default function CompanyProfileUpdateModal({
         queryClient.invalidateQueries({ queryKey: ['welcome-dashboard'] }),
       ]);
 
-      notificationManager.showSuccess("Company profile updated successfully!");
+      notify.showSuccess("Company profile updated successfully!");
       setHasUnsavedChanges(false);
 
       if (onUpdate && data) {
@@ -250,7 +250,7 @@ export default function CompanyProfileUpdateModal({
       onClose();
     } catch (error) {
       console.error("Error updating company profile:", error);
-      notificationManager.showError("Failed to update company profile. Please try again.");
+      notify.showError("Failed to update company profile. Please try again.");
     } finally {
       setLoading(false);
     }

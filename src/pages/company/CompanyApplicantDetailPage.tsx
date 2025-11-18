@@ -17,7 +17,7 @@ import {
     XCircle
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { notificationManager } from '../../utils/notificationManager';
+import { notify } from "../../utils/notify";
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from '../../lib/supabase';
@@ -148,9 +148,9 @@ const CompanyApplicantDetailPage = () => {
       queryClient.invalidateQueries({ queryKey: ['company-applications'] });
       
       // Show success notification
-      notificationManager.showSuccess(`Application status updated to ${newStatus}`);
+      notify.showSuccess(`Application status updated to ${newStatus}`);
     } catch (err: any) {
-      notificationManager.showError("Failed to update application status");
+      notify.showError("Failed to update application status");
     } finally {
       setUpdating(false);
     }
@@ -177,9 +177,9 @@ const CompanyApplicantDetailPage = () => {
       // Invalidate cache
       queryClient.invalidateQueries({ queryKey: ['company-applications'] });
       
-      notificationManager.showSuccess("Notes and feedback saved successfully");
+      notify.showSuccess("Notes and feedback saved successfully");
     } catch (err: any) {
-      notificationManager.showError("Failed to save notes and feedback");
+      notify.showError("Failed to save notes and feedback");
     } finally {
       setUpdating(false);
     }

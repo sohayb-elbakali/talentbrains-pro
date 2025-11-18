@@ -1,6 +1,6 @@
 import { Building, Edit } from "lucide-react";
 import { useState } from "react";
-import { notificationManager } from "../utils/notificationManager";
+import { notify } from "../utils/notify";
 import AvatarSelector from "../components/AvatarSelector";
 import CompanyProfileUpdateModal from "../components/company/CompanyProfileUpdateModal";
 import CompanyProfileView from "../components/company/CompanyProfileView";
@@ -29,15 +29,15 @@ export default function CompanyProfilePage() {
       });
 
       if (error) {
-        notificationManager.showError("Failed to update avatar");
+        notify.showError("Failed to update avatar");
         return;
       }
 
       // Refetch user data
       await refetch();
-      notificationManager.showSuccess("Avatar updated successfully!");
+      notify.showSuccess("Avatar updated successfully!");
     } catch (error) {
-      notificationManager.showError("Failed to update avatar");
+      notify.showError("Failed to update avatar");
     }
   };
 

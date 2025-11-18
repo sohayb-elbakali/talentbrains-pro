@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { notificationManager } from "../../utils/notificationManager";
+import { notify } from "../../utils/notify";
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
 import {
@@ -257,7 +257,7 @@ export default function TalentProfileUpdateModal({
           }
         } catch (skillError) {
           console.error("Error managing skills:", skillError);
-          notificationManager.showWarning("Skills updated with some errors");
+          notify.showWarning("Skills updated with some errors");
         }
       }
 
@@ -277,7 +277,7 @@ export default function TalentProfileUpdateModal({
       // Force refetch of skills
       await queryClient.refetchQueries({ queryKey: ['talent-skills', result.data?.id] });
 
-      notificationManager.showSuccess("Talent profile updated successfully!");
+      notify.showSuccess("Talent profile updated successfully!");
       setHasUnsavedChanges(false);
 
       if (onUpdate && result.data) {
@@ -290,7 +290,7 @@ export default function TalentProfileUpdateModal({
       onClose();
     } catch (error) {
       console.error("Error updating talent profile:", error);
-      notificationManager.showError("Failed to update talent profile. Please try again.");
+      notify.showError("Failed to update talent profile. Please try again.");
     } finally {
       setLoading(false);
     }

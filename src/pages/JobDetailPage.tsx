@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { CheckCircle, FileText, Link as LinkIcon, Upload, X } from "lucide-react";
 import React, { useEffect, useState, useMemo } from "react";
-import { notificationManager } from "../utils/notificationManager";
+import { notify } from "../utils/notify";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth, useUserData } from "../hooks/useAuth";
 import { db } from "../lib/supabase/index";
@@ -71,7 +71,7 @@ const JobDetailPage: React.FC = () => {
       try {
         const { data, error } = await db.getJob(jobId);
         if (error) {
-          notificationManager.showError("Failed to load job details");
+          notify.showError("Failed to load job details");
           return;
         }
         setJob(data);
@@ -79,7 +79,7 @@ const JobDetailPage: React.FC = () => {
         const { data: skillsData } = await db.getJobSkills(jobId);
         setJobSkills(skillsData || []);
       } catch (err) {
-        notificationManager.showError("An unexpected error occurred");
+        notify.showError("An unexpected error occurred");
       } finally {
         setLoading(false);
       }
@@ -122,12 +122,12 @@ const JobDetailPage: React.FC = () => {
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       ];
       if (!allowedTypes.includes(file.type)) {
-        notificationManager.showError("Please upload a PDF or Word document");
+        notify.showError("Please upload a PDF or Word document");
         return;
       }
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        notificationManager.showError("File size must be less than 5MB");
+        notify.showError("File size must be less than 5MB");
         return;
       }
       setResumeFile(file);
@@ -138,30 +138,30 @@ const JobDetailPage: React.FC = () => {
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !profile || !job) {
-      notificationManager.showError("You must be logged in as a talent to apply.");
+      notify.showError("You must be logged in as a talent to apply.");
       return;
     }
 
     // Check if already applied
     if (existingApplication) {
-      notificationManager.showError("You have already applied to this job.");
+      notify.showError("You have already applied to this job.");
       return;
     }
 
     if (!coverLetter.trim()) {
-      notificationManager.showError("Please write a cover letter");
+      notify.showError("Please write a cover letter");
       return;
     }
 
     if (!resumeUrl.trim() && !resumeFile) {
-      notificationManager.showError("Please provide a resume (upload file or URL)");
+      notify.showError("Please provide a resume (upload file or URL)");
       return;
     }
 
     setSubmitting(true);
     try {
       if (!talent) {
-        notificationManager.showError(
+        notify.showError(
           "Unable to find your talent profile. Please complete your profile first."
         );
         setSubmitting(false);
@@ -187,14 +187,14 @@ const JobDetailPage: React.FC = () => {
           if (uploadError) {
             // If bucket doesn't exist, inform user to use URL instead
             if (uploadError.message.includes("not found") || uploadError.message.includes("does not exist")) {
-              notificationManager.showError("Resume upload not configured. Please use a resume URL instead (Google Drive, Dropbox, etc.)");
+              notify.showError("Resume upload not configured. Please use a resume URL instead (Google Drive, Dropbox, etc.)");
               setUploadingResume(false);
               setSubmitting(false);
               setResumeFile(null);
               return;
             }
 
-            notificationManager.showError("Failed to upload resume. Please try using a resume URL instead.");
+            notify.showError("Failed to upload resume. Please try using a resume URL instead.");
             setUploadingResume(false);
             setSubmitting(false);
             return;
@@ -209,7 +209,7 @@ const JobDetailPage: React.FC = () => {
           setUploadingResume(false);
         } catch (err) {
           console.error("Resume upload exception:", err);
-          notificationManager.showError("Resume upload failed. Please use a resume URL instead.");
+          notify.showError("Resume upload failed. Please use a resume URL instead.");
           setUploadingResume(false);
           setSubmitting(false);
           return;
@@ -227,11 +227,11 @@ const JobDetailPage: React.FC = () => {
 
       const { data: newApplication, error } = await db.createApplication(applicationData);
       if (error) {
-        notificationManager.showError(
+        notify.showError(
           "Failed to submit application: " + (error.message || "Unknown error")
         );
       } else {
-        notificationManager.showSuccess("Application submitted successfully!");
+        notify.showSuccess("Application submitted successfully!");
         setExistingApplication(newApplication);
         setShowApplyModal(false);
         setCoverLetter("");
@@ -239,7 +239,7 @@ const JobDetailPage: React.FC = () => {
         setResumeFile(null);
       }
     } catch (err: any) {
-      notificationManager.showError("An unexpected error occurred.");
+      notify.showError("An unexpected error occurred.");
     } finally {
       setSubmitting(false);
       setUploadingResume(false);

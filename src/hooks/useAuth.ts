@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { auth, db } from "../lib/supabase";
 import { useAuthStore } from "../store/authStore";
 import { handleError } from "../utils/errorHandling";
-import { notificationManager } from "../utils/notificationManager";
+import { notify } from "../utils/notify";
 import { sessionManager } from "../utils/sessionManager";
 
 // Singleton for auth state listener to prevent multiple subscriptions
@@ -38,7 +38,7 @@ const isAuthError = (error: any): boolean => {
 const handleAuthError = async (error: any, clearAuthFn: () => void) => {
   if (isAuthError(error)) {
     console.log("Authentication error detected, clearing session:", error);
-    notificationManager.showError("Your session has expired. Please sign in again.");
+    notify.showError("Your session has expired. Please sign in again.");
     clearAuthFn();
     await auth.signOut();
     return true;
@@ -152,10 +152,7 @@ export const useAuth = () => {
                 session.user.id,
                 event === "INITIAL_SESSION"
               );
-              // Only show sign-in notification on explicit SIGNED_IN, not INITIAL_SESSION
-              if (event === "SIGNED_IN") {
-                notificationManager.showSignInSuccess(session.user.id);
-              }
+              // Don't show sign-in notification - it's disruptive to UX
             } else {
               // No user session found.
               console.log("No session found, clearing auth state");
@@ -164,7 +161,7 @@ export const useAuth = () => {
           } else if (event === "SIGNED_OUT") {
             console.log("User signed out, clearing auth state");
             clearAuth();
-            notificationManager.showSignOutSuccess();
+            // Don't show sign-out notification - it's disruptive to UX
             // Reset persistent sign-in notification tracker
             if (typeof window !== "undefined") {
               // @ts-ignore
@@ -177,7 +174,7 @@ export const useAuth = () => {
           } else if (event === "TOKEN_REFRESH_FAILED") {
             // Token refresh failed - this is the key event we need to handle!
             console.log("Token refresh failed, signing out user");
-            notificationManager.showError("Your session has expired. Please sign in again.");
+            notify.showError("Your session has expired. Please sign in again.");
             clearAuth();
             // Force sign out to clear any corrupted session data
             await auth.signOut();
@@ -337,27 +334,27 @@ export const useAuth = () => {
       // Only show error notifications if showErrors is true
       if (showErrors) {
         if (criticalError.message.includes("Failed to fetch profile")) {
-          notificationManager.showError(
+          notify.showError(
             "Unable to load your profile. Please try refreshing the page."
           );
         } else if (criticalError.message.includes("Failed to create profile")) {
-          notificationManager.showError(
+          notify.showError(
             "Unable to create your profile. Please try signing out and back in."
           );
         } else if (criticalError.message.includes("No authenticated user")) {
-          notificationManager.showError("Authentication error. Please sign in again.");
+          notify.showError("Authentication error. Please sign in again.");
           await auth.signOut();
         } else if (
           criticalError.message.includes(
             "Profile not found and no role information"
           )
         ) {
-          notificationManager.showError(
+          notify.showError(
             "Your account setup is incomplete. Please contact support."
           );
           await auth.signOut();
         } else {
-          notificationManager.showError("An unexpected error occurred. Please try again later.");
+          notify.showError("An unexpected error occurred. Please try again later.");
         }
 
         // Clear the profile state to trigger re-authentication
@@ -383,7 +380,7 @@ export const useAuth = () => {
       if (data?.user) {
         // If user is created but needs to confirm email, show a special message
         if (data.user?.confirmation_sent_at) {
-          notificationManager.showSuccess("Please check your email and confirm your account.");
+          notify.showSuccess("Please check your email and confirm your account.");
           return { success: true, data, needsConfirmation: true };
         }
 
@@ -459,12 +456,12 @@ export const useAuth = () => {
           }
         }
         // Do not run profile/job validation here. Only sign up schema is validated.
-        notificationManager.showSignUpSuccess();
+        notify.showSignUpSuccess();
         return { success: true, data };
       }
       // If error is about email confirmation, show a special message
       if (error?.message && error.message.toLowerCase().includes("confirm")) {
-        notificationManager.showSuccess("Please check your email and confirm your account.");
+        notify.showSuccess("Please check your email and confirm your account.");
         return {
           success: false,
           error: {
@@ -597,16 +594,16 @@ export const useAuth = () => {
         if (profile) {
           const updatedProfile = { ...profile, ...updates };
           setProfile(updatedProfile);
-          notificationManager.showProfileUpdateSuccess();
+          notify.showProfileUpdateSuccess();
           return { success: true, data: updatedProfile };
         }
-        notificationManager.showError("Failed to update profile");
+        notify.showError("Failed to update profile");
         return { success: false, error };
       }
 
       if (data) {
         setProfile(data);
-        notificationManager.showProfileUpdateSuccess();
+        notify.showProfileUpdateSuccess();
         return { success: true, data };
       }
     } catch (error: any) {
@@ -615,10 +612,10 @@ export const useAuth = () => {
       if (profile) {
         const updatedProfile = { ...profile, ...updates };
         setProfile(updatedProfile);
-        notificationManager.showProfileUpdateSuccess();
+        notify.showProfileUpdateSuccess();
         return { success: true, data: updatedProfile };
       }
-      notificationManager.showError("An error occurred while updating profile");
+      notify.showError("An error occurred while updating profile");
       return { success: false, error };
     } finally {
       setLoading(false);
@@ -649,7 +646,7 @@ export const useAuth = () => {
         console.log("No valid session found");
         if (user) {
           clearAuth();
-          notificationManager.showError("Your session has expired. Please sign in again.");
+          notify.showError("Your session has expired. Please sign in again.");
         }
         return false;
       }

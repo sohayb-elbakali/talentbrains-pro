@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Building, Eye, EyeOff, Lock, Mail, Sparkles, User, UserCircle, X } from 'lucide-react';
 import React, { useEffect, useState } from "react";
-import { notificationManager } from '../../utils/notificationManager';
+import { notify } from "../../utils/notify";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -97,7 +97,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
           }
         }, 500);
       } else {
-        toast.error(result?.error?.message || 'Sign in failed')
+        notify.showError(result?.error?.message || 'Sign in failed')
       }
     } else {
       const userData: any = {
@@ -117,7 +117,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
           navigate('/talent')
         }
       } else {
-        toast.error(result?.error?.message || 'Sign up failed. Please try again.')
+        notify.showError(result?.error?.message || 'Sign up failed. Please try again.')
       }
     }
   }

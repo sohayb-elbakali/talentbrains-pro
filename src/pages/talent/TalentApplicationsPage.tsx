@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
 import { useRealtimeQuery } from "../../hooks/useRealtimeQuery";
-import { notificationManager } from "../../utils/notificationManager";
+import { notify } from "../../utils/notify";
 
 interface Application {
   id: string;
@@ -139,9 +139,9 @@ const TalentApplicationsPage = () => {
     try {
       const { error } = await db.updateApplication(applicationId, { status: "withdrawn" });
       if (error) throw error;
-      notificationManager.showSuccess("Application withdrawn successfully");
+      notify.showSuccess("Application withdrawn successfully");
     } catch (err: any) {
-      notificationManager.showError(err.message || "Failed to withdraw application");
+      notify.showError(err.message || "Failed to withdraw application");
     } finally {
       setWithdrawingId(null);
     }

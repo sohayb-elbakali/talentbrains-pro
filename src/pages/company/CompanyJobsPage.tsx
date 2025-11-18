@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion';
 import { Edit, PlusCircle, Trash2, Briefcase, MapPin, Calendar, DollarSign, Users } from 'lucide-react';
-import React from 'react';
-import { notificationManager } from '../../utils/notificationManager';
+import React, { useState } from 'react';
+import { notify } from "../../utils/notify";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
 import { useRealtimeQuery } from "../../hooks/useRealtimeQuery";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 // Define the type for a job object
 interface Job {
@@ -24,6 +25,9 @@ interface Job {
 const CompanyJobsPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch company data with real-time updates
   const { data: companyData, error: companyError } = useRealtimeQuery({
@@ -67,25 +71,35 @@ const CompanyJobsPage: React.FC = () => {
 
   const error = companyError || jobsError;
 
-  // Add delete handler with optimistic update
-  const handleDeleteJob = async (jobId: string) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this job? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+  // Open delete confirmation modal
+  const openDeleteModal = (job: Job) => {
+    setJobToDelete({ id: job.id, title: job.title });
+    setDeleteModalOpen(true);
+  };
+
+  // Handle delete confirmation
+  const handleDeleteConfirm = async () => {
+    if (!jobToDelete) return;
+
+    setIsDeleting(true);
     try {
-      const { error } = await db.deleteJob(jobId);
-      if (error) {
-        notificationManager.showError("Failed to delete job");
-        return;
-      }
+      await notify.promise(
+        db.deleteJob(jobToDelete.id).then(({ error }) => {
+          if (error) throw error;
+          return { success: true };
+        }),
+        {
+          loading: `Deleting "${jobToDelete.title}"...`,
+          success: `"${jobToDelete.title}" deleted successfully`,
+          error: `Failed to delete "${jobToDelete.title}"`
+        }
+      );
       // Real-time subscription will automatically update the list
-      notificationManager.showSuccess("Job deleted successfully");
     } catch (err) {
-      notificationManager.showError("An unexpected error occurred");
+      console.error('Delete error:', err);
+    } finally {
+      setIsDeleting(false);
+      setJobToDelete(null);
     }
   };
 
@@ -249,8 +263,9 @@ const CompanyJobsPage: React.FC = () => {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDeleteJob(job.id)}
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold hover:from-red-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-md"
+                        onClick={() => openDeleteModal(job)}
+                        disabled={isDeleting}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold hover:from-red-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       >
                         <Trash2 className="h-4 w-4" />
                         Delete
@@ -263,6 +278,32 @@ const CompanyJobsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          if (!isDeleting) {
+            setDeleteModalOpen(false);
+            setJobToDelete(null);
+          }
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Job Posting"
+        message={
+          <div className="space-y-3">
+            <p>
+              Are you sure you want to delete <span className="font-bold">"{jobToDelete?.title}"</span>?
+            </p>
+            <p className="text-sm text-gray-600">
+              This will permanently remove the job posting and all associated applications. This action cannot be undone.
+            </p>
+          </div>
+        }
+        confirmText={isDeleting ? "Deleting..." : "Delete Job"}
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 };

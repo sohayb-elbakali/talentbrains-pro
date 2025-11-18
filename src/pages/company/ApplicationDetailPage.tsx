@@ -5,7 +5,7 @@ import {
   MapPin, MessageSquare, Star, TrendingUp, User, XCircle, Send, Phone
 } from 'lucide-react';
 import { useEffect, useState } from "react";
-import { notificationManager } from "../../utils/notificationManager";
+import { notify } from "../../utils/notify";
 import { useNavigate, useParams } from "react-router-dom";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useAuth } from "../../hooks/useAuth";
@@ -155,10 +155,10 @@ const ApplicationDetailPage = () => {
       // Invalidate cache to refresh all application lists
       queryClient.invalidateQueries({ queryKey: ['company-applications'] });
       
-      notificationManager.showSuccess(`Status updated to ${confirmModal.status}`);
+      notify.showSuccess(`Status updated to ${confirmModal.status}`);
       fetchApplicationDetail();
     } catch (err: any) {
-      notificationManager.showError("Failed to update status");
+      notify.showError("Failed to update status");
     } finally {
       setUpdatingStatus(false);
     }

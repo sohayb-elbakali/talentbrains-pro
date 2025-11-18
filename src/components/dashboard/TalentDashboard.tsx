@@ -10,7 +10,7 @@ import {
   UserCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { notificationManager } from "../../utils/notificationManager";
+import { notify } from "../../utils/notify";
 import { Link } from "react-router-dom";
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { useDataRefresh } from "../../hooks/useDataRefresh";
@@ -71,7 +71,7 @@ export default function TalentDashboard() {
         setAllJobs(jobsResult.data);
       }
     } catch (error) {
-      notificationManager.showError("Failed to load dashboard data");
+      notify.showError("Failed to load dashboard data");
     }
   }, [user, talent]);
 

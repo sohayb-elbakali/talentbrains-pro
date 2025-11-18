@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { notificationManager } from "../../utils/notificationManager";
+import { notify } from "../../utils/notify";
 import { db } from "../../lib/supabase";
 import { APPLICATION_STATUSES } from "../../utils/constants";
 
