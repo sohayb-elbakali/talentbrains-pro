@@ -11,6 +11,7 @@ import ConfirmationModal from "../../components/ConfirmationModal";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
 import { useQueryClient } from '@tanstack/react-query';
+import SkillsDisplay from "../../components/skills/SkillsDisplay";
 
 interface ApplicationDetail {
   id: string;
@@ -99,7 +100,10 @@ const ApplicationDetailPage = () => {
       setApplication(data);
 
       if (data.talent?.id) {
+        console.log("🔍 db object:", db);
+        console.log("🔍 db.getTalentSkills exists?", typeof db.getTalentSkills);
         const { data: skills } = await db.getTalentSkills(data.talent.id);
+        console.log("🔍 Fetched talent skills:", skills);
         setTalentSkills(skills || []);
       }
     } catch (err: any) {
@@ -428,16 +432,11 @@ const ApplicationDetailPage = () => {
                   <Star size={22} className="text-purple-600" />
                   Skills & Expertise
                 </h3>
-                <div className="flex flex-wrap gap-3">
-                  {talentSkills.map((skill: any, index: number) => (
-                    <span
-                      key={index}
-                      className="px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-xl font-semibold shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      {typeof skill === 'string' ? skill : skill.name}
-                    </span>
-                  ))}
-                </div>
+                <SkillsDisplay 
+                  skills={talentSkills} 
+                  variant="card" 
+                  showProficiency={true} 
+                />
               </motion.div>
             )}
 

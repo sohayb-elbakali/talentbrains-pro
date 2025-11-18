@@ -84,19 +84,31 @@ export const skills = {
           .eq("talent_id", talentId);
 
         if (error) {
+          console.error("❌ Error fetching talent skills:", error);
           return { data: null, error };
         }
 
-        const skillsData = data?.map((item: any) => ({
-          id: item.skill.id,
-          name: item.skill.name,
-          category: item.skill.category,
-          proficiency_level: item.proficiency_level,
-          years_of_experience: item.years_of_experience,
-          is_primary: item.is_primary
-        })) || [];
+        console.log("✅ Raw talent_skills data from DB:", data);
+
+        const skillsData = data?.map((item: any) => {
+          const mapped = {
+            id: item.skill.id,
+            skill_id: item.skill.id,
+            name: item.skill.name,
+            skill_name: item.skill.name,
+            category: item.skill.category,
+            proficiency_level: item.proficiency_level ?? 3, // Use nullish coalescing
+            years_of_experience: item.years_of_experience ?? 0,
+            is_primary: item.is_primary ?? false
+          };
+          console.log("✅ Mapped skill:", mapped);
+          return mapped;
+        }) || [];
+        
+        console.log("✅ Final skillsData:", skillsData);
         return { data: skillsData, error: null };
       } catch (error) {
+        console.error("❌ Exception in getTalentSkills:", error);
         return {
           data: null,
           error: { message: "Failed to get talent skills" },

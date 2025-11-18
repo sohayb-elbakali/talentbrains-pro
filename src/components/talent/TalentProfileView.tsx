@@ -1,14 +1,16 @@
 import { Calendar, Clock, DollarSign, MapPin, Star, User } from "lucide-react";
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
+import { skills } from "../../lib/supabase/database/skills";
 import ProfileViewCard, {
   ProfileField,
   ProfileLink,
   ProfileSection,
   ProfileTags,
 } from "../profile/ProfileViewCard";
-import SkillsDisplay from "../skills/SkillsDisplay";
+
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 interface TalentProfileViewProps {
   onEdit?: () => void;
@@ -21,16 +23,16 @@ export default function TalentProfileView({ onEdit, onAvatarEdit }: TalentProfil
   const talent = data?.talent;
   const profile = data?.profile;
 
-  // Fetch talent skills using React Query for automatic refresh
-  const { data: skills = [], isLoading: loadingSkills } = useQuery({
+  // Fetch talent skills
+  const { data: talentSkills = [], isLoading: loadingSkills } = useQuery({
     queryKey: ['talent-skills', talent?.id],
     queryFn: async () => {
       if (!talent?.id) return [];
-      const { data: skillsData } = await db.getTalentSkills(talent.id);
-      return skillsData || [];
+      const result = await skills.getTalentSkills(talent.id);
+      return result.data || [];
     },
     enabled: !!talent?.id,
-    staleTime: 0, // Always fetch fresh data
+    staleTime: 0,
   });
 
   const formatExperienceLevel = (level: string) => {
@@ -194,7 +196,7 @@ export default function TalentProfileView({ onEdit, onAvatarEdit }: TalentProfil
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
             <p className="text-gray-500 mt-3 text-sm">Loading skills...</p>
           </div>
-        ) : skills.length === 0 ? (
+        ) : talentSkills.length === 0 ? (
           <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl border-2 border-dashed border-gray-300">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full mb-4">
               <Star className="h-8 w-8 text-purple-600" />
@@ -213,11 +215,51 @@ export default function TalentProfileView({ onEdit, onAvatarEdit }: TalentProfil
             )}
           </div>
         ) : (
-          <SkillsDisplay
-            skills={skills}
-            variant="card"
-            showProficiency={true}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {talentSkills.map((skill: any, index: number) => {
+              const level = skill.proficiency_level ?? 3;
+              const levelMap: Record<number, { label: string; color: string }> = {
+                1: { label: "Beginner", color: "from-gray-400 to-gray-500" },
+                2: { label: "Intermediate", color: "from-green-400 to-emerald-500" },
+                3: { label: "Advanced", color: "from-blue-400 to-cyan-500" },
+                4: { label: "Expert", color: "from-orange-400 to-red-500" },
+                5: { label: "Master", color: "from-purple-500 to-pink-500" },
+              };
+              const levelInfo = levelMap[level] || { label: "Advanced", color: "from-blue-400 to-cyan-500" };
+
+              return (
+                <div key={index} className="bg-white rounded-xl border-2 border-gray-200 p-4 hover:shadow-lg transition-all">
+                  {/* Skill Name */}
+                  <h4 className="text-lg font-bold text-gray-900 mb-3">{skill.name || skill.skill_name}</h4>
+                  
+                  {/* Level Badge */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-600">Skill Level</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r ${levelInfo.color}`}>
+                      {levelInfo.label}
+                    </span>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 flex gap-1">
+                      {[1, 2, 3, 4, 5].map((dot) => (
+                        <div
+                          key={dot}
+                          className={`flex-1 h-2 rounded-full transition-all ${
+                            dot <= level
+                              ? `bg-gradient-to-r ${levelInfo.color}`
+                              : "bg-gray-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm font-bold text-gray-700">{level}/5</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </ProfileViewCard>
 

@@ -233,8 +233,15 @@ export default function TalentProfileUpdateModal({
 
           // Add new skills
           if (skills.length > 0) {
+            console.log("💾 Saving skills:", skills);
             for (const skill of skills) {
               try {
+                console.log("💾 Saving skill:", {
+                  skill_id: skill.skill_id,
+                  proficiency_level: skill.proficiency_level,
+                  years_of_experience: skill.years_of_experience || 0,
+                  is_primary: skill.is_primary || false
+                });
                 await db.addTalentSkill(
                   result.data.id,
                   skill.skill_id,
@@ -260,11 +267,15 @@ export default function TalentProfileUpdateModal({
         queryClient.invalidateQueries({ queryKey: ['user-data'] }),
         queryClient.invalidateQueries({ queryKey: ['talent'] }),
         queryClient.invalidateQueries({ queryKey: ['talent-skills'] }),
+        queryClient.invalidateQueries({ queryKey: ['talent-skills', result.data?.id] }),
         queryClient.invalidateQueries({ queryKey: ['talent-applications'] }),
         queryClient.invalidateQueries({ queryKey: ['talent-matches'] }),
         queryClient.invalidateQueries({ queryKey: ['talent-analytics'] }),
         queryClient.invalidateQueries({ queryKey: ['welcome-dashboard'] }),
       ]);
+      
+      // Force refetch of skills
+      await queryClient.refetchQueries({ queryKey: ['talent-skills', result.data?.id] });
 
       notificationManager.showSuccess("Talent profile updated successfully!");
       setHasUnsavedChanges(false);

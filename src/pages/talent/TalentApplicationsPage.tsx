@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
-import { Briefcase, Calendar, CheckCircle, Clock, Eye, Filter, MapPin, Search, XCircle, TrendingUp, DollarSign } from 'lucide-react';
+import { Briefcase, Calendar, CheckCircle, Clock, Eye, Filter, MapPin, Search, XCircle, TrendingUp, DollarSign, X } from 'lucide-react';
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
 import { useRealtimeQuery } from "../../hooks/useRealtimeQuery";
+import { notificationManager } from "../../utils/notificationManager";
 
 interface Application {
   id: string;
@@ -28,6 +29,7 @@ const TalentApplicationsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
 
   // Fetch talent ID first (cached for 10 minutes)
   const { data: talentData } = useRealtimeQuery({
@@ -126,6 +128,25 @@ const TalentApplicationsPage = () => {
     return configs[status] || configs.pending;
   };
 
+  const handleWithdraw = async (applicationId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!confirm("Are you sure you want to withdraw this application? This action cannot be undone.")) {
+      return;
+    }
+
+    setWithdrawingId(applicationId);
+    try {
+      const { error } = await db.updateApplication(applicationId, { status: "withdrawn" });
+      if (error) throw error;
+      notificationManager.showSuccess("Application withdrawn successfully");
+    } catch (err: any) {
+      notificationManager.showError(err.message || "Failed to withdraw application");
+    } finally {
+      setWithdrawingId(null);
+    }
+  };
+
   const stats = [
     { label: "Total Applications", value: applications.length, color: "from-purple-500 to-blue-500", icon: TrendingUp },
     { label: "Pending", value: applications.filter((a: Application) => a.status === "pending").length, color: "from-yellow-500 to-orange-500", icon: Clock },
@@ -187,6 +208,7 @@ const TalentApplicationsPage = () => {
               <option value="offer">Offer</option>
               <option value="accepted">Accepted</option>
               <option value="rejected">Not Selected</option>
+              <option value="withdrawn">Withdrawn</option>
             </select>
           </motion.div>
         )}
@@ -253,61 +275,77 @@ const TalentApplicationsPage = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  onClick={() => navigate(`/jobs/${app.job.id}`)}
-                  className={`group relative bg-white rounded-2xl shadow-lg border-2 ${statusConfig.bgClass} p-6 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
+                  className={`group relative bg-white rounded-xl shadow-md border ${statusConfig.bgClass} p-5 hover:shadow-xl transition-all duration-300 overflow-hidden`}
                 >
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-100 to-blue-100 opacity-0 group-hover:opacity-20 rounded-full -mr-32 -mt-32 transition-opacity duration-300"></div>
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-purple-100 to-blue-100 opacity-0 group-hover:opacity-10 rounded-full -mr-24 -mt-24 transition-opacity duration-300"></div>
 
                   <div className="relative">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4 mb-3">
-                        <div>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-1 group-hover:text-purple-600 transition-colors">
-                            {app.job.title}
-                          </h3>
-                          <p className="text-base text-gray-600 font-medium">{app.job.companies.name}</p>
-                        </div>
-                        <span className={`px-4 py-2 rounded-xl ${statusConfig.class} text-sm font-bold shadow-md whitespace-nowrap flex items-center gap-2`}>
-                          <StatusIcon size={16} />
-                          {statusConfig.label}
-                        </span>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div 
+                        className="flex-1 cursor-pointer"
+                        onClick={() => navigate(`/jobs/${app.job.id}`)}
+                      >
+                        <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-purple-600 transition-colors">
+                          {app.job.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 font-medium">{app.job.companies.name}</p>
                       </div>
+                      <span className={`px-3 py-1.5 rounded-lg ${statusConfig.class} text-xs font-bold shadow-sm whitespace-nowrap flex items-center gap-1.5`}>
+                        <StatusIcon size={14} />
+                        {statusConfig.label}
+                      </span>
+                    </div>
 
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
-                        {app.job.location && (
-                          <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                            <MapPin size={16} className="text-blue-500" />
-                            <span>{app.job.location}</span>
-                          </div>
-                        )}
-                        {app.job.salary_min && app.job.salary_max && (
-                          <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                            <DollarSign size={16} className="text-green-500" />
-                            <span>${app.job.salary_min.toLocaleString()} - ${app.job.salary_max.toLocaleString()}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                          <Calendar size={16} className="text-purple-500" />
-                          <span>Applied {new Date(app.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 mb-4">
+                      {app.job.location && (
+                        <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-md">
+                          <MapPin size={14} className="text-blue-500" />
+                          <span>{app.job.location}</span>
                         </div>
+                      )}
+                      {app.job.salary_min && app.job.salary_max && (
+                        <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-md">
+                          <DollarSign size={14} className="text-green-500" />
+                          <span>${app.job.salary_min.toLocaleString()} - ${app.job.salary_max.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-md">
+                        <Calendar size={14} className="text-purple-500" />
+                        <span>Applied {new Date(app.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                       </div>
+                    </div>
 
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-500">
-                          Click to view job details
-                        </div>
-
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/jobs/${app.job.id}`);
+                        }}
+                        className="btn btn-secondary text-sm py-2 px-4 shadow-sm hover:shadow-md"
+                      >
+                        <Eye size={16} />
+                        View Job
+                      </button>
+                      
+                      {app.status !== "withdrawn" && app.status !== "rejected" && app.status !== "accepted" && (
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/jobs/${app.job.id}`);
-                          }}
-                          className="btn btn-primary shadow-lg hover:shadow-xl"
+                          onClick={(e) => handleWithdraw(app.id, e)}
+                          disabled={withdrawingId === app.id}
+                          className="btn bg-red-50 text-red-600 hover:bg-red-100 border-red-200 text-sm py-2 px-4 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <Eye size={18} />
-                          View Job
+                          {withdrawingId === app.id ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                              Withdrawing...
+                            </>
+                          ) : (
+                            <>
+                              <X size={16} />
+                              Withdraw
+                            </>
+                          )}
                         </button>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </motion.div>

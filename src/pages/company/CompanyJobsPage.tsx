@@ -42,7 +42,7 @@ const CompanyJobsPage: React.FC = () => {
 
   // Fetch jobs with real-time updates
   const { data: jobs = [], isLoading: loading, error: jobsError } = useRealtimeQuery({
-    queryKey: ['company-jobs', companyData?.id],
+    queryKey: ['company-jobs-with-counts', companyData?.id],
     queryFn: async () => {
       if (!companyData?.id) return [];
       const { data, error } = await db.getJobs({ company_id: companyData.id });
@@ -61,8 +61,8 @@ const CompanyJobsPage: React.FC = () => {
       return jobsWithCounts;
     },
     enabled: !!companyData?.id,
-    staleTime: 5 * 60 * 1000, // Increased to 5 minutes (was 2)
-    table: 'jobs',
+    staleTime: 0, // Always refetch to get latest counts
+    table: 'jobs,applications', // Subscribe to both tables for real-time updates
     filter: `company_id=eq.${companyData?.id}`,
   });
 

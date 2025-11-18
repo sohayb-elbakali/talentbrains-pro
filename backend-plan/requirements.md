@@ -28,6 +28,8 @@ This document outlines the requirements for implementing a machine learning-powe
 3. THE ML Backend Service SHALL return jobs ranked by match score in descending order with scores between 0-100
 4. WHEN a job has a match score above 80, THE TalentBrains Platform SHALL display it as a "highly recommended" match
 5. THE Feature Extractor SHALL process both structured data (years of experience, location) and unstructured data (skill descriptions, job requirements) into numerical features
+6. WHEN a talent adds skills, THE TalentBrains Platform SHALL allow marking skills as "primary" (optional, not required) to indicate core competencies
+7. THE Matching Engine SHALL give higher weight to primary skills when calculating match scores
 
 ### Requirement 2
 
@@ -40,6 +42,8 @@ This document outlines the requirements for implementing a machine learning-powe
 3. THE ML Backend Service SHALL return talents ranked by match score with explanations of key matching factors
 4. WHEN generating matches for a job posting, THE ML Backend Service SHALL process at least 100 talent profiles per second
 5. THE TalentBrains Platform SHALL display the top 3 matching factors for each talent-job pair
+6. WHEN a recruiter views a candidate profile, THE TalentBrains Platform SHALL display all candidate skills with their proficiency levels (1-5) and years of experience
+7. THE TalentBrains Platform SHALL visually highlight primary skills to help recruiters identify candidate's core competencies
 
 ### Requirement 3
 

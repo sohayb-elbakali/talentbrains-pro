@@ -887,7 +887,55 @@ export const db = {
   },
 
   // Get talent skills
+  // Get talent skills with full details (proficiency, years, etc.)
   getTalentSkills: async (talentId: string) => {
+    return handleApiCall(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("talent_skills")
+          .select(
+            `
+            skill:skills!inner(
+              id,
+              name,
+              category
+            ),
+            proficiency_level,
+            years_of_experience,
+            is_primary
+          `
+          )
+          .eq("talent_id", talentId);
+
+        if (error) {
+          return { data: null, error };
+        }
+
+        // Transform to full skill objects
+        const skillsData = data?.map((item: any) => ({
+          id: item.skill.id,
+          skill_id: item.skill.id,
+          name: item.skill.name,
+          skill_name: item.skill.name,
+          category: item.skill.category,
+          proficiency_level: item.proficiency_level ?? 3,
+          years_of_experience: item.years_of_experience ?? 0,
+          is_primary: item.is_primary ?? false
+        })) || [];
+        
+        return { data: skillsData, error: null };
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: "Failed to get talent skills" },
+        };
+      }
+    });
+  },
+
+  // DEPRECATED: Use getTalentSkills instead
+  // This returns skill names only for backward compatibility
+  getTalentSkillNames: async (talentId: string) => {
     return handleApiCall(async () => {
       try {
         const { data, error } = await supabase

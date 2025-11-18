@@ -63,7 +63,12 @@ const JobDetailPage: React.FC = () => {
         }
 
         if (data) {
-          setJob(data);
+          // Fetch application count
+          const { data: appCount } = await db.getJobApplicationCount(jobId);
+          setJob({
+            ...data,
+            applications_count: appCount || 0,
+          });
         }
 
         // Fetch job skills
