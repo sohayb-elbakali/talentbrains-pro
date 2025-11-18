@@ -120,8 +120,9 @@ const CompanyDashboard = () => {
   });
 
   const loading = jobsLoading || appsLoading;
-  const activeJobs = jobsData?.filter((job: any) => job.status === "active").length || 0;
-  const totalApplicants = applicationsData?.length || 0;
+  // Don't show 0 while loading - show loading state instead
+  const activeJobs = loading ? undefined : (jobsData?.filter((job: any) => job.status === "active").length || 0);
+  const totalApplicants = loading ? undefined : (applicationsData?.length || 0);
   const recentJobs = jobsData?.filter((job: any) => job.status === "active").slice(0, 5) || [];
 
 
@@ -176,7 +177,7 @@ const CompanyDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <StatCard
               title="Active Job Postings"
-              value={activeJobs.toString()}
+              value={activeJobs !== undefined ? activeJobs.toString() : ""}
               icon={<Briefcase className="text-white" size={28} />}
               link="/company/jobs"
               loading={loading}
@@ -184,7 +185,7 @@ const CompanyDashboard = () => {
             />
             <StatCard
               title="Total Applicants"
-              value={totalApplicants.toString()}
+              value={totalApplicants !== undefined ? totalApplicants.toString() : ""}
               icon={<Users className="text-white" size={28} />}
               link="/company/applicants"
               loading={loading}

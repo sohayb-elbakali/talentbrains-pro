@@ -11,9 +11,8 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { notify } from "../../utils/notify";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth, useUserData } from "../../hooks/useAuth";
-import { useDataRefresh } from "../../hooks/useDataRefresh";
 import { db } from "../../lib/supabase";
 import {
   JobApplication,
@@ -24,22 +23,22 @@ import JobList from "../JobList";
 
 export default function TalentDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data, isLoading, error } = useUserData(user?.id);
   const [matches, setMatches] = useState<JobMatch[]>([]);
   const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [analytics, setAnalytics] = useState<TalentAnalytics>({
-    profileViews: 0,
-    applications: 0,
-    matches: 0,
-    messages: 0,
-  });
+  const [analytics, setAnalytics] = useState<TalentAnalytics | null>(null);
   const [allJobs, setAllJobs] = useState<any[]>([]);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(true);
 
   const talent = data?.talent;
   const profile = data?.profile;
 
   const loadDashboardData = useCallback(async () => {
     if (!user || !talent) return;
+    
+    setIsDashboardLoading(true);
+    
     try {
       // Load all data in parallel for better performance
       const [applicationsResult, matchesResult, analyticsResult, jobsResult] = await Promise.all([
@@ -65,13 +64,33 @@ export default function TalentDashboard() {
           matches: analyticsData.matches || 0,
           messages: analyticsData.messages || 0,
         });
+      } else {
+        // Set default analytics if fetch fails
+        setAnalytics({
+          profileViews: 0,
+          applications: 0,
+          matches: 0,
+          messages: 0,
+        });
       }
 
       if (jobsResult.data) {
         setAllJobs(jobsResult.data);
       }
-    } catch (error) {
-      notify.showError("Failed to load dashboard data");
+    } catch (error: any) {
+      // Don't show error on network issues
+      if (!error?.message?.includes('fetch') && !error?.message?.includes('network')) {
+        notify.showError("Failed to load dashboard data");
+      }
+      // Set default values on error
+      setAnalytics({
+        profileViews: 0,
+        applications: 0,
+        matches: 0,
+        messages: 0,
+      });
+    } finally {
+      setIsDashboardLoading(false);
     }
   }, [user, talent]);
 
@@ -188,9 +207,13 @@ export default function TalentDashboard() {
                 <Eye className="h-6 w-6 text-white" />
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-white">
-                  {analytics.profileViews || 0}
-                </p>
+                {isDashboardLoading ? (
+                  <div className="h-9 w-16 bg-white/20 rounded animate-pulse"></div>
+                ) : (
+                  <p className="text-3xl font-bold text-white">
+                    {analytics?.profileViews || 0}
+                  </p>
+                )}
               </div>
             </div>
             <p className="text-purple-100 font-medium">Profile Views</p>
@@ -208,9 +231,13 @@ export default function TalentDashboard() {
                 <Briefcase className="h-6 w-6 text-white" />
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-white">
-                  {analytics.applications || 0}
-                </p>
+                {isDashboardLoading ? (
+                  <div className="h-9 w-16 bg-white/20 rounded animate-pulse"></div>
+                ) : (
+                  <p className="text-3xl font-bold text-white">
+                    {analytics?.applications || 0}
+                  </p>
+                )}
               </div>
             </div>
             <p className="text-blue-100 font-medium">Applications</p>
@@ -231,9 +258,13 @@ export default function TalentDashboard() {
                 <Heart className="h-6 w-6 text-white" />
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-white">
-                  {analytics.matches || 0}
-                </p>
+                {isDashboardLoading ? (
+                  <div className="h-9 w-16 bg-white/20 rounded animate-pulse"></div>
+                ) : (
+                  <p className="text-3xl font-bold text-white">
+                    {analytics?.matches || 0}
+                  </p>
+                )}
               </div>
             </div>
             <p className="text-green-100 font-medium">AI Matches</p>

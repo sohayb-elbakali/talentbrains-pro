@@ -15,6 +15,8 @@ import AdminDashboard from "./components/dashboard/AdminDashboard";
 import TalentDashboard from "./components/dashboard/TalentDashboard";
 
 import ErrorBoundary from "./components/ErrorBoundary";
+import NetworkErrorBoundary from "./components/NetworkErrorBoundary";
+import OfflineIndicator from "./components/OfflineIndicator";
 import Layout from "./components/layout/Layout";
 import LoadingSpinner from "./components/LoadingSpinner";
 import TalentProfileCompletion from "./components/talent/TalentProfileCompletion";
@@ -332,27 +334,30 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <Toaster 
-          position="top-right" 
-          richColors 
-          expand={false} 
-          closeButton
-          offset="80px"
-          toastOptions={{
-            style: {
-              borderRadius: '16px',
-              padding: '16px',
-              fontSize: '14px',
-              fontWeight: '500',
-            },
-            className: 'sonner-toast',
-          }}
-        />
-        <Router>
-          <AppContent />
-        </Router>
-      </QueryClientProvider>
+      <NetworkErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <OfflineIndicator />
+          <Toaster 
+            position="top-right" 
+            richColors 
+            expand={false} 
+            closeButton
+            offset="80px"
+            toastOptions={{
+              style: {
+                borderRadius: '16px',
+                padding: '16px',
+                fontSize: '14px',
+                fontWeight: '500',
+              },
+              className: 'sonner-toast',
+            }}
+          />
+          <Router>
+            <AppContent />
+          </Router>
+        </QueryClientProvider>
+      </NetworkErrorBoundary>
     </ErrorBoundary>
   );
 }

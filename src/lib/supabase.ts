@@ -35,15 +35,29 @@ const handleApiCall = async <T>(
   try {
     const result = await apiCall();
 
-    if (result.error && isAuthError(result.error)) {
-      if (globalAuthErrorHandler) {
-        await globalAuthErrorHandler(result.error);
+    // Don't treat network errors as auth errors
+    if (result.error) {
+      const isNetworkError = 
+        !navigator.onLine || 
+        result.error.message?.includes('fetch') || 
+        result.error.message?.includes('network');
+      
+      if (!isNetworkError && isAuthError(result.error)) {
+        if (globalAuthErrorHandler) {
+          await globalAuthErrorHandler(result.error);
+        }
       }
     }
 
     return result;
-  } catch (error) {
-    if (isAuthError(error) && globalAuthErrorHandler) {
+  } catch (error: any) {
+    // Don't treat network errors as auth errors
+    const isNetworkError = 
+      !navigator.onLine || 
+      error?.message?.includes('fetch') || 
+      error?.message?.includes('network');
+    
+    if (!isNetworkError && isAuthError(error) && globalAuthErrorHandler) {
       await globalAuthErrorHandler(error);
     }
 

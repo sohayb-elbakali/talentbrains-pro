@@ -21,7 +21,7 @@ export class CustomError extends Error {
   }
 }
 
-export const handleError = (error: any, operation: string) => {
+export const handleError = (error: any, operation?: string) => {
   // Check if this is a 304 Not Modified response that should be treated as success
   if (
     error?.statusCode === 304 ||
@@ -42,6 +42,12 @@ export const handleError = (error: any, operation: string) => {
     message = error.error_description;
   }
 
+  // Don't show notifications for network errors
+  if (message.includes('fetch') || message.includes('network') || !navigator.onLine) {
+    console.log("Network error - not showing notification:", message);
+    return { success: false, error: { message } };
+  }
+
   // Make error messages more user-friendly
   const userFriendlyMessages: Record<string, string> = {
     "Invalid login credentials": "Invalid email or password. Please try again.",
@@ -51,10 +57,6 @@ export const handleError = (error: any, operation: string) => {
       "Please check your email and click the confirmation link.",
     "Too many requests":
       "Too many attempts. Please wait a moment and try again.",
-    "Network error":
-      "Connection error. Please check your internet connection and try again.",
-    "Failed to fetch":
-      "Unable to connect to the server. Please try again later.",
   };
 
   const friendlyMessage = userFriendlyMessages[message] || message;
@@ -76,7 +78,7 @@ export const handleAsyncError = async <T>(
   try {
     return await asyncFn();
   } catch (error) {
-    handleError(error, context);
+    handleError(error, context || 'async operation');
     return null;
   }
 };
@@ -89,7 +91,7 @@ export const withErrorBoundary = <T extends any[], R>(
     try {
       return fn(...args);
     } catch (error) {
-      handleError(error, context);
+      handleError(error, context || 'error boundary');
       return null;
     }
   };
@@ -138,13 +140,14 @@ export const handleNetworkError = (error: any): void => {
     return;
   }
 
+  // Don't show notifications for network errors - the OfflineIndicator handles this
   if (!navigator.onLine) {
-    notify.showError("You are offline. Please check your internet connection.");
+    console.log("Offline - not showing error notification");
     return;
   }
 
   if (error?.code === "NETWORK_ERROR" || error?.message?.includes("fetch")) {
-    notify.showNetworkError();
+    console.log("Network error - not showing notification");
     return;
   }
 

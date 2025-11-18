@@ -36,6 +36,12 @@ const isAuthError = (error: any): boolean => {
 
 // Helper function to handle auth errors consistently
 const handleAuthError = async (error: any, clearAuthFn: () => void) => {
+  // Don't treat network errors as auth errors
+  if (error?.message?.includes('fetch') || error?.message?.includes('network') || !navigator.onLine) {
+    console.log("Network error detected, not clearing session:", error);
+    return false;
+  }
+  
   if (isAuthError(error)) {
     console.log("Authentication error detected, clearing session:", error);
     notify.showError("Your session has expired. Please sign in again.");
@@ -172,11 +178,16 @@ export const useAuth = () => {
             console.log("Token refreshed successfully");
             setUser(session.user);
           } else if (event === "TOKEN_REFRESH_FAILED") {
-            // Token refresh failed - this is the key event we need to handle!
-            console.log("Token refresh failed, signing out user");
+            // Token refresh failed - check if it's a network issue first
+            console.log("Token refresh failed, checking if network issue");
+            if (!navigator.onLine) {
+              console.log("Offline - not signing out");
+              return;
+            }
+            // Only sign out if we're online (real auth issue)
+            console.log("Online - signing out user");
             notify.showError("Your session has expired. Please sign in again.");
             clearAuth();
-            // Force sign out to clear any corrupted session data
             await auth.signOut();
           }
         } catch (error) {
@@ -331,8 +342,14 @@ export const useAuth = () => {
         criticalError
       );
 
-      // Only show error notifications if showErrors is true
-      if (showErrors) {
+      // Only show error notifications if showErrors is true AND not a network error
+      if (showErrors && navigator.onLine) {
+        // Don't show errors for network issues
+        if (criticalError.message?.includes('fetch') || criticalError.message?.includes('network')) {
+          console.log("Network error in profile load, not showing notification");
+          return;
+        }
+        
         if (criticalError.message.includes("Failed to fetch profile")) {
           notify.showError(
             "Unable to load your profile. Please try refreshing the page."
@@ -638,13 +655,17 @@ export const useAuth = () => {
 
       if (error) {
         console.error("Session validation error:", error);
-        clearAuth();
+        // Don't clear auth on network errors
+        if (!error?.message?.includes('fetch') && !error?.message?.includes('network') && navigator.onLine) {
+          clearAuth();
+        }
         return false;
       }
 
       if (!currentUser) {
         console.log("No valid session found");
-        if (user) {
+        // Don't clear auth if it's just a network issue
+        if (user && navigator.onLine) {
           clearAuth();
           notify.showError("Your session has expired. Please sign in again.");
         }
