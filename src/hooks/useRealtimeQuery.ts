@@ -10,10 +10,6 @@ interface RealtimeQueryOptions<T> extends Omit<UseQueryOptions<T>, 'queryKey' | 
   event?: 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 }
 
-/**
- * Custom hook that combines React Query with Supabase real-time subscriptions
- * This prevents unnecessary refetches and keeps data in sync automatically
- */
 export function useRealtimeQuery<T>({
   queryKey,
   queryFn,
@@ -24,36 +20,44 @@ export function useRealtimeQuery<T>({
 }: RealtimeQueryOptions<T>) {
   const queryClient = useQueryClient();
 
-  // Use React Query for data fetching and caching
   const query = useQuery({
     queryKey,
-    queryFn,
+    queryFn: async () => {
+      const cachedData = queryClient.getQueryData<T>(queryKey);
+      if (cachedData) {
+        return cachedData;
+      }
+      return queryFn();
+    },
     ...queryOptions,
   });
 
-  // Set up real-time subscription if table is provided
   useEffect(() => {
     if (!table) return;
 
-    const channel = supabase
-      .channel(`${table}-changes-${queryKey.join('-')}`)
-      .on(
-        'postgres_changes',
-        {
-          event,
-          schema: 'public',
-          table,
-          ...(filter && { filter }),
-        },
-        () => {
-          // Invalidate and refetch when changes occur
-          queryClient.invalidateQueries({ queryKey });
-        }
-      )
-      .subscribe();
+    const tables = table.split(',').map(t => t.trim());
+    const channels = tables.map(tableName => {
+      const channel = supabase
+        .channel(`${tableName}-${queryKey.join('-')}`)
+        .on(
+          'postgres_changes',
+          {
+            event,
+            schema: 'public',
+            table: tableName,
+            ...(filter && { filter }),
+          },
+          () => {
+            queryClient.invalidateQueries({ queryKey, exact: false });
+          }
+        )
+        .subscribe();
+      
+      return channel;
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      channels.forEach(channel => supabase.removeChannel(channel));
     };
   }, [table, filter, event, queryKey, queryClient]);
 

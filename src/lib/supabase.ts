@@ -85,6 +85,7 @@ if (!globalForSupabase.supabase || !globalForSupabase.supabaseInitialized) {
       global: {
         headers: {
           "X-Client-Info": "talentbrains-web-app",
+          "Cache-Control": "max-age=300",
         },
       },
       db: {
@@ -92,7 +93,7 @@ if (!globalForSupabase.supabase || !globalForSupabase.supabaseInitialized) {
       },
       realtime: {
         params: {
-          eventsPerSecond: 10,
+          eventsPerSecond: 5,
         },
       },
     }

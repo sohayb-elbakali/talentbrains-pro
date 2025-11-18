@@ -45,6 +45,24 @@ const CompanyApplicantsPage = () => {
   const fetchApplicants = useCallback(async () => {
     if (!profile?.id) return;
 
+    const cacheKey = `applicants-${profile.id}-${searchParams.get("job") || 'all'}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    
+    if (cached) {
+      try {
+        const cachedData = JSON.parse(cached);
+        const age = Date.now() - cachedData.timestamp;
+        if (age < 3 * 60 * 1000) {
+          setApplications(cachedData.data);
+          setFilteredApplications(cachedData.data);
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // Invalid cache, continue with fetch
+      }
+    }
+
     try {
       setLoading(true);
       const { data: companyData, error: companyError } = await db.getCompany(profile.id);
@@ -59,8 +77,15 @@ const CompanyApplicantsPage = () => {
 
       const { data, error } = await db.getApplications(filters);
       if (error) throw error;
-      setApplications(data || []);
-      setFilteredApplications(data || []);
+      
+      const applicationsData = data || [];
+      setApplications(applicationsData);
+      setFilteredApplications(applicationsData);
+      
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        data: applicationsData,
+        timestamp: Date.now()
+      }));
     } catch (err: any) {
       setError(err.message);
     } finally {

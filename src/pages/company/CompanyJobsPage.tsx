@@ -48,7 +48,6 @@ const CompanyJobsPage: React.FC = () => {
       const { data, error } = await db.getJobs({ company_id: companyData.id });
       if (error) throw error;
       
-      // Get application counts in parallel for better performance
       const jobsWithCounts = await Promise.all(
         (data || []).map(async (job: Job) => {
           const { data: count } = await db.getJobApplicationCount(job.id);
@@ -61,8 +60,8 @@ const CompanyJobsPage: React.FC = () => {
       return jobsWithCounts;
     },
     enabled: !!companyData?.id,
-    staleTime: 0, // Always refetch to get latest counts
-    table: 'jobs,applications', // Subscribe to both tables for real-time updates
+    staleTime: 5 * 60 * 1000,
+    table: 'jobs,applications',
     filter: `company_id=eq.${companyData?.id}`,
   });
 

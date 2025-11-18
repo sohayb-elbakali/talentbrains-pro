@@ -55,7 +55,7 @@ const TalentApplicationsPage = () => {
       return data || [];
     },
     enabled: !!talentData?.id,
-    staleTime: 0,
+    staleTime: 3 * 60 * 1000,
     table: 'applications',
     filter: `talent_id=eq.${talentData?.id}`,
   });
