@@ -125,7 +125,7 @@ export default function ErrorStateCard({
       {onRetry && (
         <button
           onClick={onRetry}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-all transform hover:scale-105 shadow-lg"
         >
           <RefreshCw className="h-5 w-5" />
           Try Again

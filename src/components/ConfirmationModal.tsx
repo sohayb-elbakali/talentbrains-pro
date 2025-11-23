@@ -59,9 +59,9 @@ export default function ConfirmationModal({
         return {
           icon: Info,
           iconBg: 'bg-blue-100',
-          iconColor: 'text-blue-600',
-          gradient: 'from-blue-50 to-purple-50',
-          buttonClass: confirmButtonClass || 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700',
+          iconColor: 'text-primary',
+          gradient: 'from-blue-50 to-white',
+          buttonClass: confirmButtonClass || 'bg-primary hover:bg-primary-hover',
           borderColor: 'border-blue-200',
         };
     }
@@ -82,7 +82,7 @@ export default function ConfirmationModal({
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={onClose}
           />
-          
+
           {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}

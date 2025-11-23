@@ -139,9 +139,9 @@ export default function TalentProfiles() {
     switch (level) {
       case 'senior':
       case 'lead':
-        return 'text-purple-600 bg-purple-100';
+        return 'text-primary bg-blue-100';
       case 'mid':
-        return 'text-blue-600 bg-blue-100';
+        return 'text-secondary bg-orange-100';
       case 'entry':
         return 'text-green-600 bg-green-100';
       default:
@@ -163,7 +163,7 @@ export default function TalentProfiles() {
                 placeholder="Search talents, skills, or roles..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
 
@@ -174,8 +174,8 @@ export default function TalentProfiles() {
                   key={filter.id}
                   onClick={() => setSelectedFilter(filter.id)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${selectedFilter === filter.id
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-purple-50 hover:text-purple-600'
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-primary'
                     }`}
                 >
                   {filter.label}
@@ -226,7 +226,7 @@ export default function TalentProfiles() {
                     return (
                       <div
                         key={talent.id}
-                        className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 hover:border-purple-200"
+                        className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 hover:border-primary"
                       >
                         {/* Header */}
                         <div className="flex items-start justify-between mb-4">
@@ -235,10 +235,10 @@ export default function TalentProfiles() {
                               <img
                                 src={talent.profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${talent.profile.full_name}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
                                 alt={talent.profile.full_name}
-                                className="w-14 h-14 rounded-full object-cover border-2 border-purple-200 shadow-md"
+                                className="w-14 h-14 rounded-full object-cover border-2 border-primary-light shadow-md"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
-                                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(talent.profile.full_name)}&background=8B5CF6&color=fff&size=128&bold=true`;
+                                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(talent.profile.full_name)}&background=0a66c2&color=fff&size=128&bold=true`;
                                 }}
                               />
                               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
@@ -257,14 +257,14 @@ export default function TalentProfiles() {
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div className="text-center p-3 bg-gray-50 rounded-lg">
                             <div className="flex items-center justify-center space-x-1 mb-1">
-                              <Award className="h-4 w-4 text-purple-600" />
+                              <Award className="h-4 w-4 text-primary" />
                               <span className="font-semibold text-gray-900">{talent.years_of_experience}</span>
                             </div>
                             <p className="text-xs text-gray-600">Years Exp</p>
                           </div>
                           <div className="text-center p-3 bg-gray-50 rounded-lg">
                             <div className="flex items-center justify-center space-x-1 mb-1">
-                              <MapPin className="h-4 w-4 text-blue-600" />
+                              <MapPin className="h-4 w-4 text-secondary" />
                               <span className="font-semibold text-gray-900 text-xs">
                                 {talent.remote_preference ? 'Remote' : 'On-site'}
                               </span>
@@ -283,7 +283,7 @@ export default function TalentProfiles() {
                           {skills.slice(0, 3).map((skill, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
+                              className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
                             >
                               {skill}
                             </span>
@@ -330,11 +330,11 @@ export default function TalentProfiles() {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleViewProfile(talent.profile_id)}
-                            className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium text-sm"
+                            className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-all duration-200 font-medium text-sm"
                           >
                             View Profile
                           </button>
-                          <button className="px-4 py-2 bg-white text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors">
+                          <button className="px-4 py-2 bg-white text-primary border border-primary-light rounded-lg hover:bg-blue-50 transition-colors">
                             <MessageCircle className="h-4 w-4" />
                           </button>
                         </div>
@@ -362,7 +362,7 @@ export default function TalentProfiles() {
                         setSearchTerm('');
                         setSelectedFilter('all');
                       }}
-                      className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-blue-700 transition-all"
+                      className="px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all"
                     >
                       Clear Filters
                     </button>
@@ -378,7 +378,7 @@ export default function TalentProfiles() {
               <button
                 onClick={() => fetchTalents(false)}
                 disabled={loading}
-                className="px-8 py-4 bg-white text-purple-600 border-2 border-purple-200 rounded-xl hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 transform hover:scale-105 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-4 bg-white text-primary border-2 border-primary-light rounded-xl hover:bg-blue-50 hover:border-primary transition-all duration-200 transform hover:scale-105 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Loading...' : 'Load More Talents'}
               </button>

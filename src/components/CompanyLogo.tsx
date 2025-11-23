@@ -25,7 +25,7 @@ const iconSizes = {
 // Simple, professional default company logo
 const DefaultCompanyLogo = ({ size, className }: { size: "sm" | "md" | "lg" | "xl"; className: string }) => (
   <div
-    className={`${sizeClasses[size]} ${className} bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg`}
+    className={`${sizeClasses[size]} ${className} bg-primary rounded-xl flex items-center justify-center shadow-lg`}
   >
     <Building className="text-white" size={iconSizes[size]} />
   </div>

@@ -20,6 +20,7 @@ import {
   TalentAnalytics,
 } from "../../types/talent-dashboard";
 import JobList from "../JobList";
+import { StatsSkeleton, CardSkeleton } from "../SkeletonLoader";
 
 export default function TalentDashboard() {
   const { user } = useAuth();
@@ -35,10 +36,14 @@ export default function TalentDashboard() {
   const profile = data?.profile;
 
   const loadDashboardData = useCallback(async () => {
-    if (!user || !talent) return;
-    
+    if (!user || !talent) {
+      // Keep loading state true if we don't have user or talent yet
+      setIsDashboardLoading(true);
+      return;
+    }
+
     setIsDashboardLoading(true);
-    
+
     try {
       // Load all data in parallel for better performance
       const [applicationsResult, matchesResult, analyticsResult, jobsResult] = await Promise.all([
@@ -137,10 +142,45 @@ export default function TalentDashboard() {
     return "text-orange-600 bg-orange-100";
   };
 
-  if (isLoading) {
+  // LinkedIn-style: Show full skeleton until ALL data is loaded
+  if (isLoading || isDashboardLoading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Skeleton */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 animate-pulse">
+            <div className="flex items-center gap-6">
+              <div className="w-20 h-20 bg-gray-200 rounded-2xl"></div>
+              <div className="flex-1">
+                <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div className="h-5 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Skeleton */}
+          <StatsSkeleton count={4} />
+
+          {/* Content Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+              <div className="space-y-3">
+                <div className="h-20 bg-gray-200 rounded"></div>
+                <div className="h-20 bg-gray-200 rounded"></div>
+                <div className="h-20 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+              <div className="space-y-3">
+                <div className="h-20 bg-gray-200 rounded"></div>
+                <div className="h-20 bg-gray-200 rounded"></div>
+                <div className="h-20 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -149,7 +189,7 @@ export default function TalentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -160,10 +200,10 @@ export default function TalentDashboard() {
                   <img
                     src={profile.avatar_url}
                     alt="avatar"
-                    className="w-20 h-20 rounded-2xl border-4 border-purple-200 shadow-lg object-cover"
+                    className="w-20 h-20 rounded-2xl border-4 border-primary-light shadow-lg object-cover"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center border-4 border-purple-200 shadow-lg">
+                  <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center border-4 border-primary-light shadow-lg">
                     <UserCircle className="text-white" size={48} />
                   </div>
                 )}
@@ -179,13 +219,13 @@ export default function TalentDashboard() {
               <div className="flex flex-wrap gap-3">
                 <Link
                   to="/talent/jobs"
-                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+                  className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all duration-200"
                 >
                   <Briefcase className="mr-2 h-5 w-5" /> Browse Jobs
                 </Link>
                 <Link
                   to="/talent/applications"
-                  className="inline-flex items-center px-6 py-3 bg-white text-purple-600 border-2 border-purple-200 rounded-xl font-semibold hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 transform hover:scale-105"
+                  className="inline-flex items-center px-6 py-3 bg-white text-primary border-2 border-primary-light rounded-xl font-semibold hover:bg-primary-light hover:border-primary transition-all duration-200"
                 >
                   <Eye className="mr-2 h-5 w-5" /> Applications
                 </Link>
@@ -200,7 +240,7 @@ export default function TalentDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+            className="bg-gradient-to-br from-primary to-primary-hover p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
@@ -216,8 +256,8 @@ export default function TalentDashboard() {
                 )}
               </div>
             </div>
-            <p className="text-purple-100 font-medium">Profile Views</p>
-            <p className="text-xs text-purple-200 mt-2">+12% from last week</p>
+            <p className="text-blue-100 font-medium">Profile Views</p>
+            <p className="text-xs text-blue-200 mt-2">+12% from last week</p>
           </motion.div>
 
           <motion.div
@@ -298,7 +338,7 @@ export default function TalentDashboard() {
             transition={{ delay: 0.5 }}
             className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6">
+            <div className="bg-primary p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
@@ -308,75 +348,75 @@ export default function TalentDashboard() {
                     Top AI Matches
                   </h2>
                 </div>
-                <button className="text-white hover:text-purple-100 text-sm font-medium px-4 py-2 bg-white/20 rounded-lg backdrop-blur-sm hover:bg-white/30 transition-all">
+                <button className="text-white hover:text-blue-100 text-sm font-medium px-4 py-2 bg-white/20 rounded-lg backdrop-blur-sm hover:bg-white/30 transition-all">
                   View All
                 </button>
               </div>
             </div>
-          <div className="p-6">
-            {matches.length > 0 ? (
-              <div className="space-y-4">
-                {matches.map((match) => (
-                  <div
-                    key={match.id}
-                    className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg"
-                  >
-                    <img
-                      src={
-                        match.job?.companies?.logo_url ||
-                        "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=100"
-                      }
-                      alt={match.job?.companies?.name}
-                      className="w-12 h-12 rounded-lg object-cover"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-medium text-gray-900 truncate">
-                            {match.job?.title}
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            {match.job?.companies?.name}
-                          </p>
-                          <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                            <div className="flex items-center space-x-1">
-                              <MapPin className="h-3 w-3" />
-                              <span>{match.job?.location || "Remote"}</span>
-                            </div>
-                            {match.job?.salary_min && (
+            <div className="p-6">
+              {matches.length > 0 ? (
+                <div className="space-y-4">
+                  {matches.map((match) => (
+                    <div
+                      key={match.id}
+                      className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg"
+                    >
+                      <img
+                        src={
+                          match.job?.companies?.logo_url ||
+                          "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=100"
+                        }
+                        alt={match.job?.companies?.name}
+                        className="w-12 h-12 rounded-lg object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-medium text-gray-900 truncate">
+                              {match.job?.title}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {match.job?.companies?.name}
+                            </p>
+                            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                               <div className="flex items-center space-x-1">
-                                <DollarSign className="h-3 w-3" />
-                                <span>
-                                  ${match.job.salary_min}k - $
-                                  {match.job.salary_max}k
-                                </span>
+                                <MapPin className="h-3 w-3" />
+                                <span>{match.job?.location || "Remote"}</span>
                               </div>
-                            )}
+                              {match.job?.salary_min && (
+                                <div className="flex items-center space-x-1">
+                                  <DollarSign className="h-3 w-3" />
+                                  <span>
+                                    ${match.job.salary_min}k - $
+                                    {match.job.salary_max}k
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${getMatchColor(
+                              match.matchScore
+                            )}`}
+                          >
+                            {Math.round(match.matchScore)}% match
+                          </span>
                         </div>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getMatchColor(
-                            match.matchScore
-                          )}`}
-                        >
-                          {Math.round(match.matchScore)}% match
-                        </span>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No matches found yet</p>
-                <p className="text-sm text-gray-400">
-                  Complete your profile to get better matches
-                </p>
-              </div>
-            )}
-          </div>
-        </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No matches found yet</p>
+                  <p className="text-sm text-gray-400">
+                    Complete your profile to get better matches
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
 
           {/* Recent Applications */}
           <motion.div
@@ -423,7 +463,7 @@ export default function TalentDashboard() {
                             {application.job?.companies?.name?.charAt(0) || application.job?.title?.charAt(0) || 'J'}
                           </div>
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
@@ -475,8 +515,8 @@ export default function TalentDashboard() {
                 </div>
               )}
             </div>
-        </motion.div>
-      </div>
+          </motion.div>
+        </div>
 
         {/* Profile Completion */}
         {talent && (
@@ -484,7 +524,7 @@ export default function TalentDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="mt-8 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-2xl"
+            className="mt-8 bg-primary rounded-2xl p-8 text-white shadow-2xl"
           >
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
               <div className="flex-1">
@@ -496,7 +536,7 @@ export default function TalentDashboard() {
                     Complete Your Profile
                   </h3>
                 </div>
-                <p className="text-purple-100 text-lg mb-4">
+                <p className="text-blue-100 text-lg mb-4">
                   A complete profile gets 3x more views from companies
                 </p>
                 <div className="flex items-center gap-4 mb-4">
@@ -513,11 +553,11 @@ export default function TalentDashboard() {
               <div className="flex flex-wrap gap-3">
                 <Link
                   to="/talent-profile"
-                  className="px-6 py-3 bg-white text-purple-600 rounded-xl hover:bg-gray-100 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="px-6 py-3 bg-white text-primary rounded-xl hover:bg-gray-100 transition-all font-semibold shadow-lg hover:shadow-xl"
                 >
                   Complete Profile
                 </Link>
-                <button className="px-6 py-3 bg-purple-700 text-white rounded-xl hover:bg-purple-800 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
+                <button className="px-6 py-3 bg-primary-hover text-white rounded-xl hover:bg-primary transition-all font-semibold shadow-lg hover:shadow-xl">
                   Add Skills
                 </button>
               </div>
@@ -530,7 +570,7 @@ export default function TalentDashboard() {
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl">
+                <div className="p-3 bg-primary rounded-xl">
                   <Briefcase className="h-6 w-6 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -539,7 +579,7 @@ export default function TalentDashboard() {
               </div>
               <Link
                 to="/talent/jobs"
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+                className="px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all duration-200"
               >
                 View All Jobs
               </Link>

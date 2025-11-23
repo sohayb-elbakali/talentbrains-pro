@@ -56,7 +56,7 @@ export default class NetworkErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -69,14 +69,13 @@ export default class NetworkErrorBoundary extends Component<Props, State> {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-                  className={`${
-                    this.state.isNetworkError
+                  className={`${this.state.isNetworkError
                       ? 'bg-blue-100'
                       : 'bg-red-100'
-                  } p-4 rounded-2xl shadow-lg`}
+                    } p-4 rounded-2xl shadow-lg`}
                 >
                   {this.state.isNetworkError ? (
-                    <WifiOff className="h-10 w-10 text-blue-600" />
+                    <WifiOff className="h-10 w-10 text-primary" />
                   ) : (
                     <AlertTriangle className="h-10 w-10 text-red-600" />
                   )}
@@ -109,7 +108,7 @@ export default class NetworkErrorBoundary extends Component<Props, State> {
               {/* Retry button */}
               <button
                 onClick={this.handleRetry}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-all transform hover:scale-105 shadow-lg"
               >
                 <RefreshCw className="h-5 w-5" />
                 Try Again

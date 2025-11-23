@@ -41,7 +41,7 @@ const handleAuthError = async (error: any, clearAuthFn: () => void) => {
     console.log("Network error detected, not clearing session:", error);
     return false;
   }
-  
+
   if (isAuthError(error)) {
     console.log("Authentication error detected, clearing session:", error);
     notify.showError("Your session has expired. Please sign in again.");
@@ -104,7 +104,7 @@ export const useAuth = () => {
     // Set up SINGLE window focus/visibility event handler with throttling
     let lastValidation = 0;
     const VALIDATION_THROTTLE = 30000; // Only validate once per 30 seconds
-    
+
     const handleWindowFocus = async () => {
       const now = Date.now();
       if (now - lastValidation < VALIDATION_THROTTLE) {
@@ -349,7 +349,7 @@ export const useAuth = () => {
           console.log("Network error in profile load, not showing notification");
           return;
         }
-        
+
         if (criticalError.message.includes("Failed to fetch profile")) {
           notify.showError(
             "Unable to load your profile. Please try refreshing the page."
@@ -520,65 +520,70 @@ export const useAuth = () => {
 
   const signOut = async () => {
     try {
-      setLoading(true);
-      console.log("🚪 Starting sign out process...");
+      console.log("🚪 Starting instant sign out...");
 
-      // Step 1: Clear React Query cache
-      try {
-        const queryClient = (window as any).queryClient;
-        if (queryClient) {
-          console.log("🗑️ Clearing React Query cache...");
-          queryClient.clear();
-        }
-      } catch (cacheError) {
-        console.warn("Failed to clear query cache:", cacheError);
-      }
-
-      // Step 2: Clear Supabase session
-      try {
-        const { error } = await auth.signOut();
-        if (error) {
-          console.error("Supabase sign out error:", error);
-        }
-      } catch (supabaseError) {
-        console.error("Supabase sign out failed:", supabaseError);
-      }
-
-      // Step 3: Clear local auth state (auth listener will handle this automatically)
+      // INSTANT: Clear local state immediately (no await)
       clearAuth();
 
-      // Step 4: Use session manager for cleanup
-      sessionManager.clearAllAuthData();
-
-      // Step 5: Clear auth-related storage
-      try {
-        Object.keys(localStorage).forEach((key) => {
-          if (
-            key.includes("auth") ||
-            key.includes("supabase") ||
-            key.startsWith("sb-")
-          ) {
-            localStorage.removeItem(key);
-          }
-        });
-
-        Object.keys(sessionStorage).forEach((key) => {
-          if (
-            key.includes("auth") ||
-            key.includes("supabase") ||
-            key.startsWith("sb-")
-          ) {
-            sessionStorage.removeItem(key);
-          }
-        });
-      } catch (cleanupError) {
-        console.warn("Storage cleanup failed:", cleanupError);
-      }
-
-      console.log("✅ Sign out completed successfully");
-
-      // Step 6: Navigate to home (NO PAGE RELOAD - React Router handles this)
+      // INSTANT: Navigate immediately (don't wait for anything)
       navigate("/", { replace: true });
+
+      // BACKGROUND: Do cleanup asynchronously (don't block UI)
+      Promise.all([
+        // Clear React Query cache
+        (async () => {
+          try {
+            const queryClient = (window as any).queryClient;
+            if (queryClient) {
+              console.log("🗑️ Clearing React Query cache...");
+              queryClient.clear();
+            }
+          } catch (error) {
+            console.warn("Failed to clear query cache:", error);
+          }
+        })(),
+
+        // Clear Supabase session
+        (async () => {
+          try {
+            await auth.signOut();
+          } catch (error) {
+            console.warn("Supabase sign out failed:", error);
+          }
+        })(),
+
+        // Clear storage
+        (async () => {
+          try {
+            sessionManager.clearAllAuthData();
+
+            // Clear auth-related storage
+            Object.keys(localStorage).forEach((key) => {
+              if (
+                key.includes("auth") ||
+                key.includes("supabase") ||
+                key.startsWith("sb-")
+              ) {
+                localStorage.removeItem(key);
+              }
+            });
+
+            Object.keys(sessionStorage).forEach((key) => {
+              if (
+                key.includes("auth") ||
+                key.includes("supabase") ||
+                key.startsWith("sb-")
+              ) {
+                sessionStorage.removeItem(key);
+              }
+            });
+          } catch (error) {
+            console.warn("Storage cleanup failed:", error);
+          }
+        })(),
+      ]).then(() => {
+        console.log("✅ Background cleanup completed");
+      });
 
       return { success: true };
     } catch (error: any) {
@@ -587,8 +592,6 @@ export const useAuth = () => {
       sessionManager.forceLogout();
       navigate("/", { replace: true });
       return { success: false, error };
-    } finally {
-      setLoading(false);
     }
   };
 

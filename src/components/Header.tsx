@@ -34,10 +34,10 @@ export default function Header({ activeSection, setActiveSection }: HeaderProps)
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center space-x-2">
-              <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg">
+              <div className="p-2 bg-primary rounded-lg">
                 <Brain className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-primary">
                 TalentBrains
               </span>
             </div>
@@ -49,11 +49,10 @@ export default function Header({ activeSection, setActiveSection }: HeaderProps)
                   <button
                     key={item.id}
                     onClick={() => setActiveSection(item.id)}
-                    className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                      activeSection === item.id
-                        ? 'text-purple-600 border-b-2 border-purple-600'
-                        : 'text-gray-600 hover:text-purple-600'
-                    }`}
+                    className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${activeSection === item.id
+                        ? 'text-primary border-b-2 border-primary'
+                        : 'text-gray-600 hover:text-primary'
+                      }`}
                   >
                     {item.name}
                   </button>
@@ -63,32 +62,32 @@ export default function Header({ activeSection, setActiveSection }: HeaderProps)
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center space-x-4">
-              <button 
-                className="p-2 text-gray-600 hover:text-purple-600 transition-colors"
+              <button
+                className="p-2 text-gray-600 hover:text-primary transition-colors"
                 aria-label="Search"
               >
                 <Search className="h-5 w-5" />
               </button>
-              <button 
-                className="p-2 text-gray-600 hover:text-purple-600 transition-colors relative"
+              <button
+                className="p-2 text-gray-600 hover:text-primary transition-colors relative"
                 aria-label="Notifications"
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
+                <span className="absolute -top-1 -right-1 h-3 w-3 bg-secondary rounded-full"></span>
               </button>
-              
+
               {isAuthenticated ? (
                 <div className="relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+                    className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-all duration-200"
                   >
                     <User className="h-4 w-4" />
                     <span className="text-sm font-medium">
                       {profile?.full_name || 'Dashboard'}
                     </span>
                   </button>
-                  
+
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                       <div className="px-4 py-2 border-b border-gray-100">
@@ -132,7 +131,7 @@ export default function Header({ activeSection, setActiveSection }: HeaderProps)
               ) : (
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-all duration-200"
                 >
                   <User className="h-4 w-4" />
                   <span className="text-sm font-medium">Sign In</span>
@@ -143,7 +142,7 @@ export default function Header({ activeSection, setActiveSection }: HeaderProps)
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-purple-600 transition-colors"
+              className="md:hidden p-2 text-gray-600 hover:text-primary transition-colors"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -160,11 +159,10 @@ export default function Header({ activeSection, setActiveSection }: HeaderProps)
                       setActiveSection(item.id);
                       setIsMenuOpen(false);
                     }}
-                    className={`px-4 py-2 text-left text-sm font-medium transition-colors duration-200 ${
-                      activeSection === item.id
-                        ? 'text-purple-600 bg-purple-50'
-                        : 'text-gray-600 hover:text-purple-600 hover:bg-gray-50'
-                    }`}
+                    className={`px-4 py-2 text-left text-sm font-medium transition-colors duration-200 ${activeSection === item.id
+                        ? 'text-primary bg-primary-light'
+                        : 'text-gray-600 hover:text-primary hover:bg-gray-50'
+                      }`}
                   >
                     {item.name}
                   </button>
@@ -203,25 +201,20 @@ export default function Header({ activeSection, setActiveSection }: HeaderProps)
                         setIsAuthModalOpen(true);
                         setIsMenuOpen(false);
                       }}
-                      className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+                      className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-all duration-200"
                     >
                       <User className="h-4 w-4" />
                       <span className="text-sm font-medium">Sign In</span>
                     </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-      </header>
+              </header>
 
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        defaultMode="signin"
-      />
-    </>
-  );
+              {/* Auth Modal */}
+              <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+                defaultMode="signin"
+              />
+            </>
+          );
 }

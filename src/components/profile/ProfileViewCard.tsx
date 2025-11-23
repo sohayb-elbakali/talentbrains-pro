@@ -55,7 +55,7 @@ export function ProfileTags({ label, tags, className = '' }: ProfileTagsProps) {
           tags.map((tag, index) => (
             <span
               key={index}
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-primary"
             >
               {tag}
             </span>
@@ -84,7 +84,7 @@ export function ProfileLink({ label, url, className = '' }: ProfileLinkProps) {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-purple-600 hover:text-purple-800 underline"
+            className="text-primary hover:text-primary-hover underline"
           >
             {url}
           </a>
@@ -116,7 +116,7 @@ export function ProfileSection({ title, items, className = '' }: ProfileSectionP
         {items.length > 0 ? (
           <div className="space-y-3">
             {items.map((item, index) => (
-              <div key={index} className="border-l-2 border-purple-200 pl-4">
+              <div key={index} className="border-l-2 border-blue-200 pl-4">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     {item.title && (
@@ -133,7 +133,7 @@ export function ProfileSection({ title, items, className = '' }: ProfileSectionP
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-purple-600 hover:text-purple-800 underline mt-1 inline-block"
+                        className="text-xs text-primary hover:text-primary-hover underline mt-1 inline-block"
                       >
                         View Certificate
                       </a>

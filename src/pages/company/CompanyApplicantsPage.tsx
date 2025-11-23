@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
+import { CardSkeleton, StatsSkeleton } from "../../components/SkeletonLoader";
+import { useFilterStore } from "../../stores/filterStore";
 
 interface Application {
   id: string;
@@ -38,16 +40,16 @@ const CompanyApplicantsPage = () => {
   const [filteredApplications, setFilteredApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
+
+  // Use Zustand for filters
+  const { applicationFilters, setApplicationFilters, resetApplicationFilters } = useFilterStore();
 
   const fetchApplicants = useCallback(async () => {
     if (!profile?.id) return;
 
     const cacheKey = `applicants-${profile.id}-${searchParams.get("job") || 'all'}`;
     const cached = sessionStorage.getItem(cacheKey);
-    
+
     if (cached) {
       try {
         const cachedData = JSON.parse(cached);
@@ -77,11 +79,11 @@ const CompanyApplicantsPage = () => {
 
       const { data, error } = await db.getApplications(filters);
       if (error) throw error;
-      
+
       const applicationsData = data || [];
       setApplications(applicationsData);
       setFilteredApplications(applicationsData);
-      
+
       sessionStorage.setItem(cacheKey, JSON.stringify({
         data: applicationsData,
         timestamp: Date.now()
@@ -97,24 +99,44 @@ const CompanyApplicantsPage = () => {
     fetchApplicants();
   }, [fetchApplicants]);
 
+  // Filter applications based on Zustand filters
   useEffect(() => {
-    let filtered = applications;
+    let filtered = [...applications];
 
-    if (searchTerm) {
+    // Search filter
+    if (applicationFilters.search) {
+      const search = applicationFilters.search.toLowerCase();
       filtered = filtered.filter(
         (app) =>
-          app.talent?.profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          app.job?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          app.talent?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+          app.talent?.profile?.full_name?.toLowerCase().includes(search) ||
+          app.talent?.title?.toLowerCase().includes(search) ||
+          app.job?.title?.toLowerCase().includes(search)
       );
     }
 
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((app) => app.status === statusFilter);
+    // Status filter
+    if (applicationFilters.status.length > 0) {
+      filtered = filtered.filter((app) =>
+        applicationFilters.status.includes(app.status)
+      );
     }
 
+    // Sort
+    filtered.sort((a, b) => {
+      switch (applicationFilters.sortBy) {
+        case 'recent':
+          return new Date(b.applied_at).getTime() - new Date(a.applied_at).getTime();
+        case 'oldest':
+          return new Date(a.applied_at).getTime() - new Date(b.applied_at).getTime();
+        case 'status':
+          return a.status.localeCompare(b.status);
+        default:
+          return 0;
+      }
+    });
+
     setFilteredApplications(filtered);
-  }, [applications, searchTerm, statusFilter]);
+  }, [applications, applicationFilters]);
 
   const getStatusConfig = (status: Application["status"]) => {
     const configs = {
@@ -131,10 +153,10 @@ const CompanyApplicantsPage = () => {
         bgClass: "bg-blue-50 border-blue-200"
       },
       interview: {
-        icon: Calendar,
-        class: "bg-gradient-to-r from-purple-400 to-pink-400 text-white",
+        icon: Star,
+        class: "bg-gradient-to-r from-secondary to-secondary-hover text-white",
         label: "Interview Scheduled",
-        bgClass: "bg-purple-50 border-purple-200"
+        bgClass: "bg-orange-50 border-orange-200"
       },
       offer: {
         icon: Star,
@@ -166,69 +188,124 @@ const CompanyApplicantsPage = () => {
   };
 
   const stats = [
-    { label: "Total Applications", value: applications.length, color: "from-purple-500 to-blue-500", icon: TrendingUp },
+    { label: "Total Applications", value: applications.length, color: "from-primary to-primary-hover", icon: TrendingUp },
     { label: "Pending Review", value: applications.filter(a => a.status === "pending").length, color: "from-yellow-500 to-orange-500", icon: Clock },
-    { label: "Interviews", value: applications.filter(a => a.status === "interview").length, color: "from-purple-500 to-pink-500", icon: Calendar },
+    { label: "Interviews", value: applications.filter(a => a.status === "interview").length, color: "from-secondary to-secondary-hover", icon: Calendar },
     { label: "Offers/Accepted", value: applications.filter(a => ["offer", "accepted"].includes(a.status)).length, color: "from-green-500 to-emerald-500", icon: CheckCircle },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
+          <h1 className="text-4xl font-bold text-primary mb-3">
             Applicant Management
           </h1>
           <p className="text-lg text-gray-600">Review and manage your job applications</p>
         </motion.div>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
+        <div className="mb-8">
+          <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search by name, job title, or skills..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all outline-none text-gray-900 placeholder-gray-400 shadow-sm"
+              value={applicationFilters.search}
+              onChange={(e) => setApplicationFilters({ search: e.target.value })}
+              className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary-light transition-all outline-none text-gray-900 placeholder-gray-400 shadow-sm hover:border-gray-300"
             />
           </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`btn ${showFilters ? 'btn-primary' : 'btn-secondary'} px-6 py-4 shadow-md`}
-          >
-            <Filter size={20} />
-            <span className="hidden sm:inline">Filters</span>
-          </button>
         </div>
 
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 p-6 mb-8"
-          >
-            <label className="label">Filter by Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="input-field"
+        {/* Quick Filter Tabs */}
+        <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 p-4 mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="h-5 w-5 text-gray-600" />
+            <h3 className="font-semibold text-gray-700">Quick Filters</h3>
+            {applicationFilters.status.length > 0 && (
+              <button
+                onClick={resetApplicationFilters}
+                className="ml-auto text-sm text-primary hover:text-primary-hover font-medium"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {/* All */}
+            <button
+              onClick={() => setApplicationFilters({ status: [] })}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${applicationFilters.status.length === 0
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
-              <option value="all">All Statuses</option>
-              <option value="pending">Pending Review</option>
-              <option value="reviewed">Reviewed</option>
-              <option value="interview">Interview</option>
-              <option value="offer">Offer</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </motion.div>
-        )}
+              All ({applications.length})
+            </button>
+
+            {/* Status Filters with Counts */}
+            {[
+              { value: 'pending', label: 'Pending', color: 'bg-yellow-500', hoverColor: 'hover:bg-yellow-600' },
+              { value: 'reviewed', label: 'Reviewed', color: 'bg-blue-500', hoverColor: 'hover:bg-blue-600' },
+              { value: 'interview', label: 'Interview', color: 'bg-orange-500', hoverColor: 'hover:bg-orange-600' },
+              { value: 'offer', label: 'Offer', color: 'bg-green-500', hoverColor: 'hover:bg-green-600' },
+              { value: 'accepted', label: 'Accepted', color: 'bg-emerald-500', hoverColor: 'hover:bg-emerald-600' },
+              { value: 'rejected', label: 'Rejected', color: 'bg-red-500', hoverColor: 'hover:bg-red-600' },
+            ].map((status) => {
+              const count = applications.filter(a => a.status === status.value).length;
+              const isActive = applicationFilters.status.includes(status.value as any);
+
+              return (
+                <button
+                  key={status.value}
+                  onClick={() => {
+                    const newStatuses = isActive
+                      ? applicationFilters.status.filter(s => s !== status.value)
+                      : [...applicationFilters.status, status.value as any];
+                    setApplicationFilters({ status: newStatuses });
+                  }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${isActive
+                    ? `${status.color} text-white shadow-md ${status.hoverColor}`
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                >
+                  {status.label} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Sort Options */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-4 w-4 text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">Sort by:</span>
+            </div>
+            <div className="flex gap-2">
+              {[
+                { value: 'recent', label: 'Most Recent' },
+                { value: 'oldest', label: 'Oldest First' },
+                { value: 'status', label: 'Status' },
+              ].map((sort) => (
+                <button
+                  key={sort.value}
+                  onClick={() => setApplicationFilters({ sortBy: sort.value as any })}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${applicationFilters.sortBy === sort.value
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                >
+                  {sort.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => {
@@ -255,10 +332,12 @@ const CompanyApplicantsPage = () => {
         </div>
 
         {loading ? (
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 p-12 text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 text-lg">Loading applicants...</p>
-          </div>
+          <>
+            <StatsSkeleton count={4} />
+            <div className="mt-8">
+              <CardSkeleton count={6} />
+            </div>
+          </>
         ) : error ? (
           <div className="bg-white rounded-2xl shadow-lg border-2 border-red-200 p-12 text-center">
             <XCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
@@ -269,13 +348,13 @@ const CompanyApplicantsPage = () => {
             <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">No applicants found</h3>
             <p className="text-gray-500 text-lg">
-              {searchTerm || statusFilter !== "all"
+              {applicationFilters.search || applicationFilters.status.length > 0
                 ? "Try adjusting your filters to see more results"
                 : "Applications will appear here once candidates apply to your jobs"}
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredApplications.map((app, index) => {
               const statusConfig = getStatusConfig(app.status);
               const StatusIcon = statusConfig.icon;
@@ -283,83 +362,71 @@ const CompanyApplicantsPage = () => {
               return (
                 <motion.div
                   key={app.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => navigate(`/company/applicants/${app.id}`)}
-                  className={`group relative bg-white rounded-2xl shadow-lg border-2 ${statusConfig.bgClass} p-6 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
+                  className="group relative bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg hover:border-primary transition-all duration-300"
                 >
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-100 to-blue-100 opacity-0 group-hover:opacity-20 rounded-full -mr-32 -mt-32 transition-opacity duration-300"></div>
+                  {/* Status Badge */}
+                  <div className="absolute top-3 right-3 z-10 flex flex-col items-center gap-1">
+                    <div className={`p-2 ${statusConfig.class} rounded-full shadow-md`}>
+                      <StatusIcon size={16} />
+                    </div>
+                    <span className="text-xs font-bold text-gray-600 bg-white px-2 py-0.5 rounded-full shadow-sm">
+                      {statusConfig.label}
+                    </span>
+                  </div>
 
-                  <div className="relative flex flex-col sm:flex-row items-start gap-6">
-                    <div className="relative">
+                  <div className="p-5">
+                    {/* Avatar & Name */}
+                    <div className="flex items-center gap-3 mb-4">
                       <img
                         src={app.talent?.profile?.avatar_url || `https://api.dicebear.com/6.x/initials/svg?seed=${app.talent?.profile?.full_name}`}
                         alt={app.talent?.profile?.full_name}
-                        className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-lg ring-2 ring-purple-100"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-100"
                       />
-                      <div className={`absolute -bottom-2 -right-2 p-2 rounded-xl ${statusConfig.class} shadow-lg`}>
-                        <StatusIcon size={16} />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-bold text-gray-900 truncate group-hover:text-primary transition-colors">
+                          {app.talent?.profile?.full_name}
+                        </h3>
+                        <p className="text-sm text-gray-600 truncate">{app.talent?.title}</p>
                       </div>
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4 mb-3">
-                        <div>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-1 group-hover:text-purple-600 transition-colors">
-                            {app.talent?.profile?.full_name}
-                          </h3>
-                          <p className="text-base text-gray-600 font-medium">{app.talent?.title}</p>
+                    {/* Details with Icons */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Briefcase className="h-3.5 w-3.5 text-primary" />
                         </div>
-                        <span className={`px-4 py-2 rounded-xl ${statusConfig.class} text-sm font-bold shadow-md whitespace-nowrap flex items-center gap-2`}>
-                          <StatusIcon size={16} />
-                          {statusConfig.label}
-                        </span>
+                        <span className="truncate">{app.job.title}</span>
                       </div>
-
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
-                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                          <Briefcase size={16} className="text-purple-500" />
-                          <span className="font-medium">{app.job.title}</span>
+                      {app.talent?.location && (
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <MapPin className="h-3.5 w-3.5 text-primary" />
+                          </div>
+                          <span className="truncate">{app.talent.location}</span>
                         </div>
-                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                          <MapPin size={16} className="text-blue-500" />
-                          <span>{app.talent?.location || "Not specified"}</span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                          <Calendar size={16} className="text-green-500" />
-                          <span>Applied {new Date(app.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        </div>
-                      </div>
-
-                      {app.talent?.bio && (
-                        <p className="text-sm text-gray-600 line-clamp-2 mb-4 leading-relaxed">
-                          {app.talent.bio}
-                        </p>
                       )}
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 rounded-lg text-xs font-bold">
-                            {app.talent?.experience_level}
-                          </span>
-                          <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg text-xs font-bold">
-                            {app.talent?.availability_status}
-                          </span>
-                        </div>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/company/applicants/${app.id}`);
-                          }}
-                          className="btn btn-primary shadow-lg hover:shadow-xl"
-                        >
-                          <Eye size={18} />
-                          View Profile
-                        </button>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>Applied {new Date(app.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                       </div>
                     </div>
+
+                    {/* Action Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/company/applicants/${app.id}`);
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-hover transition-colors"
+                    >
+                      <Eye size={14} />
+                      View Profile
+                    </button>
                   </div>
                 </motion.div>
               );

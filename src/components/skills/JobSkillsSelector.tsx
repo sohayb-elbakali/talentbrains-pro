@@ -99,7 +99,7 @@ export default function JobSkillsSelector({
     if (loading) {
         return (
             <div className="flex items-center justify-center p-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-purple-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-primary"></div>
                 <span className="ml-3 text-gray-600 font-medium">Loading skills...</span>
             </div>
         );
@@ -118,7 +118,7 @@ export default function JobSkillsSelector({
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Type to search..."
-                        className="w-full px-3 py-2 pl-9 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                        className="w-full px-3 py-2 pl-9 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
                     />
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 </div>
@@ -137,7 +137,7 @@ export default function JobSkillsSelector({
                                 disabled={isSkillSelected(skill.name)}
                                 className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${isSkillSelected(skill.name)
                                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                    : "bg-white text-purple-700 hover:bg-purple-50 border border-purple-200 hover:border-purple-300"
+                                    : "bg-white text-primary hover:bg-blue-50 border border-blue-200 hover:border-primary-light"
                                     }`}
                             >
                                 {skill.name}
@@ -164,13 +164,13 @@ export default function JobSkillsSelector({
                         }
                     }}
                     placeholder="Add custom skill..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                 />
                 <button
                     type="button"
                     onClick={handleAddCustomSkill}
                     disabled={!customSkill.trim()}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all text-sm flex items-center gap-1.5"
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all text-sm flex items-center gap-1.5"
                 >
                     <Plus className="h-3.5 w-3.5" />
                     Add
@@ -193,7 +193,7 @@ export default function JobSkillsSelector({
                             return (
                                 <div
                                     key={skill.skill_name}
-                                    className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-purple-300 transition-all"
+                                    className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-primary-light transition-all"
                                 >
                                     <div className="flex items-center gap-3">
                                         {/* Skill Name */}
@@ -212,7 +212,7 @@ export default function JobSkillsSelector({
                                                         proficiency_level: parseInt(e.target.value),
                                                     })
                                                 }
-                                                className="px-2 py-1 border border-gray-300 rounded text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+                                                className="px-2 py-1 border border-gray-300 rounded text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary bg-white"
                                             >
                                                 {PROFICIENCY_LEVELS.map((level) => (
                                                     <option key={level.value} value={level.value}>

@@ -66,7 +66,7 @@ export default function Features() {
     if (!isAuthenticated) {
       setAuthMode('signin');
       setIsAuthModalOpen(true);
-      toast('Please sign in to continue.');
+      notify.showInfo('Please sign in to continue.');
       return;
     }
     action();
@@ -89,18 +89,9 @@ export default function Features() {
     });
   };
 
-  const getColorClasses = (color: string) => {
-    const colors = {
-      purple: 'bg-purple-100 text-purple-600 group-hover:bg-purple-600 group-hover:text-white',
-      blue: 'bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white',
-      green: 'bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white',
-      indigo: 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white',
-      pink: 'bg-pink-100 text-pink-600 group-hover:bg-pink-600 group-hover:text-white',
-      orange: 'bg-orange-100 text-orange-600 group-hover:bg-orange-600 group-hover:text-white',
-      teal: 'bg-teal-100 text-teal-600 group-hover:bg-teal-600 group-hover:text-white',
-      red: 'bg-red-100 text-red-600 group-hover:bg-red-600 group-hover:text-white'
-    };
-    return colors[color as keyof typeof colors] || colors.purple;
+  const getColorClasses = (_color: string) => {
+    // Simplified to use primary blue for all features to match "simple" request
+    return 'bg-primary-light text-primary group-hover:bg-primary group-hover:text-white';
   };
 
   return (
@@ -109,7 +100,7 @@ export default function Features() {
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
             Why Choose{' '}
-            <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <span className="text-primary">
               TalentBrains?
             </span>
           </h2>
@@ -124,12 +115,12 @@ export default function Features() {
             return (
               <div
                 key={index}
-                className="group p-6 bg-white rounded-xl border border-gray-200 hover:border-transparent hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
+                className="group p-6 bg-white rounded-xl border border-gray-200 hover:border-primary hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
               >
                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-all duration-300 ${getColorClasses(feature.color)}`}>
                   <Icon className="h-6 w-6 transition-colors duration-300" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors duration-300">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary transition-colors duration-300">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
@@ -142,22 +133,22 @@ export default function Features() {
 
         {/* CTA Section */}
         <div className="mt-20 text-center">
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 sm:p-12">
+          <div className="bg-primary rounded-2xl p-8 sm:p-12">
             <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
               Ready to Find Your Perfect Match?
             </h3>
-            <p className="text-purple-100 text-lg mb-8 max-w-2xl mx-auto">
+            <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
               Join thousands of successful professionals and companies who have found their ideal partnerships through TalentBrains.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                className="px-8 py-4 bg-white text-purple-600 rounded-xl font-semibold hover:bg-gray-50 transition-colors duration-200 transform hover:scale-105"
+                className="px-8 py-4 bg-white text-primary rounded-xl font-semibold hover:bg-gray-50 transition-colors duration-200 transform hover:scale-105"
                 onClick={handleStartAsTalent}
               >
                 Start as a Talent
               </button>
               <button
-                className="px-8 py-4 bg-purple-700 text-white rounded-xl font-semibold hover:bg-purple-800 transition-colors duration-200 transform hover:scale-105 border-2 border-white/30"
+                className="px-8 py-4 bg-primary-hover text-white rounded-xl font-semibold hover:bg-blue-900 transition-colors duration-200 transform hover:scale-105 border-2 border-white/30"
                 onClick={handlePostJob}
               >
                 Post a Job

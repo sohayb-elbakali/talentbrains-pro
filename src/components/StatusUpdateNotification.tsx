@@ -31,21 +31,21 @@ const StatusUpdateNotification: React.FC<StatusUpdateNotificationProps> = ({
       case 'reviewed':
         return {
           icon: <UserCheck className="h-6 w-6" />,
-          color: 'bg-blue-500',
+          color: 'bg-primary',
           title: 'Application Reviewed',
           message: 'Your application has been reviewed by the company'
         };
       case 'interview':
         return {
           icon: <Clock className="h-6 w-6" />,
-          color: 'bg-purple-500',
+          color: 'bg-secondary',
           title: 'Interview Scheduled',
           message: 'Congratulations! You\'ve been invited for an interview'
         };
       case 'offer':
         return {
           icon: <Gift className="h-6 w-6" />,
-          color: 'bg-green-500',
+          color: 'bg-green-600',
           title: 'Job Offer Received',
           message: 'Amazing! You\'ve received a job offer'
         };

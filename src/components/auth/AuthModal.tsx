@@ -24,7 +24,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  
+
   const { signIn, signUp, loading, isAuthenticated, profile } = useAuth()
   const navigate = useNavigate()
 
@@ -76,7 +76,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) return
 
     if (mode === 'signin') {
@@ -107,7 +107,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
       if (userType === 'company') {
         userData.company_name = formData.companyName;
       }
-      
+
       const result = await signUp(formData.email, formData.password, userData)
       if (result && result.success) {
         onClose()
@@ -132,17 +132,17 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-purple-900/50 via-blue-900/50 to-indigo-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <AnimatePresence>
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           transition={{ type: "spring", duration: 0.5 }}
-          className="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-auto max-h-[95vh] overflow-y-auto my-8 border border-purple-100"
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-auto max-h-[95vh] overflow-y-auto my-8 border border-gray-100"
         >
           {/* Header with gradient background */}
-          <div className="relative bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 rounded-t-3xl p-8 pb-12">
+          <div className="relative bg-primary rounded-t-3xl p-8 pb-12">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-all duration-200 backdrop-blur-sm"
@@ -150,7 +150,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
             >
               <X className="h-5 w-5 text-white" />
             </button>
-            
+
             <div className="flex flex-col items-center text-center">
               <motion.div
                 initial={{ scale: 0 }}
@@ -163,9 +163,9 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
               <h2 className="text-3xl font-bold text-white mb-2">
                 {mode === 'signin' ? 'Welcome Back!' : 'Join TalentBrains'}
               </h2>
-              <p className="text-purple-100 text-sm">
-                {mode === 'signin' 
-                  ? 'Sign in to continue your journey' 
+              <p className="text-blue-100 text-sm">
+                {mode === 'signin'
+                  ? 'Sign in to continue your journey'
                   : 'Create your account and get started'}
               </p>
             </div>
@@ -177,7 +177,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
               {mode === 'signup' && (
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <UserCircle className="h-5 w-5 text-purple-600" />
+                    <UserCircle className="h-5 w-5 text-primary" />
                     I am a...
                   </label>
                   <div className="grid grid-cols-2 gap-4">
@@ -186,17 +186,15 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                       onClick={() => setUserType('talent')}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className={`p-5 border-2 rounded-xl flex flex-col items-center space-y-3 transition-all duration-200 ${
-                        userType === 'talent'
-                          ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-blue-50 text-purple-700 shadow-md'
-                          : 'border-gray-200 hover:border-purple-300 hover:shadow-sm'
-                      }`}
+                      className={`p-5 border-2 rounded-xl flex flex-col items-center space-y-3 transition-all duration-200 ${userType === 'talent'
+                          ? 'border-primary bg-blue-50 text-primary shadow-md'
+                          : 'border-gray-200 hover:border-primary-light hover:shadow-sm'
+                        }`}
                     >
-                      <div className={`p-3 rounded-xl ${
-                        userType === 'talent' 
-                          ? 'bg-gradient-to-br from-purple-500 to-blue-600' 
+                      <div className={`p-3 rounded-xl ${userType === 'talent'
+                          ? 'bg-primary'
                           : 'bg-gray-100'
-                      }`}>
+                        }`}>
                         <User className={`h-6 w-6 ${userType === 'talent' ? 'text-white' : 'text-gray-600'}`} />
                       </div>
                       <span className="font-semibold">Talent</span>
@@ -207,17 +205,15 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                       onClick={() => setUserType('company')}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className={`p-5 border-2 rounded-xl flex flex-col items-center space-y-3 transition-all duration-200 ${
-                        userType === 'company'
-                          ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-blue-50 text-purple-700 shadow-md'
-                          : 'border-gray-200 hover:border-purple-300 hover:shadow-sm'
-                      }`}
+                      className={`p-5 border-2 rounded-xl flex flex-col items-center space-y-3 transition-all duration-200 ${userType === 'company'
+                          ? 'border-primary bg-blue-50 text-primary shadow-md'
+                          : 'border-gray-200 hover:border-primary-light hover:shadow-sm'
+                        }`}
                     >
-                      <div className={`p-3 rounded-xl ${
-                        userType === 'company' 
-                          ? 'bg-gradient-to-br from-purple-500 to-blue-600' 
+                      <div className={`p-3 rounded-xl ${userType === 'company'
+                          ? 'bg-primary'
                           : 'bg-gray-100'
-                      }`}>
+                        }`}>
                         <Building className={`h-6 w-6 ${userType === 'company' ? 'text-white' : 'text-gray-600'}`} />
                       </div>
                       <span className="font-semibold">Company</span>
@@ -234,21 +230,20 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                       Full Name
                     </label>
                     <div className="relative group">
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-500">
+                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary">
                         <User className="h-5 w-5" />
                       </div>
                       <input
                         type="text"
                         value={formData.fullName}
                         onChange={(e) => handleInputChange('fullName', e.target.value)}
-                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${
-                          errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                        }`}
+                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all ${errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-primary-light'
+                          }`}
                         placeholder="John Doe"
                       />
                     </div>
                     {errors.fullName && (
-                      <motion.p 
+                      <motion.p
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="text-red-500 text-sm mt-2 flex items-center gap-1"
@@ -265,21 +260,20 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                       Company Name
                     </label>
                     <div className="relative group">
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-500">
+                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary">
                         <Building className="h-5 w-5" />
                       </div>
                       <input
                         type="text"
                         value={formData.companyName}
                         onChange={(e) => handleInputChange('companyName', e.target.value)}
-                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${
-                          errors.companyName ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                        }`}
+                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all ${errors.companyName ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-primary-light'
+                          }`}
                         placeholder="Acme Corporation"
                       />
                     </div>
                     {errors.companyName && (
-                      <motion.p 
+                      <motion.p
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="text-red-500 text-sm mt-2 flex items-center gap-1"
@@ -295,21 +289,20 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                     Email Address
                   </label>
                   <div className="relative group">
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-500">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary">
                       <Mail className="h-5 w-5" />
                     </div>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${
-                        errors.email ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                      }`}
+                      className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all ${errors.email ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-primary-light'
+                        }`}
                       placeholder="you@example.com"
                     />
                   </div>
                   {errors.email && (
-                    <motion.p 
+                    <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-red-500 text-sm mt-2 flex items-center gap-1"
@@ -324,21 +317,20 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                     Password
                   </label>
                   <div className="relative group">
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-500">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary">
                       <Lock className="h-5 w-5" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={formData.password}
                       onChange={(e) => handleInputChange('password', e.target.value)}
-                      className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${
-                        errors.password ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                      }`}
+                      className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all ${errors.password ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-primary-light'
+                        }`}
                       placeholder="••••••••"
                     />
                     <button
                       type="button"
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-600 transition-colors"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
                       onClick={() => setShowPassword((v) => !v)}
                       tabIndex={-1}
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
@@ -347,7 +339,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                     </button>
                   </div>
                   {errors.password && (
-                    <motion.p 
+                    <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-red-500 text-sm mt-2 flex items-center gap-1"
@@ -363,21 +355,20 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                       Confirm Password
                     </label>
                     <div className="relative group">
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-500">
+                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary">
                         <Lock className="h-5 w-5" />
                       </div>
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={formData.confirmPassword}
                         onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                        className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${
-                          errors.confirmPassword ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-purple-300'
-                        }`}
+                        className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all ${errors.confirmPassword ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-primary-light'
+                          }`}
                         placeholder="••••••••"
                       />
                       <button
                         type="button"
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-600 transition-colors"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
                         onClick={() => setShowConfirmPassword((v) => !v)}
                         tabIndex={-1}
                         aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
@@ -386,7 +377,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                       </button>
                     </div>
                     {errors.confirmPassword && (
-                      <motion.p 
+                      <motion.p
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="text-red-500 text-sm mt-2 flex items-center gap-1"
@@ -402,7 +393,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                   disabled={loading || isAuthenticated}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:via-blue-700 hover:to-indigo-700 transition-all duration-200 font-bold text-lg shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-4 px-6 bg-primary text-white rounded-xl hover:bg-primary-hover transition-all duration-200 font-bold text-lg shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   aria-label={mode === 'signin' ? 'Sign In' : 'Create Account'}
                 >
                   {loading ? (
@@ -422,7 +413,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                   )}
                 </motion.button>
                 {isAuthenticated && (
-                  <motion.p 
+                  <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="text-green-600 text-center mt-2 font-medium"
@@ -445,7 +436,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                 </div>
                 <button
                   onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-                  className="mt-4 text-purple-600 hover:text-purple-700 font-bold text-base hover:underline transition-all"
+                  className="mt-4 text-primary hover:text-primary-hover font-bold text-base hover:underline transition-all"
                 >
                   {mode === 'signin' ? '→ Create an account' : '→ Sign in instead'}
                 </button>

@@ -114,7 +114,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                        <Star className="h-6 w-6 text-purple-600" />
+                        <Star className="h-6 w-6 text-primary" />
                         {type === 'talent' ? 'My Skills' : 'Required Skills'}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
@@ -125,7 +125,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                 </div>
                 <button
                     onClick={() => setShowAddModal(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-blue-700 transition-all flex items-center gap-2"
+                    className="px-4 py-2 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all flex items-center gap-2"
                 >
                     <Plus className="h-5 w-5" />
                     Add Skill
@@ -135,7 +135,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
             {/* Skills List */}
             {loading ? (
                 <div className="text-center py-8">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     <p className="text-gray-500 mt-2">Loading skills...</p>
                 </div>
             ) : userSkills.length === 0 ? (
@@ -144,7 +144,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                     <p className="text-gray-500">No skills added yet</p>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="mt-4 text-purple-600 hover:text-purple-700 font-semibold"
+                        className="mt-4 text-primary hover:text-primary-hover font-semibold"
                     >
                         Add your first skill
                     </button>
@@ -156,14 +156,14 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                             key={index}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-4 border border-purple-100"
+                            className="bg-blue-50 rounded-xl p-4 border border-blue-100"
                         >
                             <div className="flex items-start justify-between mb-2">
                                 <div className="flex-1">
                                     <h4 className="font-bold text-gray-900 flex items-center gap-2">
                                         {userSkill.skill.name}
                                         {userSkill.is_primary && (
-                                            <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">
+                                            <span className="px-2 py-0.5 bg-primary text-white text-xs rounded-full">
                                                 Primary
                                             </span>
                                         )}
@@ -184,13 +184,13 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                                 <div>
                                     <div className="flex items-center justify-between text-sm mb-1">
                                         <span className="text-gray-600">Proficiency</span>
-                                        <span className="font-semibold text-purple-600">
+                                        <span className="font-semibold text-primary">
                                             {getProficiencyLabel(userSkill.proficiency_level)}
                                         </span>
                                     </div>
                                     <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                                         <div
-                                            className="h-full bg-gradient-to-r from-purple-500 to-blue-600"
+                                            className="h-full bg-gradient-to-r from-primary to-primary-hover"
                                             style={{ width: `${(userSkill.proficiency_level / 5) * 100}%` }}
                                         />
                                     </div>
@@ -215,7 +215,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                         animate={{ opacity: 1, scale: 1 }}
                         className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
                     >
-                        <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-t-2xl">
+                        <div className="bg-primary p-6 rounded-t-2xl">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xl font-bold text-white">Add New Skill</h3>
                                 <button
@@ -241,7 +241,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     placeholder="Search skills..."
-                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary-light transition-all"
                                 />
                             </div>
 
@@ -256,8 +256,8 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                                                 key={skill.id}
                                                 onClick={() => setSelectedSkill(skill.id)}
                                                 className={`w-full text-left px-3 py-2 rounded-lg transition-all ${selectedSkill === skill.id
-                                                        ? 'bg-purple-100 border-2 border-purple-500'
-                                                        : 'hover:bg-gray-100'
+                                                    ? 'bg-blue-100 border-2 border-primary'
+                                                    : 'hover:bg-gray-100'
                                                     }`}
                                             >
                                                 <p className="font-semibold text-gray-900">{skill.name}</p>
@@ -300,7 +300,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                                             max="50"
                                             value={yearsOfExperience}
                                             onChange={(e) => setYearsOfExperience(Number(e.target.value))}
-                                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary-light transition-all"
                                         />
                                     </div>
                                     <label className="flex items-center gap-2 cursor-pointer">
@@ -308,7 +308,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                                             type="checkbox"
                                             checked={isPrimary}
                                             onChange={(e) => setIsPrimary(e.target.checked)}
-                                            className="w-5 h-5 text-purple-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                                            className="w-5 h-5 text-primary border-2 border-gray-300 rounded focus:ring-2 focus:ring-primary"
                                         />
                                         <span className="text-sm font-medium text-gray-700">
                                             Mark as primary skill
@@ -324,7 +324,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                                         type="checkbox"
                                         checked={isRequired}
                                         onChange={(e) => setIsRequired(e.target.checked)}
-                                        className="w-5 h-5 text-purple-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                                        className="w-5 h-5 text-primary border-2 border-gray-300 rounded focus:ring-2 focus:ring-primary"
                                     />
                                     <span className="text-sm font-medium text-gray-700">
                                         Required skill (must-have)
@@ -346,7 +346,7 @@ export default function SkillsManager({ type, entityId, onSkillsChange }: Skills
                                 <button
                                     onClick={handleAddSkill}
                                     disabled={!selectedSkill}
-                                    className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 px-4 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Add Skill
                                 </button>

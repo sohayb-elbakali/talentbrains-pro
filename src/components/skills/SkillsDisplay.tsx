@@ -40,8 +40,8 @@ export default function SkillsDisplay({
     }
     // Ensure proficiency_level is a number
     if (skill && typeof skill === 'object') {
-      const profLevel = skill.proficiency_level !== undefined && skill.proficiency_level !== null 
-        ? Number(skill.proficiency_level) 
+      const profLevel = skill.proficiency_level !== undefined && skill.proficiency_level !== null
+        ? Number(skill.proficiency_level)
         : 3;
       console.log("✅ Skill object:", skill.name || skill.skill_name, "proficiency:", skill.proficiency_level, "→", profLevel);
       return {
@@ -64,19 +64,18 @@ export default function SkillsDisplay({
           const profInfo = {
             1: { emoji: "🌱", color: "from-gray-400 to-gray-500" },
             2: { emoji: "🌿", color: "from-green-400 to-emerald-500" },
-            3: { emoji: "🌟", color: "from-blue-400 to-cyan-500" },
-            4: { emoji: "🔥", color: "from-orange-400 to-red-500" },
-            5: { emoji: "👑", color: "from-purple-500 to-pink-500" },
-          }[proficiencyLevel] || { emoji: "🌟", color: "from-blue-400 to-cyan-500" };
+            3: { emoji: "🌟", color: "from-primary to-primary-hover" },
+            4: { emoji: "🔥", color: "from-secondary to-secondary-hover" },
+            5: { emoji: "👑", color: "from-purple-500 to-purple-600" },
+          }[proficiencyLevel] || { emoji: "🌟", color: "from-primary to-primary-hover" };
 
           return (
             <span
               key={`${skillName}-${index}`}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-bold transition-all hover:scale-105 shadow-sm ${
-                showProficiency && proficiencyLevel > 0
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-bold transition-all hover:scale-105 shadow-sm ${showProficiency && proficiencyLevel > 0
                   ? `bg-gradient-to-r ${profInfo.color} text-white shadow-md`
                   : "bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 border border-gray-200 hover:border-gray-300"
-              }`}
+                }`}
             >
               {showProficiency && proficiencyLevel > 0 && (
                 <span className="text-base">{profInfo.emoji}</span>
@@ -109,27 +108,27 @@ export default function SkillsDisplay({
           const profInfo = {
             1: { emoji: "🌱", label: "Beginner", color: "from-gray-400 to-gray-500" },
             2: { emoji: "🌿", label: "Intermediate", color: "from-green-400 to-emerald-500" },
-            3: { emoji: "🌟", label: "Advanced", color: "from-blue-400 to-cyan-500" },
-            4: { emoji: "🔥", label: "Expert", color: "from-orange-400 to-red-500" },
-            5: { emoji: "👑", label: "Master", color: "from-purple-500 to-pink-500" },
-          }[proficiencyLevel] || { emoji: "🌟", label: "Advanced", color: "from-blue-400 to-cyan-500" };
+            3: { emoji: "🌟", label: "Advanced", color: "from-primary to-primary-hover" },
+            4: { emoji: "🔥", label: "Expert", color: "from-secondary to-secondary-hover" },
+            5: { emoji: "👑", label: "Master", color: "from-purple-500 to-purple-600" },
+          }[proficiencyLevel] || { emoji: "🌟", label: "Advanced", color: "from-primary to-primary-hover" };
 
           return (
             <div
               key={`${skillName}-${index}`}
-              className="flex items-center justify-between p-4 rounded-xl border-2 hover:shadow-lg transition-all bg-white border-gray-200 hover:border-blue-300"
+              className="flex items-center justify-between p-4 rounded-xl border-2 hover:shadow-lg transition-all bg-white border-gray-200 hover:border-primary-light"
             >
               <div className="flex items-center gap-4 flex-1">
                 {/* Emoji Icon */}
                 <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br ${profInfo.color} shadow-md`}>
                   {profInfo.emoji}
                 </div>
-                
+
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-bold text-gray-900 text-lg">{skillName}</span>
                   </div>
-                  
+
                   <div className="flex items-center gap-4">
                     {/* Proficiency Level */}
                     <div className="flex items-center gap-1.5">
@@ -143,18 +142,17 @@ export default function SkillsDisplay({
                   </div>
                 </div>
               </div>
-              
+
               {/* Visual Progress Dots */}
               <div className="flex-shrink-0 ml-4">
                 <div className="flex gap-1.5">
                   {[1, 2, 3, 4, 5].map((level) => (
                     <div
                       key={level}
-                      className={`w-2.5 h-10 rounded-full transition-all ${
-                        level <= proficiencyLevel
+                      className={`w-2.5 h-10 rounded-full transition-all ${level <= proficiencyLevel
                           ? `bg-gradient-to-b ${profInfo.color} shadow-md`
                           : "bg-gray-200"
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>
@@ -184,15 +182,15 @@ export default function SkillsDisplay({
           const profInfo = {
             1: { emoji: "🌱", label: "Beginner", color: "from-gray-400 to-gray-500" },
             2: { emoji: "🌿", label: "Intermediate", color: "from-green-400 to-emerald-500" },
-            3: { emoji: "🌟", label: "Advanced", color: "from-blue-400 to-cyan-500" },
-            4: { emoji: "🔥", label: "Expert", color: "from-orange-400 to-red-500" },
-            5: { emoji: "👑", label: "Master", color: "from-purple-500 to-pink-500" },
-          }[proficiencyLevel] || { emoji: "🌟", label: "Advanced", color: "from-blue-400 to-cyan-500" };
+            3: { emoji: "🌟", label: "Advanced", color: "from-primary to-primary-hover" },
+            4: { emoji: "🔥", label: "Expert", color: "from-secondary to-secondary-hover" },
+            5: { emoji: "👑", label: "Master", color: "from-purple-500 to-purple-600" },
+          }[proficiencyLevel] || { emoji: "🌟", label: "Advanced", color: "from-primary to-primary-hover" };
 
           return (
             <div
               key={`${skillName}-${index}`}
-              className="relative p-5 rounded-2xl border-2 transition-all hover:scale-105 hover:shadow-xl bg-white border-gray-200 hover:border-blue-300"
+              className="relative p-5 rounded-2xl border-2 transition-all hover:scale-105 hover:shadow-xl bg-white border-gray-200 hover:border-primary-light"
             >
               {/* Proficiency Level Badge - Top Right */}
               <div className="absolute -top-3 right-3">
@@ -217,17 +215,16 @@ export default function SkillsDisplay({
                     {proficiencyLevel}/5
                   </span>
                 </div>
-                
+
                 {/* Creative Dot Progress Bar */}
                 <div className="flex gap-1.5">
                   {[1, 2, 3, 4, 5].map((level) => (
                     <div
                       key={level}
-                      className={`flex-1 h-2.5 rounded-full transition-all duration-300 ${
-                        level <= proficiencyLevel
+                      className={`flex-1 h-2.5 rounded-full transition-all duration-300 ${level <= proficiencyLevel
                           ? `bg-gradient-to-r ${profInfo.color} shadow-md`
                           : "bg-gray-200"
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>
@@ -238,7 +235,7 @@ export default function SkillsDisplay({
           );
         })}
         {remainingCount > 0 && (
-          <div className="flex items-center justify-center p-5 rounded-2xl border-2 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-blue-50 hover:border-blue-400 transition-all">
+          <div className="flex items-center justify-center p-5 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 hover:border-primary-light transition-all">
             <span className="text-sm font-bold text-gray-600">
               +{remainingCount} more skill{remainingCount !== 1 ? 's' : ''}
             </span>

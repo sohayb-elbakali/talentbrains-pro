@@ -8,6 +8,7 @@ import type { Job } from "../../types/database";
 import CompanyProfileUpdateModal from "./CompanyProfileUpdateModal";
 import ModernJobCard from "./ModernJobCard";
 import CompanyLogo from "../CompanyLogo";
+import { StatsSkeleton, CardSkeleton } from "../SkeletonLoader";
 
 // A small component for the stat cards to avoid repetition
 const StatCard = ({
@@ -17,7 +18,7 @@ const StatCard = ({
   link,
   comingSoon = false,
   loading = false,
-  gradient = "from-purple-500 to-purple-600",
+  gradient = "from-primary to-primary-hover",
 }: {
   title: string;
   value: string;
@@ -29,11 +30,10 @@ const StatCard = ({
 }) => {
   const content = (
     <div
-      className={`bg-gradient-to-br ${gradient} p-6 rounded-2xl shadow-xl h-full flex flex-col justify-between ${
-        comingSoon
-          ? "opacity-60"
-          : "hover:shadow-2xl hover:scale-105 transition-all duration-300"
-      }`}
+      className={`bg-gradient-to-br ${gradient} p-6 rounded-2xl shadow-xl h-full flex flex-col justify-between ${comingSoon
+        ? "opacity-60"
+        : "hover:shadow-2xl hover:scale-105 transition-all duration-300"
+        }`}
     >
       <div>
         <div className="flex justify-between items-start mb-4">
@@ -60,7 +60,7 @@ const StatCard = ({
     return (
       <Link
         to={link}
-        className="focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-2xl"
+        className="focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl"
       >
         {content}
       </Link>
@@ -81,14 +81,14 @@ const CompanyDashboard = () => {
   // Get company ID first
   useEffect(() => {
     if (!profile?.id) return;
-    
+
     const getCompanyId = async () => {
       const { data: companyData } = await db.getCompany(profile.id);
       if (companyData) {
         setCompanyId(companyData.id);
       }
     };
-    
+
     getCompanyId();
   }, [profile?.id]);
 
@@ -119,7 +119,7 @@ const CompanyDashboard = () => {
     refetchOnWindowFocus: false,
   });
 
-  const loading = jobsLoading || appsLoading;
+  const loading = jobsLoading || appsLoading || !companyId;
   // Don't show 0 while loading - show loading state instead
   const activeJobs = loading ? undefined : (jobsData?.filter((job: any) => job.status === "active").length || 0);
   const totalApplicants = loading ? undefined : (applicationsData?.length || 0);
@@ -127,8 +127,37 @@ const CompanyDashboard = () => {
 
 
 
+  // LinkedIn-style: Don't show page until data is loaded
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Skeleton */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 animate-pulse">
+            <div className="flex items-center gap-6">
+              <div className="w-20 h-20 bg-gray-200 rounded-2xl"></div>
+              <div className="flex-1">
+                <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div className="h-5 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Skeleton */}
+          <StatsSkeleton count={3} />
+
+          {/* Jobs Skeleton */}
+          <div className="mt-8">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6 animate-pulse"></div>
+            <CardSkeleton count={3} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -136,7 +165,7 @@ const CompanyDashboard = () => {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
               <div className="flex items-center gap-6">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-blue-400 rounded-2xl blur-lg opacity-30"></div>
+                  <div className="absolute inset-0 bg-primary rounded-2xl blur-lg opacity-20"></div>
                   <div className="relative w-20 h-20 rounded-2xl border-4 border-white shadow-2xl overflow-hidden">
                     <CompanyLogo
                       avatarUrl={profile?.avatar_url}
@@ -158,13 +187,13 @@ const CompanyDashboard = () => {
               <div className="flex flex-wrap gap-3">
                 <Link
                   to="/company/jobs/create"
-                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+                  className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all duration-200"
                 >
                   <Plus className="mr-2 h-5 w-5" /> Post Job
                 </Link>
                 <Link
                   to="/company/applicants"
-                  className="inline-flex items-center px-6 py-3 bg-white text-purple-600 border-2 border-purple-200 rounded-xl font-semibold hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 transform hover:scale-105"
+                  className="inline-flex items-center px-6 py-3 bg-white text-primary border-2 border-primary-light rounded-xl font-semibold hover:bg-primary-light hover:border-primary transition-all duration-200"
                 >
                   <Users className="mr-2 h-5 w-5" /> Applicants
                 </Link>
@@ -181,7 +210,7 @@ const CompanyDashboard = () => {
               icon={<Briefcase className="text-white" size={28} />}
               link="/company/jobs"
               loading={loading}
-              gradient="from-purple-500 to-purple-600"
+              gradient="from-primary to-primary-hover"
             />
             <StatCard
               title="Total Applicants"
@@ -209,26 +238,13 @@ const CompanyDashboard = () => {
               </h2>
               <Link
                 to="/company/jobs"
-                className="text-purple-600 hover:text-purple-700 font-medium"
+                className="text-primary hover:text-primary-hover font-medium"
               >
                 View All Jobs →
               </Link>
             </div>
 
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200"
-                  >
-                    <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded animate-pulse mb-4"></div>
-                    <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
-                  </div>
-                ))}
-              </div>
-            ) : recentJobs.length > 0 ? (
+            {recentJobs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {recentJobs.map((job: any) => (
                   <ModernJobCard
@@ -250,7 +266,7 @@ const CompanyDashboard = () => {
                 </p>
                 <Link
                   to="/company/jobs/create"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-hover"
                 >
                   <Plus className="-ml-1 mr-2 h-5 w-5" />
                   Post Your First Job
