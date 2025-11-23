@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { db } from "../../lib/supabase/index";
 import JobForm from "../../components/company/JobForm";
-import { notificationManager } from "../../utils/notificationManager";
+import { notify } from "../../utils/notify";
 import { Briefcase, ArrowLeft } from "lucide-react";
 
 export default function EditJobPage() {
@@ -56,7 +56,7 @@ export default function EditJobPage() {
             const { error } = await db.updateJob(jobId!, data.formData);
 
             if (error) {
-                notificationManager.showError(error.message || "Failed to update job");
+                notify.showError(error.message || "Failed to update job");
                 return;
             }
 
@@ -75,15 +75,15 @@ export default function EditJobPage() {
                             skill.is_required !== undefined ? skill.is_required : true
                         );
                     } catch (skillError) {
-                        console.error("Error adding skill:", skillError);
+                        // Silently handle skill addition errors
                     }
                 }
             }
 
-            notificationManager.showSuccess("Job updated successfully!");
+            notify.showSuccess("Job updated successfully!");
             navigate(`/company/jobs/${jobId}`);
         } catch (err: any) {
-            notificationManager.showError(err.message || "Failed to update job");
+            notify.showError(err.message || "Failed to update job");
         }
     };
 

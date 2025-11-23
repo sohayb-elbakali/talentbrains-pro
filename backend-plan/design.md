@@ -209,7 +209,8 @@ class SkillData(BaseModel):
     name: str
     proficiency_level: int  # 1-5
     years_of_experience: float
-    is_required: bool = False
+    is_primary: bool = False  # For talent skills - marks primary/core skills
+    is_required: bool = False  # For job skills - marks required vs optional skills
 
 # POST /api/v1/match/job-to-talents
 # Similar structure, reversed perspective
@@ -237,6 +238,7 @@ class HealthResponse(BaseModel):
 - Skill overlap score: Jaccard similarity of skill sets
 - Proficiency alignment: Average difference in proficiency levels for matching skills
 - Required skills coverage: Percentage of required job skills the talent has
+- Primary skills match: Bonus weight for matching primary/core skills marked by talent
 - Skill embedding similarity: Cosine similarity of skill text embeddings
 - Years of experience per skill: Weighted by skill importance
 

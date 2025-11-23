@@ -42,8 +42,6 @@ export const useAuthStore = create<AuthState>()(
           },
         }),
       clearAuth: () => {
-        console.log("🧹 Clearing auth state from store...");
-
         // Clear the Zustand state
         set({
           user: null,
@@ -68,12 +66,8 @@ export const useAuthStore = create<AuthState>()(
               localStorage.removeItem(key);
             }
           });
-          console.log("✅ Auth storage cleared from localStorage");
         } catch (error) {
-          console.warn(
-            "Failed to clear auth-storage from localStorage:",
-            error
-          );
+          // Silently handle errors
         }
       },
     }),

@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Bookmark, BookmarkCheck, Briefcase, Building, Clock, DollarSign, Filter, MapPin, Search, Sparkles, TrendingUp, Users } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { notificationManager } from "../utils/notificationManager";
+import { notify } from "../utils/notify";
 import { Link } from 'react-router-dom';
 import { useAuth } from "../hooks/useAuth";
 import AuthModal from './auth/AuthModal';
@@ -69,7 +69,7 @@ export default function JobListings() {
         const [entry] = entries;
         if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
-          
+
           // Prefetch next page for smoother experience
           if (data?.pages) {
             const currentPage = data.pages.length;
@@ -119,7 +119,7 @@ export default function JobListings() {
     if (!user) {
       setAuthMode("signup");
       setIsAuthModalOpen(true);
-      notificationManager.showInfo("Please sign in to continue.");
+      notify.showInfo("Please sign in to continue.");
       return;
     }
     action();
@@ -131,10 +131,10 @@ export default function JobListings() {
         const newSet = new Set(prev);
         if (newSet.has(jobId)) {
           newSet.delete(jobId);
-          notificationManager.showSuccess('Job removed from saved');
+          notify.showSuccess('Job removed from saved');
         } else {
           newSet.add(jobId);
-          notificationManager.showSuccess('Job saved successfully!');
+          notify.showSuccess('Job saved successfully!');
         }
         return newSet;
       });
@@ -147,7 +147,7 @@ export default function JobListings() {
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
             Discover Amazing{' '}
-            <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <span className="text-primary">
               Job Opportunities
             </span>
           </h2>
@@ -165,7 +165,7 @@ export default function JobListings() {
               placeholder="Search jobs, companies, or skills..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
 
@@ -176,7 +176,7 @@ export default function JobListings() {
                 key={filter.id}
                 onClick={() => setSelectedFilter(filter.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${selectedFilter === filter.id
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-primary text-white'
                   : 'bg-white text-gray-600'
                   }`}
               >
@@ -203,7 +203,7 @@ export default function JobListings() {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full mb-4"
+              className="w-16 h-16 border-4 border-blue-200 border-t-primary rounded-full mb-4"
             />
             <p className="text-gray-600 font-medium">Loading amazing opportunities...</p>
           </div>
@@ -249,21 +249,21 @@ export default function JobListings() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(index * 0.05, 0.3) }} // Cap delay for performance
-                    whileHover={{ y: -8, boxShadow: "0px 20px 40px rgba(124, 58, 237, 0.15)" }}
-                    className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:border-purple-200 transition-all duration-300 group cursor-pointer"
+                    whileHover={{ y: -8, boxShadow: "0px 20px 40px rgba(10, 102, 194, 0.15)" }}
+                    className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:border-primary transition-all duration-300 group cursor-pointer"
                   >
                     {/* Header with gradient */}
-                    <div className="bg-gradient-to-r from-purple-50 via-blue-50 to-indigo-50 p-6 border-b border-gray-100">
+                    <div className="bg-gray-50 p-6 border-b border-gray-100">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-start gap-4 flex-1">
                           <div className="relative">
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-blue-400 rounded-xl blur opacity-30"></div>
+                            <div className="absolute inset-0 bg-primary rounded-xl blur opacity-30"></div>
                             <div className="relative w-14 h-14 bg-white rounded-xl flex items-center justify-center shadow-md border-2 border-white">
-                              <Building className="h-7 w-7 text-purple-600" />
+                              <Building className="h-7 w-7 text-primary" />
                             </div>
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-purple-700 transition-colors line-clamp-2">
+                            <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-primary transition-colors line-clamp-2">
                               {job.title}
                             </h3>
                             <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -283,8 +283,8 @@ export default function JobListings() {
                             handleSaveJob(job.id);
                           }}
                           className={`p-2 rounded-lg transition-all ${isSaved
-                            ? 'bg-purple-100 text-purple-600'
-                            : 'bg-white text-gray-400 hover:bg-gray-50 hover:text-purple-600'
+                            ? 'bg-blue-100 text-primary'
+                            : 'bg-white text-gray-400 hover:bg-gray-50 hover:text-primary'
                             }`}
                         >
                           {isSaved ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
@@ -313,14 +313,14 @@ export default function JobListings() {
                       {/* Job Details */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                          <MapPin className="h-4 w-4 text-purple-600 flex-shrink-0" />
+                          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
                           <span className="text-sm font-medium text-gray-700 truncate">{job.location}</span>
                         </div>
                         <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                          <Briefcase className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                          <Briefcase className="h-4 w-4 text-secondary flex-shrink-0" />
                           <span className="text-sm font-medium text-gray-700 truncate">{job.type}</span>
                         </div>
-                        <div className="col-span-2 flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg px-3 py-2">
+                        <div className="col-span-2 flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2">
                           <DollarSign className="h-4 w-4 text-green-600 flex-shrink-0" />
                           <span className="text-sm font-bold text-green-700">{job.salary}</span>
                         </div>
@@ -333,7 +333,7 @@ export default function JobListings() {
                             {job.skills.slice(0, 4).map((skill: string, skillIndex: number) => (
                               <span
                                 key={`${job.id}-skill-${skillIndex}`}
-                                className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full border border-purple-100"
+                                className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100"
                               >
                                 {skill}
                               </span>
@@ -352,7 +352,7 @@ export default function JobListings() {
 
                     {/* Footer with Action Button */}
                     <div className="px-6 pb-6">
-                      <div className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-blue-700 transition-all">
+                      <div className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all">
                         <Sparkles className="h-5 w-5" />
                         View Details
                         <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -373,14 +373,14 @@ export default function JobListings() {
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full mb-3"
+                  className="w-12 h-12 border-4 border-blue-200 border-t-primary rounded-full mb-3"
                 />
                 <p className="text-gray-600 font-medium">Loading more jobs...</p>
               </div>
             ) : hasNextPage ? (
               <button
                 onClick={() => fetchNextPage()}
-                className="px-8 py-4 bg-white text-purple-600 border-2 border-purple-200 rounded-xl font-semibold hover:bg-purple-50 hover:border-purple-300 transition-all"
+                className="px-8 py-4 bg-white text-primary border-2 border-primary-light rounded-xl font-semibold hover:bg-blue-50 hover:border-primary transition-all"
               >
                 Load More Jobs
               </button>

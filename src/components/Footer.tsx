@@ -11,10 +11,10 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg">
+              <div className="p-2 bg-primary rounded-lg">
                 <Brain className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-white">
                 TalentBrains
               </span>
             </div>
@@ -23,16 +23,16 @@ export default function Footer() {
               Building the future of work, one perfect match at a time.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
                 <Twitter className="h-5 w-5" />
               </a>
               <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
                 <LinkedIn className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-gray-300 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-white transition-colors">
                 <Github className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-blue-500 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
                 <Facebook className="h-5 w-5" />
               </a>
             </div>
@@ -107,7 +107,7 @@ export default function Footer() {
             <h3 className="text-lg font-semibold text-white">Contact Us</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
-                <Mail className="h-4 w-4 text-purple-400" />
+                <Mail className="h-4 w-4 text-blue-400" />
                 <span className="text-gray-400">hello@talentbrains.com</span>
               </div>
               <div className="flex items-center space-x-2">
@@ -115,7 +115,7 @@ export default function Footer() {
                 <span className="text-gray-400">+212 612345678</span>
               </div>
               <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 text-green-400" />
+                <MapPin className="h-4 w-4 text-orange-400" />
                 <span className="text-gray-400">Rabat,Morocco</span>
               </div>
             </div>
@@ -127,9 +127,9 @@ export default function Footer() {
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-l-lg text-white text-sm focus:outline-none focus:border-purple-500"
+                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-l-lg text-white text-sm focus:outline-none focus:border-blue-500"
                 />
-                <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 rounded-r-lg hover:from-purple-700 hover:to-blue-700 transition-colors text-sm font-medium">
+                <button className="px-4 py-2 bg-primary hover:bg-primary-hover rounded-r-lg transition-colors text-sm font-medium">
                   Subscribe
                 </button>
               </div>

@@ -5,12 +5,13 @@ import {
   MapPin, MessageSquare, Star, TrendingUp, User, XCircle, Send, Phone
 } from 'lucide-react';
 import { useEffect, useState } from "react";
-import { notificationManager } from "../../utils/notificationManager";
+import { notify } from "../../utils/notify";
 import { useNavigate, useParams } from "react-router-dom";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
 import { useQueryClient } from '@tanstack/react-query';
+import SkillsDisplay from "../../components/skills/SkillsDisplay";
 
 interface ApplicationDetail {
   id: string;
@@ -99,7 +100,10 @@ const ApplicationDetailPage = () => {
       setApplication(data);
 
       if (data.talent?.id) {
+        console.log("🔍 db object:", db);
+        console.log("🔍 db.getTalentSkills exists?", typeof db.getTalentSkills);
         const { data: skills } = await db.getTalentSkills(data.talent.id);
+        console.log("🔍 Fetched talent skills:", skills);
         setTalentSkills(skills || []);
       }
     } catch (err: any) {
@@ -151,10 +155,10 @@ const ApplicationDetailPage = () => {
       // Invalidate cache to refresh all application lists
       queryClient.invalidateQueries({ queryKey: ['company-applications'] });
       
-      notificationManager.showSuccess(`Status updated to ${confirmModal.status}`);
+      notify.showSuccess(`Status updated to ${confirmModal.status}`);
       fetchApplicationDetail();
     } catch (err: any) {
-      notificationManager.showError("Failed to update status");
+      notify.showError("Failed to update status");
     } finally {
       setUpdatingStatus(false);
     }
@@ -428,16 +432,11 @@ const ApplicationDetailPage = () => {
                   <Star size={22} className="text-purple-600" />
                   Skills & Expertise
                 </h3>
-                <div className="flex flex-wrap gap-3">
-                  {talentSkills.map((skill: any, index: number) => (
-                    <span
-                      key={index}
-                      className="px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-xl font-semibold shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      {typeof skill === 'string' ? skill : skill.name}
-                    </span>
-                  ))}
-                </div>
+                <SkillsDisplay 
+                  skills={talentSkills} 
+                  variant="card" 
+                  showProficiency={true} 
+                />
               </motion.div>
             )}
 

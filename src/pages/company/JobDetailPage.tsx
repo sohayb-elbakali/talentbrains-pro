@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { notificationManager } from "../../utils/notificationManager";
+import { notify } from "../../utils/notify";
 import { db } from "../../lib/supabase/index";
 import SkillsDisplay from "../../components/skills/SkillsDisplay";
 
@@ -57,21 +57,24 @@ const JobDetailPage: React.FC = () => {
         const { data, error } = await db.getJob(jobId);
 
         if (error) {
-          console.error("Error fetching job:", error);
-          notificationManager.showError("Failed to load job details");
+          notify.showError("Failed to load job details");
           return;
         }
 
         if (data) {
-          setJob(data);
+          // Fetch application count
+          const { data: appCount } = await db.getJobApplicationCount(jobId);
+          setJob({
+            ...data,
+            applications_count: appCount || 0,
+          });
         }
 
         // Fetch job skills
         const { data: skillsData } = await db.getJobSkills(jobId);
         setJobSkills(skillsData || []);
       } catch (error) {
-        console.error("Unexpected error:", error);
-        notificationManager.showError("An unexpected error occurred");
+        notify.showError("An unexpected error occurred");
       } finally {
         setLoading(false);
       }
@@ -99,16 +102,14 @@ const JobDetailPage: React.FC = () => {
       const { error } = await db.deleteJob(jobId!);
 
       if (error) {
-        console.error("Error deleting job:", error);
-        notificationManager.showError("Failed to delete job");
+        notify.showError("Failed to delete job");
         return;
       }
 
-      notificationManager.showSuccess("Job deleted successfully");
+      notify.showSuccess("Job deleted successfully");
       navigate("/company/jobs");
     } catch (error) {
-      console.error("Unexpected error:", error);
-      notificationManager.showError("An unexpected error occurred");
+      notify.showError("An unexpected error occurred");
     }
   };
 
@@ -121,18 +122,16 @@ const JobDetailPage: React.FC = () => {
       const { error } = await db.updateJob(jobId!, { status: newStatus });
 
       if (error) {
-        console.error("Error updating job status:", error);
-        notificationManager.showError("Failed to update job status");
+        notify.showError("Failed to update job status");
         return;
       }
 
       setJob({ ...job, status: newStatus });
-      notificationManager.showSuccess(
+      notify.showSuccess(
         `Job ${newStatus === "active" ? "activated" : "paused"} successfully`
       );
     } catch (error) {
-      console.error("Unexpected error:", error);
-      notificationManager.showError("An unexpected error occurred");
+      notify.showError("An unexpected error occurred");
     }
   };
 

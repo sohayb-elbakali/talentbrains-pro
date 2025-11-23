@@ -1,8 +1,7 @@
-import { Camera, Edit, User } from "lucide-react";
+import { Edit, User } from "lucide-react";
 import { useState } from "react";
-import { notificationManager } from "../utils/notificationManager";
+import { notify } from "../utils/notify";
 import AvatarSelector from "../components/AvatarSelector";
-import LoadingSpinner from "../components/LoadingSpinner";
 import TalentProfileUpdateModal from "../components/talent/TalentProfileUpdateModal";
 import TalentProfileView from "../components/talent/TalentProfileView";
 import { useAuth, useUserData } from "../hooks/useAuth";
@@ -14,11 +13,7 @@ export default function TalentProfilePage() {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
 
-  // Debug logging
-  console.log("TalentProfilePage - user:", user?.id);
-  console.log("TalentProfilePage - data:", data);
-  console.log("TalentProfilePage - isLoading:", isLoading);
-  console.log("TalentProfilePage - error:", error);
+
 
   const handleUpdateComplete = async () => {
     setIsUpdateModalOpen(false);
@@ -36,21 +31,29 @@ export default function TalentProfilePage() {
       });
 
       if (error) {
-        notificationManager.showError("Failed to update avatar");
+        notify.showError("Failed to update avatar");
         return;
       }
 
       // Refetch user data
       await refetch();
-      notificationManager.showSuccess("Avatar updated successfully!");
+      notify.showSuccess("Avatar updated successfully!");
     } catch (error) {
-      console.error("Avatar update error:", error);
-      notificationManager.showError("Failed to update avatar");
+      notify.showError("Failed to update avatar");
     }
   };
 
   if (isLoading) {
-    return <LoadingSpinner fullScreen text="Loading talent profile..." />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative inline-block mb-4">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-primary rounded-full animate-spin"></div>
+          </div>
+          <p className="text-lg font-medium text-gray-700">Loading profile...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -61,7 +64,7 @@ export default function TalentProfilePage() {
           <p className="text-gray-600 mb-6">{error.message}</p>
           <button
             onClick={() => refetch()}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-hover"
           >
             Retry
           </button>
@@ -72,11 +75,6 @@ export default function TalentProfilePage() {
 
   const talentData = data?.talent;
   const profile = data?.profile;
-
-  console.log("TalentProfilePage - talentData:", talentData);
-  console.log("TalentProfilePage - profile:", profile);
-
-  // Show debug info if no data
   if (!data) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -95,13 +93,13 @@ export default function TalentProfilePage() {
 
   if (!talentData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 mb-6 p-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
                   <User className="h-8 w-8 text-white" />
                 </div>
                 <div>
@@ -116,7 +114,7 @@ export default function TalentProfilePage() {
               <button
                 type="button"
                 onClick={() => setIsUpdateModalOpen(true)}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+                className="px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all duration-200"
               >
                 <Edit className="inline h-5 w-5 mr-2" />
                 Complete Profile
@@ -126,8 +124,8 @@ export default function TalentProfilePage() {
 
           {/* Empty State */}
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center mx-auto mb-6">
-              <User className="h-10 w-10 text-purple-600" />
+            <div className="w-20 h-20 rounded-2xl bg-blue-100 flex items-center justify-center mx-auto mb-6">
+              <User className="h-10 w-10 text-primary" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-3">
               Welcome to TalentBrains! 👋
@@ -138,7 +136,7 @@ export default function TalentProfilePage() {
             <button
               type="button"
               onClick={() => setIsUpdateModalOpen(true)}
-              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+              className="px-8 py-4 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all duration-200"
             >
               Get Started - Complete Your Profile
             </button>
@@ -161,13 +159,13 @@ export default function TalentProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 mb-6 p-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
                 <User className="h-8 w-8 text-white" />
               </div>
               <div>
@@ -179,7 +177,7 @@ export default function TalentProfilePage() {
             </div>
             <button
               onClick={() => setIsUpdateModalOpen(true)}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+              className="px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all duration-200"
             >
               <Edit className="inline h-5 w-5 mr-2" />
               Edit Profile
@@ -188,7 +186,7 @@ export default function TalentProfilePage() {
         </div>
 
         {/* Profile Content */}
-        <TalentProfileView 
+        <TalentProfileView
           onEdit={() => setIsUpdateModalOpen(true)}
           onAvatarEdit={() => setIsAvatarSelectorOpen(true)}
         />

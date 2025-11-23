@@ -54,7 +54,7 @@ export const JobCard: React.FC<JobCardProps> = ({
     const configs: any = {
       pending: { icon: Clock, color: "from-yellow-400 to-orange-400", label: "Pending", progress: 25 },
       reviewed: { icon: Eye, color: "from-blue-400 to-cyan-400", label: "Reviewed", progress: 50 },
-      interview: { icon: Star, color: "from-purple-400 to-pink-400", label: "Interview", progress: 75 },
+      interview: { icon: Star, color: "from-secondary to-secondary-hover", label: "Interview", progress: 75 },
       offer: { icon: CheckCircle, color: "from-green-400 to-emerald-400", label: "Offer", progress: 90 },
       accepted: { icon: CheckCircle, color: "from-green-500 to-teal-500", label: "Accepted", progress: 100 },
       rejected: { icon: XCircle, color: "from-red-400 to-pink-400", label: "Not Selected", progress: 100 },
@@ -73,9 +73,9 @@ export const JobCard: React.FC<JobCardProps> = ({
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -8, scale: 1.02 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="group relative bg-gradient-to-br from-white via-white to-purple-50/30 rounded-3xl shadow-xl border-2 border-gray-100 overflow-hidden h-full flex flex-col hover:shadow-2xl hover:border-purple-300 transition-all duration-300"
+        className="group relative bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden h-full flex flex-col hover:shadow-xl hover:border-primary transition-all duration-300"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-blue-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div className="absolute inset-0 bg-blue-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
@@ -91,9 +91,8 @@ export const JobCard: React.FC<JobCardProps> = ({
         <div className="p-6 flex-1 flex flex-col relative z-10">
           <div className="flex items-start gap-4 mb-5">
             <div className="relative flex-shrink-0 group/logo">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-blue-500 to-pink-500 rounded-2xl blur-md opacity-30 group-hover/logo:opacity-60 transition-opacity duration-300"></div>
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-blue-400 rounded-2xl blur opacity-0 group-hover/logo:opacity-40 animate-pulse"></div>
-              <div className="relative transform group-hover/logo:scale-110 transition-transform duration-300">
+              <div className="absolute inset-0 bg-primary rounded-2xl blur-md opacity-20 group-hover/logo:opacity-40 transition-opacity duration-300"></div>
+              <div className="relative transform group-hover/logo:scale-105 transition-transform duration-300">
                 <CompanyLogo
                   avatarUrl={job.avatar_url}
                   companyName={job.company_name}
@@ -102,11 +101,11 @@ export const JobCard: React.FC<JobCardProps> = ({
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-purple-600 flex items-center mb-1.5 uppercase tracking-wider">
+              <p className="text-xs font-bold text-primary flex items-center mb-1.5 uppercase tracking-wider">
                 <Building size={12} className="mr-1.5" />
                 {job.company_name}
               </p>
-              <h3 className="text-lg font-bold text-gray-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-blue-600 transition-all line-clamp-2 leading-tight">
+              <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary transition-all line-clamp-2 leading-tight">
                 {job.title}
               </h3>
             </div>
@@ -114,9 +113,9 @@ export const JobCard: React.FC<JobCardProps> = ({
 
           <div className="space-y-2.5 mb-5 flex-1">
             {job.location && (
-              <div className="flex items-center gap-3 text-sm text-gray-700 group/item hover:text-purple-600 transition-colors">
-                <div className="p-2.5 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl group-hover/item:from-purple-100 group-hover/item:to-purple-200 transition-all shadow-sm">
-                  <MapPin size={15} className="text-purple-600" />
+              <div className="flex items-center gap-3 text-sm text-gray-700 group/item hover:text-primary transition-colors">
+                <div className="p-2.5 bg-blue-50 rounded-xl group-hover/item:bg-blue-100 transition-all shadow-sm">
+                  <MapPin size={15} className="text-primary" />
                 </div>
                 <span className="font-semibold">{job.location}</span>
               </div>
@@ -143,7 +142,7 @@ export const JobCard: React.FC<JobCardProps> = ({
           {job.required_skills && job.required_skills.length > 0 && (
             <div className="mt-4 pt-4 border-t-2 border-gray-100">
               <div className="flex items-center gap-2 mb-3">
-                <Star className="h-4 w-4 text-purple-600" />
+                <Star className="h-4 w-4 text-primary" />
                 <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Required Skills
                 </span>
@@ -152,9 +151,8 @@ export const JobCard: React.FC<JobCardProps> = ({
                 {job.required_skills.slice(0, 5).map((skill, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 rounded-lg text-xs font-semibold border border-purple-200 transition-all hover:scale-105"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-primary rounded-lg text-xs font-semibold border border-blue-100 transition-all hover:scale-105">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
                     {skill}
                   </span>
                 ))}
@@ -171,10 +169,10 @@ export const JobCard: React.FC<JobCardProps> = ({
             <div className="space-y-3 pt-4 border-t-2 border-gray-200">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
                   Application Progress
                 </span>
-                <span className="text-sm font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">{statusConfig.progress}%</span>
+                <span className="text-sm font-bold text-primary">{statusConfig.progress}%</span>
               </div>
               <div className="w-full h-3 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 rounded-full overflow-hidden shadow-inner">
                 <motion.div

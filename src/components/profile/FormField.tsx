@@ -39,9 +39,8 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export function Input({ error, className = '', ...props }: InputProps) {
   return (
     <input
-      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-        error ? 'border-red-500' : 'border-gray-300'
-      } ${className}`}
+      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors ${error ? 'border-red-500' : 'border-gray-300'
+        } ${className}`}
       {...props}
     />
   );
@@ -54,9 +53,8 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 export function Textarea({ error, className = '', ...props }: TextareaProps) {
   return (
     <textarea
-      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors resize-vertical ${
-        error ? 'border-red-500' : 'border-gray-300'
-      } ${className}`}
+      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors resize-vertical ${error ? 'border-red-500' : 'border-gray-300'
+        } ${className}`}
       {...props}
     />
   );
@@ -71,9 +69,8 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 export function Select({ error, options, placeholder, className = '', ...props }: SelectProps) {
   return (
     <select
-      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-        error ? 'border-red-500' : 'border-gray-300'
-      } ${className}`}
+      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors ${error ? 'border-red-500' : 'border-gray-300'
+        } ${className}`}
       {...props}
     >
       {placeholder && <option value="">{placeholder}</option>}
@@ -115,20 +112,19 @@ export function CheckboxGroup({
       {options.map((option) => {
         const isSelected = selectedValues.includes(option);
         const isDisabled = maxSelections && selectedValues.length >= maxSelections && !isSelected;
-        
+
         return (
           <label
             key={option}
-            className={`flex items-center space-x-2 cursor-pointer ${
-              isDisabled ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`flex items-center space-x-2 cursor-pointer ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
             <input
               type="checkbox"
               checked={isSelected}
               onChange={() => handleToggle(option)}
               disabled={isDisabled}
-              className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+              className="rounded border-gray-300 text-primary focus:ring-primary"
             />
             <span className="text-sm text-gray-700">{option}</span>
           </label>

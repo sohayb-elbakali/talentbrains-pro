@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { auth, db } from "../lib/supabase";
 import { useAuthStore } from "../store/authStore";
 import { handleError } from "../utils/errorHandling";
-import { notificationManager } from "../utils/notificationManager";
+import { notify } from "../utils/notify";
 import { sessionManager } from "../utils/sessionManager";
 
 // Singleton for auth state listener to prevent multiple subscriptions
@@ -36,9 +36,15 @@ const isAuthError = (error: any): boolean => {
 
 // Helper function to handle auth errors consistently
 const handleAuthError = async (error: any, clearAuthFn: () => void) => {
+  // Don't treat network errors as auth errors
+  if (error?.message?.includes('fetch') || error?.message?.includes('network') || !navigator.onLine) {
+    console.log("Network error detected, not clearing session:", error);
+    return false;
+  }
+
   if (isAuthError(error)) {
     console.log("Authentication error detected, clearing session:", error);
-    notificationManager.showError("Your session has expired. Please sign in again.");
+    notify.showError("Your session has expired. Please sign in again.");
     clearAuthFn();
     await auth.signOut();
     return true;
@@ -98,7 +104,7 @@ export const useAuth = () => {
     // Set up SINGLE window focus/visibility event handler with throttling
     let lastValidation = 0;
     const VALIDATION_THROTTLE = 30000; // Only validate once per 30 seconds
-    
+
     const handleWindowFocus = async () => {
       const now = Date.now();
       if (now - lastValidation < VALIDATION_THROTTLE) {
@@ -152,10 +158,7 @@ export const useAuth = () => {
                 session.user.id,
                 event === "INITIAL_SESSION"
               );
-              // Only show sign-in notification on explicit SIGNED_IN, not INITIAL_SESSION
-              if (event === "SIGNED_IN") {
-                notificationManager.showSignInSuccess(session.user.id);
-              }
+              // Don't show sign-in notification - it's disruptive to UX
             } else {
               // No user session found.
               console.log("No session found, clearing auth state");
@@ -164,7 +167,7 @@ export const useAuth = () => {
           } else if (event === "SIGNED_OUT") {
             console.log("User signed out, clearing auth state");
             clearAuth();
-            notificationManager.showSignOutSuccess();
+            // Don't show sign-out notification - it's disruptive to UX
             // Reset persistent sign-in notification tracker
             if (typeof window !== "undefined") {
               // @ts-ignore
@@ -175,11 +178,16 @@ export const useAuth = () => {
             console.log("Token refreshed successfully");
             setUser(session.user);
           } else if (event === "TOKEN_REFRESH_FAILED") {
-            // Token refresh failed - this is the key event we need to handle!
-            console.log("Token refresh failed, signing out user");
-            notificationManager.showError("Your session has expired. Please sign in again.");
+            // Token refresh failed - check if it's a network issue first
+            console.log("Token refresh failed, checking if network issue");
+            if (!navigator.onLine) {
+              console.log("Offline - not signing out");
+              return;
+            }
+            // Only sign out if we're online (real auth issue)
+            console.log("Online - signing out user");
+            notify.showError("Your session has expired. Please sign in again.");
             clearAuth();
-            // Force sign out to clear any corrupted session data
             await auth.signOut();
           }
         } catch (error) {
@@ -334,30 +342,36 @@ export const useAuth = () => {
         criticalError
       );
 
-      // Only show error notifications if showErrors is true
-      if (showErrors) {
+      // Only show error notifications if showErrors is true AND not a network error
+      if (showErrors && navigator.onLine) {
+        // Don't show errors for network issues
+        if (criticalError.message?.includes('fetch') || criticalError.message?.includes('network')) {
+          console.log("Network error in profile load, not showing notification");
+          return;
+        }
+
         if (criticalError.message.includes("Failed to fetch profile")) {
-          notificationManager.showError(
+          notify.showError(
             "Unable to load your profile. Please try refreshing the page."
           );
         } else if (criticalError.message.includes("Failed to create profile")) {
-          notificationManager.showError(
+          notify.showError(
             "Unable to create your profile. Please try signing out and back in."
           );
         } else if (criticalError.message.includes("No authenticated user")) {
-          notificationManager.showError("Authentication error. Please sign in again.");
+          notify.showError("Authentication error. Please sign in again.");
           await auth.signOut();
         } else if (
           criticalError.message.includes(
             "Profile not found and no role information"
           )
         ) {
-          notificationManager.showError(
+          notify.showError(
             "Your account setup is incomplete. Please contact support."
           );
           await auth.signOut();
         } else {
-          notificationManager.showError("An unexpected error occurred. Please try again later.");
+          notify.showError("An unexpected error occurred. Please try again later.");
         }
 
         // Clear the profile state to trigger re-authentication
@@ -383,7 +397,7 @@ export const useAuth = () => {
       if (data?.user) {
         // If user is created but needs to confirm email, show a special message
         if (data.user?.confirmation_sent_at) {
-          notificationManager.showSuccess("Please check your email and confirm your account.");
+          notify.showSuccess("Please check your email and confirm your account.");
           return { success: true, data, needsConfirmation: true };
         }
 
@@ -459,12 +473,12 @@ export const useAuth = () => {
           }
         }
         // Do not run profile/job validation here. Only sign up schema is validated.
-        notificationManager.showSignUpSuccess();
+        notify.showSignUpSuccess();
         return { success: true, data };
       }
       // If error is about email confirmation, show a special message
       if (error?.message && error.message.toLowerCase().includes("confirm")) {
-        notificationManager.showSuccess("Please check your email and confirm your account.");
+        notify.showSuccess("Please check your email and confirm your account.");
         return {
           success: false,
           error: {
@@ -506,65 +520,70 @@ export const useAuth = () => {
 
   const signOut = async () => {
     try {
-      setLoading(true);
-      console.log("🚪 Starting sign out process...");
+      console.log("🚪 Starting instant sign out...");
 
-      // Step 1: Clear React Query cache
-      try {
-        const queryClient = (window as any).queryClient;
-        if (queryClient) {
-          console.log("🗑️ Clearing React Query cache...");
-          queryClient.clear();
-        }
-      } catch (cacheError) {
-        console.warn("Failed to clear query cache:", cacheError);
-      }
-
-      // Step 2: Clear Supabase session
-      try {
-        const { error } = await auth.signOut();
-        if (error) {
-          console.error("Supabase sign out error:", error);
-        }
-      } catch (supabaseError) {
-        console.error("Supabase sign out failed:", supabaseError);
-      }
-
-      // Step 3: Clear local auth state (auth listener will handle this automatically)
+      // INSTANT: Clear local state immediately (no await)
       clearAuth();
 
-      // Step 4: Use session manager for cleanup
-      sessionManager.clearAllAuthData();
-
-      // Step 5: Clear auth-related storage
-      try {
-        Object.keys(localStorage).forEach((key) => {
-          if (
-            key.includes("auth") ||
-            key.includes("supabase") ||
-            key.startsWith("sb-")
-          ) {
-            localStorage.removeItem(key);
-          }
-        });
-
-        Object.keys(sessionStorage).forEach((key) => {
-          if (
-            key.includes("auth") ||
-            key.includes("supabase") ||
-            key.startsWith("sb-")
-          ) {
-            sessionStorage.removeItem(key);
-          }
-        });
-      } catch (cleanupError) {
-        console.warn("Storage cleanup failed:", cleanupError);
-      }
-
-      console.log("✅ Sign out completed successfully");
-
-      // Step 6: Navigate to home (NO PAGE RELOAD - React Router handles this)
+      // INSTANT: Navigate immediately (don't wait for anything)
       navigate("/", { replace: true });
+
+      // BACKGROUND: Do cleanup asynchronously (don't block UI)
+      Promise.all([
+        // Clear React Query cache
+        (async () => {
+          try {
+            const queryClient = (window as any).queryClient;
+            if (queryClient) {
+              console.log("🗑️ Clearing React Query cache...");
+              queryClient.clear();
+            }
+          } catch (error) {
+            console.warn("Failed to clear query cache:", error);
+          }
+        })(),
+
+        // Clear Supabase session
+        (async () => {
+          try {
+            await auth.signOut();
+          } catch (error) {
+            console.warn("Supabase sign out failed:", error);
+          }
+        })(),
+
+        // Clear storage
+        (async () => {
+          try {
+            sessionManager.clearAllAuthData();
+
+            // Clear auth-related storage
+            Object.keys(localStorage).forEach((key) => {
+              if (
+                key.includes("auth") ||
+                key.includes("supabase") ||
+                key.startsWith("sb-")
+              ) {
+                localStorage.removeItem(key);
+              }
+            });
+
+            Object.keys(sessionStorage).forEach((key) => {
+              if (
+                key.includes("auth") ||
+                key.includes("supabase") ||
+                key.startsWith("sb-")
+              ) {
+                sessionStorage.removeItem(key);
+              }
+            });
+          } catch (error) {
+            console.warn("Storage cleanup failed:", error);
+          }
+        })(),
+      ]).then(() => {
+        console.log("✅ Background cleanup completed");
+      });
 
       return { success: true };
     } catch (error: any) {
@@ -573,8 +592,6 @@ export const useAuth = () => {
       sessionManager.forceLogout();
       navigate("/", { replace: true });
       return { success: false, error };
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -597,16 +614,16 @@ export const useAuth = () => {
         if (profile) {
           const updatedProfile = { ...profile, ...updates };
           setProfile(updatedProfile);
-          notificationManager.showProfileUpdateSuccess();
+          notify.showProfileUpdateSuccess();
           return { success: true, data: updatedProfile };
         }
-        notificationManager.showError("Failed to update profile");
+        notify.showError("Failed to update profile");
         return { success: false, error };
       }
 
       if (data) {
         setProfile(data);
-        notificationManager.showProfileUpdateSuccess();
+        notify.showProfileUpdateSuccess();
         return { success: true, data };
       }
     } catch (error: any) {
@@ -615,10 +632,10 @@ export const useAuth = () => {
       if (profile) {
         const updatedProfile = { ...profile, ...updates };
         setProfile(updatedProfile);
-        notificationManager.showProfileUpdateSuccess();
+        notify.showProfileUpdateSuccess();
         return { success: true, data: updatedProfile };
       }
-      notificationManager.showError("An error occurred while updating profile");
+      notify.showError("An error occurred while updating profile");
       return { success: false, error };
     } finally {
       setLoading(false);
@@ -641,15 +658,19 @@ export const useAuth = () => {
 
       if (error) {
         console.error("Session validation error:", error);
-        clearAuth();
+        // Don't clear auth on network errors
+        if (!error?.message?.includes('fetch') && !error?.message?.includes('network') && navigator.onLine) {
+          clearAuth();
+        }
         return false;
       }
 
       if (!currentUser) {
         console.log("No valid session found");
-        if (user) {
+        // Don't clear auth if it's just a network issue
+        if (user && navigator.onLine) {
           clearAuth();
-          notificationManager.showError("Your session has expired. Please sign in again.");
+          notify.showError("Your session has expired. Please sign in again.");
         }
         return false;
       }

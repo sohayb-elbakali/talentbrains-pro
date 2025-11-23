@@ -26,7 +26,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-        className={`${sizeClasses[size]} text-purple-600`}
+        className={`${sizeClasses[size]} text-primary`}
       >
         <Loader2 className="h-full w-full" />
       </motion.div>

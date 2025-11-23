@@ -1,4 +1,4 @@
-import { notificationManager } from './notificationManager'
+import { notify } from './notify'
 
 export interface AppError {
   message: string
@@ -21,9 +21,7 @@ export class CustomError extends Error {
   }
 }
 
-export const handleError = (error: any, operation: string) => {
-  console.error(`${operation} error:`, error);
-
+export const handleError = (error: any, operation?: string) => {
   // Check if this is a 304 Not Modified response that should be treated as success
   if (
     error?.statusCode === 304 ||
@@ -44,6 +42,12 @@ export const handleError = (error: any, operation: string) => {
     message = error.error_description;
   }
 
+  // Don't show notifications for network errors
+  if (message.includes('fetch') || message.includes('network') || !navigator.onLine) {
+    console.log("Network error - not showing notification:", message);
+    return { success: false, error: { message } };
+  }
+
   // Make error messages more user-friendly
   const userFriendlyMessages: Record<string, string> = {
     "Invalid login credentials": "Invalid email or password. Please try again.",
@@ -53,21 +57,17 @@ export const handleError = (error: any, operation: string) => {
       "Please check your email and click the confirmation link.",
     "Too many requests":
       "Too many attempts. Please wait a moment and try again.",
-    "Network error":
-      "Connection error. Please check your internet connection and try again.",
-    "Failed to fetch":
-      "Unable to connect to the server. Please try again later.",
   };
 
   const friendlyMessage = userFriendlyMessages[message] || message;
 
-  notificationManager.showError(friendlyMessage);
+  notify.showError(friendlyMessage);
 
   return { success: false, error: { message: friendlyMessage } };
 };
 
 export const handleSuccess = (message: string) => {
-  notificationManager.showSuccess(message);
+  notify.showSuccess(message);
   return { success: true };
 };
 
@@ -78,7 +78,7 @@ export const handleAsyncError = async <T>(
   try {
     return await asyncFn();
   } catch (error) {
-    handleError(error, context);
+    handleError(error, context || 'async operation');
     return null;
   }
 };
@@ -91,7 +91,7 @@ export const withErrorBoundary = <T extends any[], R>(
     try {
       return fn(...args);
     } catch (error) {
-      handleError(error, context);
+      handleError(error, context || 'error boundary');
       return null;
     }
   };
@@ -116,9 +116,7 @@ export const logError = (
     url: window.location.href,
   };
 
-  // In production, you would send this to your logging service
-  console.error("Error Log:", errorLog);
-
+  // In production, send this to your logging service
   // Example: Send to logging service
   // sendToLoggingService(errorLog)
 };
@@ -142,13 +140,14 @@ export const handleNetworkError = (error: any): void => {
     return;
   }
 
+  // Don't show notifications for network errors - the OfflineIndicator handles this
   if (!navigator.onLine) {
-    notificationManager.showError("You are offline. Please check your internet connection.");
+    console.log("Offline - not showing error notification");
     return;
   }
 
   if (error?.code === "NETWORK_ERROR" || error?.message?.includes("fetch")) {
-    notificationManager.showNetworkError();
+    console.log("Network error - not showing notification");
     return;
   }
 
@@ -161,40 +160,40 @@ export const handleValidationError = (errors: string[]): void => {
     ? errors[0]
     : `Multiple validation errors: ${errors.join(', ')}`
 
-  notificationManager.showError(message)
+  notify.showError(message)
 }
 
 // Rate limiting error handling
 export const handleRateLimitError = (): void => {
-  notificationManager.showError('Too many requests. Please wait a moment before trying again.')
+  notify.showError('Too many requests. Please wait a moment before trying again.')
 }
 
 // Permission error handling
 export const handlePermissionError = (): void => {
-  notificationManager.showError('You do not have permission to perform this action.')
+  notify.showError('You do not have permission to perform this action.')
 }
 
 // File upload error handling
 export const handleFileUploadError = (error: any): void => {
   if (error?.code === 'file-too-large') {
-    notificationManager.showError('File is too large. Please choose a smaller file.')
+    notify.showError('File is too large. Please choose a smaller file.')
   } else if (error?.code === 'invalid-file-type') {
-    notificationManager.showError('Invalid file type. Please choose a supported file format.')
+    notify.showError('Invalid file type. Please choose a supported file format.')
   } else {
-    notificationManager.showUploadError('file')
+    notify.showUploadError('file')
   }
 }
 
 // Database error handling
 export const handleDatabaseError = (error: any): void => {
   if (error?.code === '23505') { // Unique constraint violation
-    notificationManager.showError('This record already exists.')
+    notify.showError('This record already exists.')
   } else if (error?.code === '23503') { // Foreign key constraint violation
-    notificationManager.showError('Cannot delete this record as it is referenced by other data.')
+    notify.showError('Cannot delete this record as it is referenced by other data.')
   } else if (error?.code === '42501') { // Insufficient privilege
-    notificationManager.showError('You do not have permission to perform this operation.')
+    notify.showError('You do not have permission to perform this operation.')
   } else {
-    notificationManager.showError('Database error occurred. Please try again.')
+    notify.showError('Database error occurred. Please try again.')
   }
 }
 

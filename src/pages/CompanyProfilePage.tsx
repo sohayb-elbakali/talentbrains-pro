@@ -1,10 +1,9 @@
-import { Building, Camera, Edit } from "lucide-react";
+import { Building, Edit } from "lucide-react";
 import { useState } from "react";
-import { notificationManager } from "../utils/notificationManager";
+import { notify } from "../utils/notify";
 import AvatarSelector from "../components/AvatarSelector";
 import CompanyProfileUpdateModal from "../components/company/CompanyProfileUpdateModal";
 import CompanyProfileView from "../components/company/CompanyProfileView";
-import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth, useUserData } from "../hooks/useAuth";
 import { db } from "../lib/supabase";
 
@@ -30,21 +29,29 @@ export default function CompanyProfilePage() {
       });
 
       if (error) {
-        notificationManager.showError("Failed to update avatar");
+        notify.showError("Failed to update avatar");
         return;
       }
 
       // Refetch user data
       await refetch();
-      notificationManager.showSuccess("Avatar updated successfully!");
+      notify.showSuccess("Avatar updated successfully!");
     } catch (error) {
-      console.error("Avatar update error:", error);
-      notificationManager.showError("Failed to update avatar");
+      notify.showError("Failed to update avatar");
     }
   };
 
   if (isLoading) {
-    return <LoadingSpinner fullScreen text="Loading company profile..." />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative inline-block mb-4">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-primary rounded-full animate-spin"></div>
+          </div>
+          <p className="text-lg font-medium text-gray-700">Loading profile...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -63,7 +70,7 @@ export default function CompanyProfilePage() {
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Building className="h-8 w-8 text-purple-600" />
+                  <Building className="h-8 w-8 text-primary" />
                   <div>
                     <h1 className="text-2xl font-bold text-gray-900">
                       Company Profile
@@ -76,7 +83,7 @@ export default function CompanyProfilePage() {
                 <button
                   type="button"
                   onClick={() => setIsUpdateModalOpen(true)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
+                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
                 >
                   <Edit className="h-4 w-4" />
                   <span>Complete Profile</span>
@@ -98,7 +105,7 @@ export default function CompanyProfilePage() {
               <button
                 type="button"
                 onClick={() => setIsUpdateModalOpen(true)}
-                className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
+                className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-hover focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
               >
                 Complete Profile
               </button>
@@ -120,7 +127,7 @@ export default function CompanyProfilePage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Content */}
-        <CompanyProfileView 
+        <CompanyProfileView
           onEdit={() => setIsUpdateModalOpen(true)}
           onAvatarEdit={() => setIsAvatarSelectorOpen(true)}
         />

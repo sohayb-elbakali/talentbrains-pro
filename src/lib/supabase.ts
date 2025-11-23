@@ -2,15 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { env } from "../config/env";
 import type { Database } from "../types/database";
 
-// Global auth error handler
 let globalAuthErrorHandler: ((error: any) => Promise<void>) | null = null;
-
-// Token refresh state management to prevent concurrent refresh attempts
-// Currently unused but kept for future implementation
-// const refreshState = {
-//   isRefreshing: false,
-//   refreshPromise: null as Promise<any> | null,
-// };
 
 export const setGlobalAuthErrorHandler = (
   handler: (error: any) => Promise<void>
@@ -18,18 +10,16 @@ export const setGlobalAuthErrorHandler = (
   globalAuthErrorHandler = handler;
 };
 
-// Helper function to detect authentication errors
 const isAuthError = (error: any): boolean => {
   if (!error) return false;
 
   const errorMessage = error.message?.toLowerCase() || "";
   const errorCode = error.code || "";
 
-  // Common authentication error patterns
   return (
     errorCode === "401" ||
-    errorCode === "406" || // Not Acceptable - often auth related
-    errorCode === "PGRST301" || // JWT expired
+    errorCode === "406" ||
+    errorCode === "PGRST301" ||
     errorMessage.includes("jwt") ||
     errorMessage.includes("token") ||
     errorMessage.includes("unauthorized") ||
@@ -39,28 +29,35 @@ const isAuthError = (error: any): boolean => {
   );
 };
 
-// Enhanced wrapper function to handle auth errors and prevent race conditions
 const handleApiCall = async <T>(
   apiCall: () => Promise<{ data: T | null; error: any }>
 ): Promise<{ data: T | null; error: any }> => {
   try {
     const result = await apiCall();
 
-    // Check if the error is an authentication error
-    if (result.error && isAuthError(result.error)) {
-      console.log("Authentication error detected in API call:", result.error);
-
-      // Call the global auth error handler if available
-      if (globalAuthErrorHandler) {
-        await globalAuthErrorHandler(result.error);
+    // Don't treat network errors as auth errors
+    if (result.error) {
+      const isNetworkError = 
+        !navigator.onLine || 
+        result.error.message?.includes('fetch') || 
+        result.error.message?.includes('network');
+      
+      if (!isNetworkError && isAuthError(result.error)) {
+        if (globalAuthErrorHandler) {
+          await globalAuthErrorHandler(result.error);
+        }
       }
     }
 
     return result;
-  } catch (error) {
-    console.error("API call failed:", error);
-    // Handle unexpected errors
-    if (isAuthError(error) && globalAuthErrorHandler) {
+  } catch (error: any) {
+    // Don't treat network errors as auth errors
+    const isNetworkError = 
+      !navigator.onLine || 
+      error?.message?.includes('fetch') || 
+      error?.message?.includes('network');
+    
+    if (!isNetworkError && isAuthError(error) && globalAuthErrorHandler) {
       await globalAuthErrorHandler(error);
     }
 
@@ -86,8 +83,6 @@ const globalForSupabase = globalThis as unknown as {
 let supabase: any = null;
 
 if (!globalForSupabase.supabase || !globalForSupabase.supabaseInitialized) {
-  console.log("🔧 Creating new Supabase client instance");
-
   globalForSupabase.supabase = createClient<Database>(
     supabaseUrl,
     supabaseAnonKey,
@@ -96,24 +91,29 @@ if (!globalForSupabase.supabase || !globalForSupabase.supabaseInitialized) {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
-        // Disable debug logging to prevent race conditions
         debug: false,
-        // Add storage key to prevent conflicts
         storageKey: 'sb-mucwmuqcxqngimiueszx-auth-token',
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        flowType: 'pkce',
       },
-      // Add global headers to help with debugging
       global: {
         headers: {
           "X-Client-Info": "talentbrains-web-app",
+          "Cache-Control": "max-age=300",
+        },
+      },
+      db: {
+        schema: 'public',
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 5,
         },
       },
     }
   );
 
   globalForSupabase.supabaseInitialized = true;
-  console.log("✅ Supabase client created and initialized");
-} else {
-  console.log("🔧 Using existing Supabase client instance");
 }
 
 supabase = globalForSupabase.supabase;
@@ -887,7 +887,55 @@ export const db = {
   },
 
   // Get talent skills
+  // Get talent skills with full details (proficiency, years, etc.)
   getTalentSkills: async (talentId: string) => {
+    return handleApiCall(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("talent_skills")
+          .select(
+            `
+            skill:skills!inner(
+              id,
+              name,
+              category
+            ),
+            proficiency_level,
+            years_of_experience,
+            is_primary
+          `
+          )
+          .eq("talent_id", talentId);
+
+        if (error) {
+          return { data: null, error };
+        }
+
+        // Transform to full skill objects
+        const skillsData = data?.map((item: any) => ({
+          id: item.skill.id,
+          skill_id: item.skill.id,
+          name: item.skill.name,
+          skill_name: item.skill.name,
+          category: item.skill.category,
+          proficiency_level: item.proficiency_level ?? 3,
+          years_of_experience: item.years_of_experience ?? 0,
+          is_primary: item.is_primary ?? false
+        })) || [];
+        
+        return { data: skillsData, error: null };
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: "Failed to get talent skills" },
+        };
+      }
+    });
+  },
+
+  // DEPRECATED: Use getTalentSkills instead
+  // This returns skill names only for backward compatibility
+  getTalentSkillNames: async (talentId: string) => {
     return handleApiCall(async () => {
       try {
         const { data, error } = await supabase

@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion';
 import { Edit, PlusCircle, Trash2, Briefcase, MapPin, Calendar, DollarSign, Users } from 'lucide-react';
-import React from 'react';
-import { notificationManager } from '../../utils/notificationManager';
+import React, { useState } from 'react';
+import { notify } from "../../utils/notify";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
 import { useRealtimeQuery } from "../../hooks/useRealtimeQuery";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 // Define the type for a job object
 interface Job {
@@ -24,6 +25,9 @@ interface Job {
 const CompanyJobsPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch company data with real-time updates
   const { data: companyData, error: companyError } = useRealtimeQuery({
@@ -42,13 +46,12 @@ const CompanyJobsPage: React.FC = () => {
 
   // Fetch jobs with real-time updates
   const { data: jobs = [], isLoading: loading, error: jobsError } = useRealtimeQuery({
-    queryKey: ['company-jobs', companyData?.id],
+    queryKey: ['company-jobs-with-counts', companyData?.id],
     queryFn: async () => {
       if (!companyData?.id) return [];
       const { data, error } = await db.getJobs({ company_id: companyData.id });
       if (error) throw error;
       
-      // Get application counts in parallel for better performance
       const jobsWithCounts = await Promise.all(
         (data || []).map(async (job: Job) => {
           const { data: count } = await db.getJobApplicationCount(job.id);
@@ -61,37 +64,54 @@ const CompanyJobsPage: React.FC = () => {
       return jobsWithCounts;
     },
     enabled: !!companyData?.id,
-    staleTime: 5 * 60 * 1000, // Increased to 5 minutes (was 2)
-    table: 'jobs',
+    staleTime: 5 * 60 * 1000,
+    table: 'jobs,applications',
     filter: `company_id=eq.${companyData?.id}`,
   });
 
   const error = companyError || jobsError;
 
-  // Add delete handler with optimistic update
-  const handleDeleteJob = async (jobId: string) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this job? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+  // Open delete confirmation modal
+  const openDeleteModal = (job: Job) => {
+    setJobToDelete({ id: job.id, title: job.title });
+    setDeleteModalOpen(true);
+  };
+
+  // Handle delete confirmation
+  const handleDeleteConfirm = async () => {
+    if (!jobToDelete) return;
+
+    setIsDeleting(true);
     try {
-      const { error } = await db.deleteJob(jobId);
-      if (error) {
-        notificationManager.showError("Failed to delete job");
-        return;
-      }
+      await notify.promise(
+        db.deleteJob(jobToDelete.id).then(({ error }) => {
+          if (error) throw error;
+          return { success: true };
+        }),
+        {
+          loading: `Deleting "${jobToDelete.title}"...`,
+          success: `"${jobToDelete.title}" deleted successfully`,
+          error: `Failed to delete "${jobToDelete.title}"`
+        }
+      );
       // Real-time subscription will automatically update the list
-      notificationManager.showSuccess("Job deleted successfully");
     } catch (err) {
-      notificationManager.showError("An unexpected error occurred");
+      console.error('Delete error:', err);
+    } finally {
+      setIsDeleting(false);
+      setJobToDelete(null);
     }
   };
 
   if (loading) {
-    return <div className="text-center p-8">Loading your job postings...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-lg font-medium text-gray-700">Loading jobs...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -243,8 +263,9 @@ const CompanyJobsPage: React.FC = () => {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDeleteJob(job.id)}
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold hover:from-red-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-md"
+                        onClick={() => openDeleteModal(job)}
+                        disabled={isDeleting}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold hover:from-red-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       >
                         <Trash2 className="h-4 w-4" />
                         Delete
@@ -257,6 +278,32 @@ const CompanyJobsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          if (!isDeleting) {
+            setDeleteModalOpen(false);
+            setJobToDelete(null);
+          }
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Job Posting"
+        message={
+          <div className="space-y-3">
+            <p>
+              Are you sure you want to delete <span className="font-bold">"{jobToDelete?.title}"</span>?
+            </p>
+            <p className="text-sm text-gray-600">
+              This will permanently remove the job posting and all associated applications. This action cannot be undone.
+            </p>
+          </div>
+        }
+        confirmText={isDeleting ? "Deleting..." : "Delete Job"}
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 };

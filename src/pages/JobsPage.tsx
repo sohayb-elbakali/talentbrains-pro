@@ -17,44 +17,14 @@ const JobsPage: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        console.log("🔍 Fetching jobs for talent view...");
+        const { data, error } = await db.getJobs({ showAll: true });
 
-        // Simplified debug: Check if db functions exist
-        console.log("🔍 Checking db object:", typeof db);
-        console.log("🔍 getAllJobsDebug exists:", typeof db.getAllJobsDebug);
-        console.log(
-          "🔍 activateAllDraftJobs exists:",
-          typeof db.activateAllDraftJobs
-        );
-        console.log("🔍 getJobs exists:", typeof db.getJobs);
-
-        console.log("📡 Fetching jobs with showAll: true...");
-
-        // Test simple function call first
-        try {
-          console.log("🧪 Testing simple db call...");
-          const result = await db.getAllJobsDebug();
-          console.log("🧪 getAllJobsDebug result:", result);
-        } catch (simpleErr) {
-          console.error("🧪 Simple db call error:", simpleErr);
-        }
-
-        const { data, error } = await db.getJobs({ showAll: true }); // Show all jobs for debugging
-
-        console.log("📊 Jobs response:", { data, error, count: data?.length });
-
-        if (error) {
-          console.error("❌ Error fetching jobs:", error);
-          throw error;
-        }
+        if (error) throw error;
 
         setJobs(data || []);
-        console.log("✅ Jobs set successfully:", data?.length || 0, "jobs");
 
-        // Fetch user's applications if user is logged in
         if (user?.id) {
           try {
-            console.log("📋 Fetching talent applications...");
             const { data: talentData } = await db.getTalent(user.id);
             
             if (talentData?.id) {
@@ -63,32 +33,24 @@ const JobsPage: React.FC = () => {
               });
               
               if (applicationsData) {
-                // Create a map of job_id -> application for quick lookup
                 const appMap = new Map();
                 applicationsData.forEach((app: any) => {
                   appMap.set(app.job_id, app);
                 });
                 setApplications(appMap);
-                console.log("✅ Applications loaded:", applicationsData.length);
               }
             }
           } catch (appErr) {
-            console.error("⚠️ Error fetching applications:", appErr);
-            // Don't fail the whole page if applications fail to load
+            // Silently handle application fetch errors
           }
         }
       } catch (err: any) {
-        console.error("💥 Exception in fetchData:", err);
-        // Check if this is a 304 Not Modified response (cached data)
         if (
           err.status === 304 ||
           err.statusCode === 304 ||
-          (err.message &&
-            (err.message.includes("304") ||
-              err.message.includes("Not Modified")))
+          (err.message && (err.message.includes("304") || err.message.includes("Not Modified")))
         ) {
-          console.log("304 response detected - using cached data");
-          // Don't set error for 304 responses
+          // 304 Not Modified - using cached data
         } else {
           setError(err.message);
         }

@@ -4,7 +4,6 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import { env } from "./config/env";
 import "./index.css";
-import "./styles/notifications.css";
 import { useAuthStore } from "./store/authStore";
 import { sessionManager } from "./utils/sessionManager";
 

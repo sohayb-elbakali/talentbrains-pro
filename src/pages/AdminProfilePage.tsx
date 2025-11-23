@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { Edit, Mail, Shield, User, Calendar, CheckCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { notificationManager } from '../utils/notificationManager'
+import { notify } from "../utils/notify"
 import { db } from '../lib/supabase'
 
 export default function AdminProfilePage() {

@@ -298,6 +298,14 @@ This revised plan focuses on a pragmatic, incremental approach that delivers val
     - Add sorting and filtering by match score
     - _Requirements: 2.2, 2.3, 2.5_
 
+  - [ ] 14.4 Enhance candidate skill display for recruiters
+    - Update TalentProfileView to show all skills with proficiency levels (1-5 scale)
+    - Display years of experience for each skill
+    - Visually highlight primary skills with special badges/styling
+    - Update ModernTalentCard to show primary skills prominently
+    - Ensure SkillsDisplay component properly renders proficiency indicators
+    - _Requirements: 2.6, 2.7_
+
   - [ ] 14.4 Add feedback capture for ML improvement
     - Track when talent applies to a job (positive feedback)
     - Track when talent dismisses a recommendation (negative feedback)

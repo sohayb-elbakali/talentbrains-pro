@@ -6,7 +6,8 @@ import {
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
-import { notificationManager } from "./utils/notificationManager";
+import { Toaster } from "sonner";
+import { notify } from "./utils/notify";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import CompanyDashboard from "./components/company/CompanyDashboard";
 import CompanyProfileCompletion from "./components/company/CompanyProfileCompletion";
@@ -14,6 +15,8 @@ import AdminDashboard from "./components/dashboard/AdminDashboard";
 import TalentDashboard from "./components/dashboard/TalentDashboard";
 
 import ErrorBoundary from "./components/ErrorBoundary";
+import NetworkErrorBoundary from "./components/NetworkErrorBoundary";
+import OfflineIndicator from "./components/OfflineIndicator";
 import Layout from "./components/layout/Layout";
 import LoadingSpinner from "./components/LoadingSpinner";
 import TalentProfileCompletion from "./components/talent/TalentProfileCompletion";
@@ -35,14 +38,19 @@ import SettingsPage from "./pages/SettingsPage";
 import TalentApplicationsPage from "./pages/talent/TalentApplicationsPage";
 import TalentProfilePage from "./pages/TalentProfilePage";
 import TalentsPage from "./pages/TalentsPage";
+import TalentPublicProfilePage from "./pages/TalentPublicProfilePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnMount: false,
+      refetchOnReconnect: true,
+      staleTime: 10 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      networkMode: 'offlineFirst',
     },
   },
 });
@@ -234,6 +242,14 @@ function AppContent() {
           }
         />
         <Route
+          path="/talents/:profileId"
+          element={
+            <ProtectedRoute allowedRoles={["company"]}>
+              <TalentPublicProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/ai-matching"
           element={
             <ProtectedRoute>
@@ -291,7 +307,7 @@ function App() {
   useEffect(() => {
     const handleError = (event: any) => {
       if (event?.error?.message?.includes("message port closed")) {
-        notificationManager.showError(
+        notify.showError(
           "A browser extension or session error occurred. Try disabling extensions or clearing storage."
         );
         event.preventDefault();
@@ -299,7 +315,7 @@ function App() {
     };
     const handleUnhandledRejection = (event: any) => {
       if (event?.reason?.message?.includes("message port closed")) {
-        notificationManager.showError(
+        notify.showError(
           "A browser extension or session error occurred. Try disabling extensions or clearing storage."
         );
         event.preventDefault();
@@ -318,11 +334,30 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <AppContent />
-        </Router>
-      </QueryClientProvider>
+      <NetworkErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <OfflineIndicator />
+          <Toaster 
+            position="top-right" 
+            richColors 
+            expand={false} 
+            closeButton
+            offset="80px"
+            toastOptions={{
+              style: {
+                borderRadius: '16px',
+                padding: '16px',
+                fontSize: '14px',
+                fontWeight: '500',
+              },
+              className: 'sonner-toast',
+            }}
+          />
+          <Router>
+            <AppContent />
+          </Router>
+        </QueryClientProvider>
+      </NetworkErrorBoundary>
     </ErrorBoundary>
   );
 }
