@@ -15,7 +15,7 @@ export default function Hero() {
 
   return (
     <>
-      <section className="pt-24 pb-16 bg-gray-50">
+      <section className="pt-24 pb-16 bg-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Content */}
@@ -73,15 +73,15 @@ export default function Hero() {
               <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">10K+</div>
-                  <div className="text-sm text-gray-600">Active Talents</div>
+                  <div className="text-sm text-gray-500">Active Talents</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-secondary">500+</div>
-                  <div className="text-sm text-gray-600">Companies</div>
+                  <div className="text-sm text-gray-500">Companies</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">95%</div>
-                  <div className="text-sm text-gray-600">Match Success</div>
+                  <div className="text-sm text-gray-500">Match Success</div>
                 </div>
               </div>
             </div>
@@ -143,9 +143,9 @@ export default function Hero() {
               </div>
 
               {/* Background decorations */}
-              <div className="absolute -top-4 -left-4 w-24 h-24 bg-blue-200 rounded-full opacity-50"></div>
-              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-orange-200 rounded-full opacity-30"></div>
-              <div className="absolute top-1/2 -right-8 w-16 h-16 bg-green-200 rounded-full opacity-40"></div>
+              <div className="absolute -top-4 -left-4 w-24 h-24 bg-blue-100 rounded-full opacity-60"></div>
+              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-orange-100 rounded-full opacity-50"></div>
+              <div className="absolute top-1/2 -right-8 w-16 h-16 bg-green-100 rounded-full opacity-50"></div>
             </div>
           </div>
         </div>

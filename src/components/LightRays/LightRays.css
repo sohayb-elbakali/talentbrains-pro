@@ -1,0 +1,17 @@
+.light-rays-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0; /* Ensure it stays behind content if used as background */
+  pointer-events: none; /* Let clicks pass through */
+}
+
+/* Ensure canvas takes full size */
+.light-rays-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
