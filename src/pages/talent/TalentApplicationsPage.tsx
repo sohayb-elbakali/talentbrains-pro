@@ -179,7 +179,7 @@ const TalentApplicationsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -352,7 +352,7 @@ const TalentApplicationsPage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="group relative bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg hover:border-primary transition-all duration-300 cursor-pointer"
+                  className="group relative bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg hover:border-primary transition-all duration-300 cursor-pointer"
                   onClick={() => navigate(`/jobs/${app.job.id}`)}
                 >
                   {/* Status Badge */}
@@ -366,11 +366,26 @@ const TalentApplicationsPage = () => {
                   </div>
 
                   <div className="p-5">
-                    {/* Job Title & Company */}
-                    <h3 className="text-lg font-bold text-gray-900 mb-1 pr-12 line-clamp-2 group-hover:text-primary transition-colors">
-                      {app.job.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 font-medium mb-4">{app.job.companies.name}</p>
+                    {/* Company Logo & Job Title */}
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="flex-shrink-0 w-20 h-20 bg-white rounded-2xl border-2 border-slate-200 flex items-center justify-center overflow-hidden p-3 shadow-sm">
+                        {app.job.companies?.avatar_url ? (
+                          <img
+                            src={app.job.companies.avatar_url}
+                            alt={app.job.companies.name}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <Briefcase className="h-8 w-8 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 pr-12">
+                        <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+                          {app.job.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 font-medium truncate">{app.job.companies.name}</p>
+                      </div>
+                    </div>
 
                     {/* Details with Icons */}
                     <div className="space-y-2 mb-4">

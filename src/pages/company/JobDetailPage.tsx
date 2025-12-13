@@ -164,18 +164,8 @@ const JobDetailPage: React.FC = () => {
     );
   }
 
-  const getStatusColor = (status: string) => {
-    const colors: any = {
-      active: "bg-green-500",
-      paused: "bg-orange-500",
-      draft: "bg-slate-400",
-      closed: "bg-red-500",
-    };
-    return colors[status] || "bg-blue-500";
-  };
-
   return (
-    <div className="min-h-screen bg-white py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button
@@ -190,10 +180,8 @@ const JobDetailPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-8 relative overflow-hidden"
+          className="bg-white rounded-2xl shadow-md border border-slate-200 p-8 mb-8 hover:shadow-lg transition-shadow duration-200"
         >
-          {/* Status Bar */}
-          <div className={`h-1 ${getStatusColor(job.status)}`}></div>
 
           <div className="p-8">
             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-6">
@@ -209,10 +197,8 @@ const JobDetailPage: React.FC = () => {
                       <h1 className="text-3xl font-bold text-slate-900 leading-tight">
                         {job.title}
                       </h1>
-                      <div
-                        className={`px-4 py-2 ${getStatusColor(job.status)} text-white text-sm font-bold uppercase rounded-lg flex-shrink-0`}
-                      >
-                        {job.status.toUpperCase()}
+                      <div className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold capitalize rounded-lg flex-shrink-0 border border-slate-200">
+                        {job.status}
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
@@ -254,10 +240,7 @@ const JobDetailPage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleToggleStatus}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-colors ${job.status === "active"
-                      ? "bg-orange-500 text-white hover:bg-orange-600"
-                      : "bg-green-500 text-white hover:bg-green-600"
-                    }`}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-700 border-2 border-slate-300 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-colors"
                 >
                   {job.status === "active" ? (
                     <>
@@ -273,7 +256,7 @@ const JobDetailPage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleDeleteJob}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-red-600 border border-red-200 rounded-lg font-semibold hover:bg-red-50 transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-600 border-2 border-slate-300 rounded-lg font-semibold hover:bg-slate-50 hover:border-red-300 hover:text-red-600 transition-colors"
                 >
                   <Trash size={16} weight="regular" />
                   Delete

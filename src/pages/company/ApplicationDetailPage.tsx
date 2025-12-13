@@ -205,7 +205,7 @@ const ApplicationDetailPage = () => {
   const StatusIcon = statusConfig.icon;
 
   return (
-    <div className="min-h-screen bg-white py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -16 }}
@@ -228,14 +228,16 @@ const ApplicationDetailPage = () => {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
             >
-              <div className="h-24 bg-slate-50 relative border-b border-slate-200">
+              <div className="h-32 bg-slate-50 relative border-b border-slate-200">
                 <div className="absolute bottom-0 left-0 right-0 p-6 flex items-end justify-between">
                   <div className="flex items-center gap-4">
-                    <img
-                      src={talent.profile.avatar_url || `https://api.dicebear.com/6.x/initials/svg?seed=${talent.profile.full_name}`}
-                      alt={talent.profile.full_name}
-                      className="w-24 h-24 rounded-2xl border-4 border-white shadow-sm object-cover"
-                    />
+                    <div className="w-28 h-28 bg-white rounded-2xl border-4 border-white shadow-lg overflow-hidden flex items-center justify-center p-2">
+                      <img
+                        src={talent.profile.avatar_url || `https://api.dicebear.com/6.x/initials/svg?seed=${talent.profile.full_name}`}
+                        alt={talent.profile.full_name}
+                        className="w-full h-full rounded-xl object-cover"
+                      />
+                    </div>
                   </div >
                   <span className={`px-4 py-2 ${statusConfig.class} rounded-lg border font-semibold text-sm flex items-center gap-2`}>
                     <StatusIcon size={16} weight="regular" />
