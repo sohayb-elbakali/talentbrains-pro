@@ -330,7 +330,7 @@ const JobDetailPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-xl p-6 text-white cursor-pointer hover:scale-105 transition-transform"
-            onClick={() => navigate(`/company/matches?job_id=${job.id}`)}
+            onClick={() => navigate(`/company/jobs/${job.id}/matching`)}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
@@ -338,8 +338,8 @@ const JobDetailPage: React.FC = () => {
               </div>
               <TrendingUp className="h-5 w-5 opacity-50" />
             </div>
-            <p className="text-3xl font-bold mb-1">View</p>
-            <p className="text-purple-100 font-medium">AI Matches</p>
+            <p className="text-3xl font-bold mb-1">Find</p>
+            <p className="text-purple-100 font-medium">Matching Talents</p>
           </motion.div>
         </div>
 
@@ -442,11 +442,11 @@ const JobDetailPage: React.FC = () => {
                   View Applications
                 </button>
                 <button
-                  onClick={() => navigate(`/company/matches?job_id=${job.id}`)}
+                  onClick={() => navigate(`/company/jobs/${job.id}/matching`)}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg"
                 >
                   <Star className="h-5 w-5" />
-                  View AI Matches
+                  Find Matching Talents
                 </button>
               </div>
             </motion.div>
