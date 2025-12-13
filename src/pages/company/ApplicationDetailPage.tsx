@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, Briefcase, Calendar, CheckCircle, Clock, Download, 
-  ExternalLink, FileText, Github, Globe, Linkedin, Mail, 
-  MapPin, MessageSquare, Star, TrendingUp, User, XCircle, Send, Phone
-} from 'lucide-react';
+import {
+  ArrowLeft, Briefcase, Calendar, CheckCircle, Clock, Download,
+  ArrowSquareOut, FileText, Globe, MapPin, User, XCircle, PaperPlaneTilt, Phone,
+  Star, Eye, Envelope
+} from '@phosphor-icons/react';
 import { useEffect, useState } from "react";
 import { notify } from "../../utils/notify";
 import { useNavigate, useParams } from "react-router-dom";
@@ -12,6 +12,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase";
 import { useQueryClient } from '@tanstack/react-query';
 import SkillsDisplay from "../../components/skills/SkillsDisplay";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 interface ApplicationDetail {
   id: string;
@@ -88,7 +89,7 @@ const ApplicationDetailPage = () => {
       setError(null);
 
       const { data, error: fetchError } = await db.getApplication(applicationId!);
-      
+
       if (fetchError) {
         throw new Error(fetchError.message || "Failed to fetch application details");
       }
@@ -100,15 +101,12 @@ const ApplicationDetailPage = () => {
       setApplication(data);
 
       if (data.talent?.id) {
-        console.log("🔍 db object:", db);
-        console.log("🔍 db.getTalentSkills exists?", typeof db.getTalentSkills);
         const { data: skills } = await db.getTalentSkills(data.talent.id);
-        console.log("🔍 Fetched talent skills:", skills);
         setTalentSkills(skills || []);
       }
     } catch (err: any) {
       setError(err.message);
-      toast.error("Failed to load application details");
+      notify.showError("Failed to load application details");
     } finally {
       setLoading(false);
     }
@@ -145,17 +143,16 @@ const ApplicationDetailPage = () => {
 
   const handleStatusUpdate = async () => {
     if (!application || !confirmModal.status) return;
-    
+
     try {
       setUpdatingStatus(true);
       const { error } = await db.updateApplication(application.id, { status: confirmModal.status });
-      
+
       if (error) throw error;
-      
-      // Invalidate cache to refresh all application lists
+
       queryClient.invalidateQueries({ queryKey: ['company-applications'] });
-      
-      notify.showSuccess(`Status updated to ${confirmModal.status}`);
+
+      notify.showSuccess(`Status updated to ${confirmModal.status} `);
       fetchApplicationDetail();
     } catch (err: any) {
       notify.showError("Failed to update status");
@@ -166,39 +163,36 @@ const ApplicationDetailPage = () => {
 
   const getStatusConfig = (status: string) => {
     const configs: any = {
-      pending: { icon: Clock, class: "from-yellow-400 to-orange-400", label: "Pending Review" },
-      reviewed: { icon: CheckCircle, class: "from-blue-400 to-cyan-400", label: "Reviewed" },
-      interview: { icon: Calendar, class: "from-purple-400 to-pink-400", label: "Interview" },
-      offer: { icon: Star, class: "from-green-400 to-emerald-400", label: "Offer Extended" },
-      accepted: { icon: CheckCircle, class: "from-green-500 to-teal-500", label: "Accepted" },
-      rejected: { icon: XCircle, class: "from-red-400 to-pink-400", label: "Rejected" },
+      pending: { icon: Clock, class: "bg-orange-100 text-orange-700 border-orange-200", label: "Pending Review" },
+      reviewed: { icon: Eye, class: "bg-blue-100 text-blue-700 border-blue-200", label: "Reviewed" },
+      interview: { icon: Calendar, class: "bg-orange-100 text-orange-700 border-orange-200", label: "Interview" },
+      offer: { icon: Star, class: "bg-green-100 text-green-700 border-green-200", label: "Offer Extended" },
+      accepted: { icon: CheckCircle, class: "bg-green-100 text-green-700 border-green-200", label: "Accepted" },
+      rejected: { icon: XCircle, class: "bg-red-100 text-red-700 border-red-200", label: "Rejected" },
     };
     return configs[status] || configs.pending;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Loading application details...</p>
-        </div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading application details..." />
       </div>
     );
   }
 
   if (error || !application) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl border-2 border-red-200 p-12 text-center max-w-md">
-          <XCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-red-200 p-12 text-center max-w-md">
+          <XCircle size={64} weight="regular" className="text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Error</h2>
           <p className="text-red-600 mb-6">{error || "Application not found"}</p>
           <button
             onClick={() => navigate("/company/applicants")}
-            className="btn btn-primary"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={18} weight="regular" />
             Back to Applications
           </button>
         </div>
@@ -211,18 +205,18 @@ const ApplicationDetailPage = () => {
   const StatusIcon = statusConfig.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-white py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
           <button
             onClick={() => navigate("/company/applicants")}
-            className="btn btn-secondary mb-4"
+            className="inline-flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-primary transition-colors font-medium"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={18} weight="regular" />
             Back to Applications
           </button>
         </motion.div>
@@ -230,43 +224,42 @@ const ApplicationDetailPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 overflow-hidden"
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
             >
-              <div className={`h-32 bg-gradient-to-r ${statusConfig.class} relative`}>
-                <div className="absolute inset-0 bg-black opacity-10"></div>
+              <div className="h-24 bg-slate-50 relative border-b border-slate-200">
                 <div className="absolute bottom-0 left-0 right-0 p-6 flex items-end justify-between">
                   <div className="flex items-center gap-4">
                     <img
                       src={talent.profile.avatar_url || `https://api.dicebear.com/6.x/initials/svg?seed=${talent.profile.full_name}`}
                       alt={talent.profile.full_name}
-                      className="w-24 h-24 rounded-2xl border-4 border-white shadow-2xl object-cover"
+                      className="w-24 h-24 rounded-2xl border-4 border-white shadow-sm object-cover"
                     />
-                  </div>
-                  <span className={`px-4 py-2 bg-white rounded-xl shadow-lg flex items-center gap-2 font-bold text-gray-900`}>
-                    <StatusIcon size={18} />
+                  </div >
+                  <span className={`px-4 py-2 ${statusConfig.class} rounded-lg border font-semibold text-sm flex items-center gap-2`}>
+                    <StatusIcon size={16} weight="regular" />
                     {statusConfig.label}
                   </span>
-                </div>
-              </div>
+                </div >
+              </div >
 
               <div className="p-8">
                 <div className="mb-6">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{talent.profile.full_name}</h1>
-                  <p className="text-xl text-gray-600 mb-4">{talent.title}</p>
-                  
+                  <h1 className="text-3xl font-bold text-slate-900 mb-2">{talent.profile.full_name}</h1>
+                  <p className="text-xl text-slate-600 mb-4">{talent.title}</p>
+
                   <div className="flex flex-wrap gap-3">
-                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 rounded-xl font-semibold">
-                      <TrendingUp size={16} />
+                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-medium border border-slate-200">
+                      <User size={16} weight="regular" />
                       {talent.experience_level}
                     </span>
-                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-xl font-semibold">
-                      <MapPin size={16} />
+                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-medium border border-slate-200">
+                      <MapPin size={16} weight="regular" />
                       {talent.location}
                     </span>
-                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 rounded-xl font-semibold">
-                      <User size={16} />
+                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium border border-green-200">
+                      <CheckCircle size={16} weight="regular" />
                       {talent.availability_status}
                     </span>
                   </div>
@@ -274,11 +267,11 @@ const ApplicationDetailPage = () => {
 
                 {talent.bio && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <FileText size={20} className="text-purple-600" />
+                    <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+                      <FileText size={20} weight="regular" className="text-primary" />
                       About
                     </h3>
-                    <p className="text-gray-700 leading-relaxed">{talent.bio}</p>
+                    <p className="text-slate-700 leading-relaxed">{talent.bio}</p>
                   </div>
                 )}
 
@@ -288,11 +281,11 @@ const ApplicationDetailPage = () => {
                       href={talent.portfolio_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn btn-secondary btn-sm"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg font-medium hover:bg-slate-50 transition-colors"
                     >
-                      <Globe size={16} />
+                      <Globe size={16} weight="regular" />
                       Portfolio
-                      <ExternalLink size={14} />
+                      <ArrowSquareOut size={14} weight="regular" />
                     </a>
                   )}
                   {talent.linkedin_url && (
@@ -300,11 +293,10 @@ const ApplicationDetailPage = () => {
                       href={talent.linkedin_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn btn-secondary btn-sm"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg font-medium hover:bg-slate-50 transition-colors"
                     >
-                      <Linkedin size={16} />
                       LinkedIn
-                      <ExternalLink size={14} />
+                      <ArrowSquareOut size={14} weight="regular" />
                     </a>
                   )}
                   {talent.github_url && (
@@ -312,279 +304,244 @@ const ApplicationDetailPage = () => {
                       href={talent.github_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn btn-secondary btn-sm"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg font-medium hover:bg-slate-50 transition-colors"
                     >
-                      <Github size={16} />
                       GitHub
-                      <ExternalLink size={14} />
+                      <ArrowSquareOut size={14} weight="regular" />
                     </a>
                   )}
                 </div>
               </div>
-            </motion.div>
+            </motion.div >
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl shadow-2xl border-2 border-purple-200 p-8 text-white"
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8"
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold flex items-center gap-3">
-                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <Send size={24} />
+                <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <PaperPlaneTilt size={24} weight="regular" className="text-primary" />
                   </div>
                   Quick Actions
                 </h3>
                 {updatingStatus && (
-                  <div className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-sm font-semibold">Updating...</span>
+                  <div className="flex items-center space-x-2 bg-slate-100 rounded-lg px-4 py-2">
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm font-semibold text-slate-700">Updating...</span>
                   </div>
                 )}
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
                   onClick={() => openConfirmModal('interview')}
                   disabled={updatingStatus}
-                  className="group relative overflow-hidden bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/30 rounded-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="bg-white hover:bg-slate-50 border border-slate-200 rounded-xl p-6 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <div className="relative">
-                    <Calendar className="h-8 w-8 mb-3 mx-auto group-hover:rotate-12 transition-transform duration-300" />
-                    <p className="font-bold text-sm">Schedule Interview</p>
-                    {application.status === 'interview' && (
-                      <span className="absolute top-0 right-0 bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded-full">
-                        ✓ Active
-                      </span>
-                    )}
-                  </div>
+                  <Calendar size={32} weight="regular" className="mb-3 mx-auto text-primary" />
+                  <p className="font-bold text-sm text-slate-900">Schedule Interview</p>
+                  {application.status === 'interview' && (
+                    <span className="mt-2 inline-block bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-lg border border-green-200">
+                      ✓ Active
+                    </span>
+                  )}
                 </button>
 
                 <button
                   onClick={() => openConfirmModal('offer')}
                   disabled={updatingStatus}
-                  className="group relative overflow-hidden bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/30 rounded-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="bg-white hover:bg-slate-50 border border-slate-200 rounded-xl p-6 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <div className="relative">
-                    <Star className="h-8 w-8 mb-3 mx-auto group-hover:scale-110 transition-transform duration-300" />
-                    <p className="font-bold text-sm">Make Offer</p>
-                    {application.status === 'offer' && (
-                      <span className="absolute top-0 right-0 bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded-full">
-                        ✓ Active
-                      </span>
-                    )}
-                  </div>
+                  <Star size={32} weight="regular" className="mb-3 mx-auto text-primary" />
+                  <p className="font-bold text-sm text-slate-900">Make Offer</p>
+                  {application.status === 'offer' && (
+                    <span className="mt-2 inline-block bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-lg border border-green-200">
+                      ✓ Active
+                    </span>
+                  )}
                 </button>
 
                 <button
                   onClick={() => openConfirmModal('rejected')}
                   disabled={updatingStatus || application.status === 'rejected'}
-                  className="group relative overflow-hidden bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/30 rounded-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-xl p-6 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <div className="relative">
-                    <XCircle className="h-8 w-8 mb-3 mx-auto group-hover:rotate-90 transition-transform duration-300" />
-                    <p className="font-bold text-sm">Reject</p>
-                    {application.status === 'rejected' && (
-                      <span className="absolute top-0 right-0 bg-red-400 text-red-900 text-xs font-bold px-2 py-1 rounded-full">
-                        ✓ Done
-                      </span>
-                    )}
-                  </div>
+                  <XCircle size={32} weight="regular" className="mb-3 mx-auto text-red-600" />
+                  <p className="font-bold text-sm text-slate-900">Reject</p>
+                  {application.status === 'rejected' && (
+                    <span className="mt-2 inline-block bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-lg border border-red-200">
+                      ✓ Done
+                    </span>
+                  )}
                 </button>
               </div>
 
-              {/* Status Description */}
-              <div className="mt-6 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                <p className="text-sm">
+              <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <p className="text-sm text-slate-700">
                   <span className="font-semibold">Current Status:</span>{' '}
                   {statusConfig.label}
                 </p>
-                <p className="text-xs text-white/80 mt-1">
-                  {application.status === 'pending' && '⏳ Review this application to move it forward'}
-                  {application.status === 'reviewed' && '✓ Application reviewed - Ready for next steps'}
-                  {application.status === 'interview' && '📅 Interview phase - Schedule or conduct meeting'}
-                  {application.status === 'offer' && '🎉 Offer extended - Awaiting candidate response'}
-                  {application.status === 'rejected' && '❌ Application has been declined'}
-                </p>
-              </div>
-
-              <div className="mt-6 pt-6 border-t-2 border-white/20">
-                <button className="w-full bg-white text-purple-600 hover:bg-gray-50 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 group">
-                  <MessageSquare size={20} className="group-hover:scale-110 transition-transform" />
-                  Send Message to Candidate
-                  <Send size={16} className="group-hover:translate-x-1 transition-transform" />
-                </button>
               </div>
             </motion.div>
 
-            {talentSkills && talentSkills.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8"
-              >
-                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <Star size={22} className="text-purple-600" />
-                  Skills & Expertise
-                </h3>
-                <SkillsDisplay 
-                  skills={talentSkills} 
-                  variant="card" 
-                  showProficiency={true} 
-                />
-              </motion.div>
-            )}
+            {
+              talentSkills && talentSkills.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8"
+                >
+                  <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <Star size={22} weight="regular" className="text-primary" />
+                    Skills & Expertise
+                  </h3>
+                  <SkillsDisplay
+                    skills={talentSkills}
+                    variant="card"
+                    showProficiency={true}
+                  />
+                </motion.div>
+              )
+            }
 
-            {application.cover_letter && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8"
-              >
-                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <FileText size={22} className="text-purple-600" />
-                  Cover Letter
-                </h3>
-                <div className="prose max-w-none">
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {application.cover_letter}
-                  </p>
-                </div>
-              </motion.div>
-            )}
+            {
+              application.cover_letter && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8"
+                >
+                  <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <FileText size={22} weight="regular" className="text-primary" />
+                    Cover Letter
+                  </h3>
+                  <div className="prose max-w-none">
+                    <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {application.cover_letter}
+                    </p>
+                  </div>
+                </motion.div>
+              )
+            }
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl shadow-2xl border-2 border-blue-200 p-8 text-white"
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8"
             >
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <h3 className="text-2xl font-bold mb-2 flex items-center gap-3">
-                    <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                      <Download size={24} />
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-3">
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <Download size={24} weight="regular" className="text-primary" />
                     </div>
                     Resume & Documents
                   </h3>
-                  <p className="text-blue-100">Download and review candidate materials</p>
+                  <p className="text-slate-600">Download and review candidate materials</p>
                 </div>
               </div>
-              
+
               {application.custom_resume_url ? (
                 <a
                   href={application.custom_resume_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group w-full bg-white text-blue-600 hover:bg-gray-50 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3"
+                  className="group w-full bg-primary text-white hover:bg-blue-700 font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3"
                 >
-                  <Download size={20} className="group-hover:scale-110 transition-transform" />
+                  <Download size={20} weight="regular" />
                   Download Resume
-                  <ExternalLink size={16} className="group-hover:translate-x-1 transition-transform" />
+                  <ArrowSquareOut size={16} weight="regular" />
                 </a>
               ) : (
-                <div className="bg-white/10 backdrop-blur-sm border-2 border-white/30 rounded-xl p-6 text-center">
-                  <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-white/80">No resume uploaded</p>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center">
+                  <FileText size={48} weight="regular" className="mx-auto mb-3 text-slate-400" />
+                  <p className="text-slate-600">No resume uploaded</p>
                 </div>
               )}
             </motion.div>
-          </div>
+          </div >
 
           <div className="space-y-6">
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-6"
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"
             >
-              <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <Briefcase size={20} className="text-purple-600" />
+              <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <Briefcase size={20} weight="regular" className="text-primary" />
                 Job Details
               </h3>
               <div className="space-y-5">
-                <div className="pb-4 border-b-2 border-gray-100">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Position</span>
-                  <p className="text-lg font-bold text-gray-900">{job.title}</p>
+                <div className="pb-4 border-b border-slate-200">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Position</span>
+                  <p className="text-lg font-bold text-slate-900">{job.title}</p>
                 </div>
                 {job.location && (
-                  <div className="pb-4 border-b-2 border-gray-100">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Location</span>
-                    <p className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                      <MapPin size={18} className="text-purple-600" />
+                  <div className="pb-4 border-b border-slate-200">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Location</span>
+                    <p className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <MapPin size={18} weight="regular" className="text-primary" />
                       {job.location}
                     </p>
                   </div>
                 )}
                 {job.salary_min && job.salary_max && (
-                  <div className="pb-4 border-b-2 border-gray-100">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Salary Range</span>
+                  <div className="pb-4 border-b border-slate-200">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Salary Range</span>
                     <p className="text-lg font-bold text-green-600">
                       ${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}
                     </p>
                   </div>
                 )}
                 <div>
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Applied Date</span>
-                  <p className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <Calendar size={18} className="text-blue-600" />
-                    {new Date(application.applied_at).toLocaleDateString('en-US', { 
-                      month: 'long', 
-                      day: 'numeric', 
-                      year: 'numeric' 
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Applied Date</span>
+                  <p className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <Calendar size={18} weight="regular" className="text-primary" />
+                    {new Date(application.applied_at).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric'
                     })}
                   </p>
                 </div>
-                {application.reviewed_at && (
-                  <div>
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Reviewed Date</span>
-                    <p className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                      <CheckCircle size={18} className="text-green-600" />
-                      {new Date(application.reviewed_at).toLocaleDateString('en-US', { 
-                        month: 'long', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
-                    </p>
-                  </div>
-                )}
               </div>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-2xl p-6 text-white"
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"
             >
-              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <Mail size={20} />
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <Envelope size={20} weight="regular" className="text-primary" />
                 Contact Information
               </h3>
               <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-3">
-                  <Mail size={18} />
-                  <span className="text-sm font-medium">{talent.profile.email}</span>
+                <div className="flex items-center gap-3 bg-slate-50 rounded-xl p-3 border border-slate-200">
+                  <Envelope size={18} weight="regular" className="text-slate-600" />
+                  <span className="text-sm font-medium text-slate-700">{talent.profile.email}</span>
                 </div>
                 {talent.profile.email && (
-                  <a 
+                  <a
                     href={`mailto:${talent.profile.email}`}
-                    className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-3 hover:bg-white/20 transition-colors"
+                    className="flex items-center gap-3 bg-slate-50 rounded-xl p-3 border border-slate-200 hover:bg-slate-100 transition-colors"
                   >
-                    <Phone size={18} />
-                    <span className="text-sm font-medium">Call Candidate</span>
+                    <Phone size={18} weight="regular" className="text-slate-600" />
+                    <span className="text-sm font-medium text-slate-700">Call Candidate</span>
                   </a>
                 )}
               </div>
             </motion.div>
           </div>
-        </div>
-      </div>
+        </div >
+      </div >
 
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
@@ -596,7 +553,7 @@ const ApplicationDetailPage = () => {
         confirmText="Yes, Proceed"
         cancelText="Cancel"
       />
-    </div>
+    </div >
   );
 };
 

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Building, Eye, EyeOff, X, ArrowRight, User, Mail, Lock, UserCircle } from 'lucide-react';
+import { Buildings, Eye, EyeSlash, X, ArrowRight, User, Envelope, Lock, UserCircle } from '@phosphor-icons/react';
 import React, { useEffect, useState } from "react";
+import { createPortal } from 'react-dom';
 import { notify } from "../../utils/notify";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -25,7 +26,6 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
 
   const { signIn, signUp, loading, isAuthenticated, profile } = useAuth()
   const navigate = useNavigate()
@@ -135,69 +135,69 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  return createPortal(
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
       <AnimatePresence>
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.3 }}
-          className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden relative flex flex-col"
+          transition={{ duration: 0.2 }}
+          className="w-full max-w-md max-h-[90vh] bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative flex flex-col"
           style={{ maxHeight: '90vh' }}
         >
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-50 p-2 bg-white/80 hover:bg-white rounded-full transition-all duration-200 text-gray-500 hover:text-gray-900"
+            className="absolute top-4 right-4 z-50 p-2 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-slate-500 hover:text-slate-900"
             aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X size={20} weight="regular" />
           </button>
 
           {/* Form */}
           <div className="w-full flex-1 overflow-y-auto">
-            <div className="p-6">
+            <div className="p-5">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.3 }}
               >
-                <h1 className="text-2xl md:text-3xl font-bold mb-2 text-gray-900">
+                <h1 className="text-2xl font-bold mb-1 text-slate-900">
                   {mode === 'signin' ? 'Welcome back' : 'Create an account'}
                 </h1>
-                <p className="text-gray-500 mb-6">
+                <p className="text-slate-500 mb-5">
                   {mode === 'signin'
                     ? 'Sign in to access your dashboard'
                     : 'Join thousands of professionals and companies'}
                 </p>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-3">
                   {mode === 'signup' && (
-                    <div className="mb-6 grid grid-cols-2 gap-4">
+                    <div className="mb-4 grid grid-cols-2 gap-3">
                       <button
                         type="button"
                         onClick={() => setUserType('talent')}
                         className={cn(
-                          "p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all duration-200",
+                          "p-3 rounded-2xl border flex flex-col items-center gap-2 transition-all duration-200",
                           userType === 'talent'
-                            ? "border-primary bg-blue-50/50 text-primary"
-                            : "border-gray-100 hover:border-gray-200 text-gray-500"
+                            ? "border-primary bg-slate-50 text-primary"
+                            : "border-slate-200 hover:border-slate-300 text-slate-500"
                         )}
                       >
-                        <UserCircle className={cn("h-6 w-6", userType === 'talent' ? "text-primary" : "text-gray-400")} />
+                        <UserCircle size={20} weight="regular" className={userType === 'talent' ? "text-primary" : "text-slate-400"} />
                         <span className="font-medium text-sm">Talent</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setUserType('company')}
                         className={cn(
-                          "p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all duration-200",
+                          "p-3 rounded-2xl border flex flex-col items-center gap-2 transition-all duration-200",
                           userType === 'company'
-                            ? "border-primary bg-blue-50/50 text-primary"
-                            : "border-gray-100 hover:border-gray-200 text-gray-500"
+                            ? "border-primary bg-slate-50 text-primary"
+                            : "border-slate-200 hover:border-slate-300 text-slate-500"
                         )}
                       >
-                        <Building className={cn("h-6 w-6", userType === 'company' ? "text-primary" : "text-gray-400")} />
+                        <Buildings size={20} weight="regular" className={userType === 'company' ? "text-primary" : "text-slate-400"} />
                         <span className="font-medium text-sm">Company</span>
                       </button>
                     </div>
@@ -205,8 +205,8 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
 
                   {mode === 'signup' && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name <span className="text-blue-500">*</span>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Full Name <span className="text-primary">*</span>
                       </label>
                       <div className="relative">
                         <Input
@@ -218,16 +218,16 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                             errors.fullName && "border-red-500 focus-visible:ring-red-500"
                           )}
                         />
-                        <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                        <User size={20} weight="regular" className="absolute left-3 top-2.5 text-slate-400" />
                       </div>
-                      {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
+                      {errors.fullName && <p className="text-red-600 text-xs mt-1">{errors.fullName}</p>}
                     </div>
                   )}
 
                   {mode === 'signup' && userType === 'company' && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Company Name <span className="text-blue-500">*</span>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Company Name <span className="text-primary">*</span>
                       </label>
                       <div className="relative">
                         <Input
@@ -239,15 +239,15 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                             errors.companyName && "border-red-500 focus-visible:ring-red-500"
                           )}
                         />
-                        <Building className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                        <Buildings size={20} weight="regular" className="absolute left-3 top-2.5 text-slate-400" />
                       </div>
-                      {errors.companyName && <p className="text-red-500 text-xs mt-1">{errors.companyName}</p>}
+                      {errors.companyName && <p className="text-red-600 text-xs mt-1">{errors.companyName}</p>}
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email <span className="text-blue-500">*</span>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Email <span className="text-primary">*</span>
                     </label>
                     <div className="relative">
                       <Input
@@ -260,14 +260,14 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                           errors.email && "border-red-500 focus-visible:ring-red-500"
                         )}
                       />
-                      <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                      <Envelope size={20} weight="regular" className="absolute left-3 top-2.5 text-slate-400" />
                     </div>
-                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                    {errors.email && <p className="text-red-600 text-xs mt-1">{errors.email}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Password <span className="text-blue-500">*</span>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Password <span className="text-primary">*</span>
                     </label>
                     <div className="relative">
                       <Input
@@ -280,22 +280,22 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                           errors.password && "border-red-500 focus-visible:ring-red-500"
                         )}
                       />
-                      <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                      <Lock size={20} weight="regular" className="absolute left-3 top-2.5 text-slate-400" />
                       <button
                         type="button"
-                        className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+                        className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-700"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showPassword ? <EyeSlash size={20} weight="regular" /> : <Eye size={20} weight="regular" />}
                       </button>
                     </div>
-                    {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                    {errors.password && <p className="text-red-600 text-xs mt-1">{errors.password}</p>}
                   </div>
 
                   {mode === 'signup' && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Confirm Password <span className="text-blue-500">*</span>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Confirm Password <span className="text-primary">*</span>
                       </label>
                       <div className="relative">
                         <Input
@@ -308,63 +308,45 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                             errors.confirmPassword && "border-red-500 focus-visible:ring-red-500"
                           )}
                         />
-                        <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                        <Lock size={20} weight="regular" className="absolute left-3 top-2.5 text-slate-400" />
                         <button
                           type="button"
-                          className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+                          className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-700"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         >
-                          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          {showConfirmPassword ? <EyeSlash size={20} weight="regular" /> : <Eye size={20} weight="regular" />}
                         </button>
                       </div>
-                      {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
+                      {errors.confirmPassword && <p className="text-red-600 text-xs mt-1">{errors.confirmPassword}</p>}
                     </div>
                   )}
 
-                  <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
-                    onHoverStart={() => setIsHovered(true)}
-                    onHoverEnd={() => setIsHovered(false)}
-                    className="pt-2"
-                  >
+                  <div className="pt-2">
                     <Button
                       type="submit"
                       disabled={loading || isAuthenticated}
-                      className={cn(
-                        "w-full py-6 text-base shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden",
-                        isHovered ? "shadow-blue-200" : ""
-                      )}
+                      className="w-full py-6 text-base transition-colors"
                     >
-                      <span className="flex items-center justify-center relative z-10">
+                      <span className="flex items-center justify-center">
                         {loading ? (
-                          <span className="animate-pulse">Processing...</span>
+                          <span>Processing...</span>
                         ) : (
                           <>
                             {mode === 'signin' ? 'Sign In' : 'Create Account'}
-                            <ArrowRight className="ml-2 h-5 w-5" />
+                            <ArrowRight size={20} weight="regular" className="ml-2" />
                           </>
                         )}
                       </span>
-                      {isHovered && !loading && (
-                        <motion.span
-                          initial={{ left: "-100%" }}
-                          animate={{ left: "100%" }}
-                          transition={{ duration: 1, ease: "easeInOut" }}
-                          className="absolute top-0 bottom-0 left-0 w-20 bg-gradient-to-r from-transparent via-white/30 to-transparent z-0"
-                          style={{ filter: "blur(8px)" }}
-                        />
-                      )}
                     </Button>
-                  </motion.div>
+                  </div>
 
                   <div className="text-center mt-6">
                     <div className="relative my-6">
                       <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-200"></div>
+                        <div className="w-full border-t border-slate-200"></div>
                       </div>
                       <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-white text-gray-500">
+                        <span className="px-2 bg-white text-slate-500">
                           {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}
                         </span>
                       </div>
@@ -372,7 +354,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                     <button
                       type="button"
                       onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-                      className="text-primary hover:text-primary-hover font-semibold text-sm transition-colors hover:underline"
+                      className="text-primary hover:text-blue-700 font-medium text-sm transition-colors hover:underline"
                     >
                       {mode === 'signin' ? 'Create an account' : 'Sign in instead'}
                     </button>
@@ -383,6 +365,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
           </div>
         </motion.div>
       </AnimatePresence>
-    </div>
+    </div>,
+    document.body
   )
 }

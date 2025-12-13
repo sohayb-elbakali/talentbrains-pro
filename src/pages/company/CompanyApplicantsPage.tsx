@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Briefcase, Calendar, CheckCircle, Clock, Eye, Filter, MapPin, Search, User, XCircle, Star, TrendingUp } from 'lucide-react';
+import { Briefcase, Calendar, CheckCircle, Clock, Eye, Funnel, MapPin, MagnifyingGlass, User, XCircle, Star, TrendUp, ChartBar } from '@phosphor-icons/react';
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
@@ -142,45 +142,45 @@ const CompanyApplicantsPage = () => {
     const configs = {
       pending: {
         icon: Clock,
-        class: "bg-gradient-to-r from-yellow-400 to-orange-400 text-white",
+        class: "bg-orange-100 text-orange-700 border-orange-200",
         label: "Pending Review",
-        bgClass: "bg-yellow-50 border-yellow-200"
+        bgClass: "bg-orange-50 border-orange-200"
       },
       reviewed: {
         icon: Eye,
-        class: "bg-gradient-to-r from-blue-400 to-cyan-400 text-white",
+        class: "bg-blue-100 text-blue-700 border-blue-200",
         label: "Reviewed",
         bgClass: "bg-blue-50 border-blue-200"
       },
       interview: {
         icon: Star,
-        class: "bg-gradient-to-r from-secondary to-secondary-hover text-white",
+        class: "bg-orange-100 text-orange-700 border-orange-200",
         label: "Interview Scheduled",
         bgClass: "bg-orange-50 border-orange-200"
       },
       offer: {
         icon: Star,
-        class: "bg-gradient-to-r from-green-400 to-emerald-400 text-white",
+        class: "bg-green-100 text-green-700 border-green-200",
         label: "Offer Extended",
         bgClass: "bg-green-50 border-green-200"
       },
       accepted: {
         icon: CheckCircle,
-        class: "bg-gradient-to-r from-green-500 to-teal-500 text-white",
+        class: "bg-green-100 text-green-700 border-green-200",
         label: "Accepted",
         bgClass: "bg-green-50 border-green-200"
       },
       rejected: {
         icon: XCircle,
-        class: "bg-gradient-to-r from-red-400 to-pink-400 text-white",
+        class: "bg-red-100 text-red-700 border-red-200",
         label: "Rejected",
         bgClass: "bg-red-50 border-red-200"
       },
       withdrawn: {
         icon: XCircle,
-        class: "bg-gradient-to-r from-gray-400 to-gray-500 text-white",
+        class: "bg-slate-100 text-slate-700 border-slate-200",
         label: "Withdrawn",
-        bgClass: "bg-gray-50 border-gray-200"
+        bgClass: "bg-slate-50 border-slate-200"
       },
     };
 
@@ -188,48 +188,48 @@ const CompanyApplicantsPage = () => {
   };
 
   const stats = [
-    { label: "Total Applications", value: applications.length, color: "from-primary to-primary-hover", icon: TrendingUp },
-    { label: "Pending Review", value: applications.filter(a => a.status === "pending").length, color: "from-yellow-500 to-orange-500", icon: Clock },
-    { label: "Interviews", value: applications.filter(a => a.status === "interview").length, color: "from-secondary to-secondary-hover", icon: Calendar },
-    { label: "Offers/Accepted", value: applications.filter(a => ["offer", "accepted"].includes(a.status)).length, color: "from-green-500 to-emerald-500", icon: CheckCircle },
+    { label: "Total Applications", value: applications.length, color: "bg-primary text-white", icon: ChartBar },
+    { label: "Pending Review", value: applications.filter(a => a.status === "pending").length, color: "bg-orange-100 text-orange-700 border border-orange-200", icon: Clock },
+    { label: "Interviews", value: applications.filter(a => a.status === "interview").length, color: "bg-blue-100 text-blue-700 border border-blue-200", icon: Calendar },
+    { label: "Offers/Accepted", value: applications.filter(a => ["offer", "accepted"].includes(a.status)).length, color: "bg-green-100 text-green-700 border border-green-200", icon: CheckCircle },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-primary mb-3">
-            Applicant Management
+          <h1 className="text-4xl font-bold text-slate-900 mb-3">
+            Applicant <span className="text-primary">Management</span>
           </h1>
-          <p className="text-lg text-gray-600">Review and manage your job applications</p>
+          <p className="text-lg text-slate-600">Review and manage your job applications</p>
         </motion.div>
 
         <div className="mb-8">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <MagnifyingGlass weight="regular" size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Search by name, job title, or skills..."
               value={applicationFilters.search}
               onChange={(e) => setApplicationFilters({ search: e.target.value })}
-              className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary-light transition-all outline-none text-gray-900 placeholder-gray-400 shadow-sm hover:border-gray-300"
+              className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:border-primary focus:ring-2 focus:ring-primary transition-all outline-none text-slate-900 placeholder-slate-400"
             />
           </div>
         </div>
 
         {/* Quick Filter Tabs */}
-        <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 p-4 mb-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <Filter className="h-5 w-5 text-gray-600" />
-            <h3 className="font-semibold text-gray-700">Quick Filters</h3>
+            <Funnel size={20} weight="regular" className="text-slate-600" />
+            <h3 className="font-semibold text-slate-700">Quick Filters</h3>
             {applicationFilters.status.length > 0 && (
               <button
                 onClick={resetApplicationFilters}
-                className="ml-auto text-sm text-primary hover:text-primary-hover font-medium"
+                className="ml-auto text-sm text-primary hover:text-blue-700 font-medium"
               >
                 Clear All
               </button>
@@ -241,8 +241,8 @@ const CompanyApplicantsPage = () => {
             <button
               onClick={() => setApplicationFilters({ status: [] })}
               className={`px-4 py-2 rounded-lg font-medium transition-all ${applicationFilters.status.length === 0
-                ? 'bg-primary text-white shadow-md'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-primary text-white'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
                 }`}
             >
               All ({applications.length})
@@ -250,11 +250,11 @@ const CompanyApplicantsPage = () => {
 
             {/* Status Filters with Counts */}
             {[
-              { value: 'pending', label: 'Pending', color: 'bg-yellow-500', hoverColor: 'hover:bg-yellow-600' },
+              { value: 'pending', label: 'Pending', color: 'bg-orange-500', hoverColor: 'hover:bg-orange-600' },
               { value: 'reviewed', label: 'Reviewed', color: 'bg-blue-500', hoverColor: 'hover:bg-blue-600' },
               { value: 'interview', label: 'Interview', color: 'bg-orange-500', hoverColor: 'hover:bg-orange-600' },
               { value: 'offer', label: 'Offer', color: 'bg-green-500', hoverColor: 'hover:bg-green-600' },
-              { value: 'accepted', label: 'Accepted', color: 'bg-emerald-500', hoverColor: 'hover:bg-emerald-600' },
+              { value: 'accepted', label: 'Accepted', color: 'bg-green-600', hoverColor: 'hover:bg-green-700' },
               { value: 'rejected', label: 'Rejected', color: 'bg-red-500', hoverColor: 'hover:bg-red-600' },
             ].map((status) => {
               const count = applications.filter(a => a.status === status.value).length;
@@ -270,8 +270,8 @@ const CompanyApplicantsPage = () => {
                     setApplicationFilters({ status: newStatuses });
                   }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${isActive
-                    ? `${status.color} text-white shadow-md ${status.hoverColor}`
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? `${status.color} text-white ${status.hoverColor}`
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
                     }`}
                 >
                   {status.label} ({count})
@@ -281,10 +281,10 @@ const CompanyApplicantsPage = () => {
           </div>
 
           {/* Sort Options */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-slate-200">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Sort by:</span>
+              <TrendUp size={16} weight="regular" className="text-slate-600" />
+              <span className="text-sm font-medium text-slate-700">Sort by:</span>
             </div>
             <div className="flex gap-2">
               {[
@@ -297,7 +297,7 @@ const CompanyApplicantsPage = () => {
                   onClick={() => setApplicationFilters({ sortBy: sort.value as any })}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${applicationFilters.sortBy === sort.value
                     ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
                     }`}
                 >
                   {sort.label}
@@ -313,19 +313,16 @@ const CompanyApplicantsPage = () => {
             return (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative overflow-hidden bg-white rounded-2xl shadow-lg border-2 border-gray-100 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                transition={{ delay: index * 0.05 }}
+                className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-all duration-200`}
               >
-                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-10 rounded-full -mr-16 -mt-16`}></div>
-                <div className="relative">
-                  <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${stat.color} mb-4 shadow-lg`}>
-                    <Icon className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</div>
-                  <div className="text-sm font-medium text-gray-600">{stat.label}</div>
+                <div className={`inline-flex p-3 rounded-xl ${stat.color} mb-4`}>
+                  <Icon size={24} weight="regular" />
                 </div>
+                <div className="text-3xl font-bold text-slate-900 mb-1">{stat.value}</div>
+                <div className="text-sm font-medium text-slate-600">{stat.label}</div>
               </motion.div>
             );
           })}
@@ -339,15 +336,15 @@ const CompanyApplicantsPage = () => {
             </div>
           </>
         ) : error ? (
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-red-200 p-12 text-center">
-            <XCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+          <div className="bg-white rounded-2xl shadow-sm border border-red-200 p-12 text-center">
+            <XCircle size={64} weight="regular" className="text-red-400 mx-auto mb-4" />
             <p className="text-red-600 text-lg">{error}</p>
           </div>
         ) : filteredApplications.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 p-12 text-center">
-            <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No applicants found</h3>
-            <p className="text-gray-500 text-lg">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
+            <User size={64} weight="regular" className="text-slate-300 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-slate-900 mb-2">No applicants found</h3>
+            <p className="text-slate-500 text-lg">
               {applicationFilters.search || applicationFilters.status.length > 0
                 ? "Try adjusting your filters to see more results"
                 : "Applications will appear here once candidates apply to your jobs"}
@@ -362,20 +359,18 @@ const CompanyApplicantsPage = () => {
               return (
                 <motion.div
                   key={app.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: index * 0.02 }}
                   onClick={() => navigate(`/company/applicants/${app.id}`)}
-                  className="group relative bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg hover:border-primary transition-all duration-300"
+                  className="group relative bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer hover:shadow-md hover:border-primary transition-all duration-200"
                 >
                   {/* Status Badge */}
                   <div className="absolute top-3 right-3 z-10 flex flex-col items-center gap-1">
-                    <div className={`p-2 ${statusConfig.class} rounded-full shadow-md`}>
-                      <StatusIcon size={16} />
-                    </div>
-                    <span className="text-xs font-bold text-gray-600 bg-white px-2 py-0.5 rounded-full shadow-sm">
+                    <div className={`px-3 py-1.5 ${statusConfig.class} rounded-lg border text-xs font-semibold flex items-center gap-1.5`}>
+                      <StatusIcon size={14} weight="regular" />
                       {statusConfig.label}
-                    </span>
+                    </div>
                   </div>
 
                   <div className="p-5">
@@ -384,34 +379,34 @@ const CompanyApplicantsPage = () => {
                       <img
                         src={app.talent?.profile?.avatar_url || `https://api.dicebear.com/6.x/initials/svg?seed=${app.talent?.profile?.full_name}`}
                         alt={app.talent?.profile?.full_name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-100"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-slate-100"
                       />
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-gray-900 truncate group-hover:text-primary transition-colors">
+                        <h3 className="text-lg font-bold text-slate-900 truncate group-hover:text-primary transition-colors">
                           {app.talent?.profile?.full_name}
                         </h3>
-                        <p className="text-sm text-gray-600 truncate">{app.talent?.title}</p>
+                        <p className="text-sm text-slate-600 truncate">{app.talent?.title}</p>
                       </div>
                     </div>
 
                     {/* Details with Icons */}
                     <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
-                        <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Briefcase className="h-3.5 w-3.5 text-primary" />
+                      <div className="flex items-center gap-2 text-sm text-slate-700">
+                        <div className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center flex-shrink-0 border border-slate-200">
+                          <Briefcase size={14} weight="regular" className="text-primary" />
                         </div>
                         <span className="truncate">{app.job.title}</span>
                       </div>
                       {app.talent?.location && (
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <MapPin className="h-3.5 w-3.5 text-primary" />
+                        <div className="flex items-center gap-2 text-sm text-slate-700">
+                          <div className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center flex-shrink-0 border border-slate-200">
+                            <MapPin size={14} weight="regular" className="text-primary" />
                           </div>
                           <span className="truncate">{app.talent.location}</span>
                         </div>
                       )}
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <Calendar className="h-3.5 w-3.5" />
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <Calendar size={14} weight="regular" />
                         <span>Applied {new Date(app.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                       </div>
                     </div>
@@ -422,9 +417,9 @@ const CompanyApplicantsPage = () => {
                         e.stopPropagation();
                         navigate(`/company/applicants/${app.id}`);
                       }}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-hover transition-colors"
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
                     >
-                      <Eye size={14} />
+                      <Eye size={16} weight="regular" />
                       View Profile
                     </button>
                   </div>

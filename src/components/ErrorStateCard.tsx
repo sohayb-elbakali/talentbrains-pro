@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { WifiOff, RefreshCw, AlertCircle, ServerCrash } from 'lucide-react';
+import { WifiSlash, ArrowClockwise, WarningCircle, CloudSlash } from '@phosphor-icons/react';
 import { isNetworkError } from '../utils/networkErrorHandler';
 
 interface ErrorStateCardProps {
@@ -27,9 +27,9 @@ export default function ErrorStateCard({
   const getErrorConfig = () => {
     if (isOffline) {
       return {
-        icon: WifiOff,
+        icon: WifiSlash,
         iconBg: 'bg-blue-100',
-        iconColor: 'text-blue-600',
+        iconColor: 'text-primary',
         title: title || 'No Connection',
         message: message || 'Check your internet connection and try again',
       };
@@ -37,16 +37,16 @@ export default function ErrorStateCard({
 
     if (isNetwork) {
       return {
-        icon: ServerCrash,
-        iconBg: 'bg-orange-100',
-        iconColor: 'text-orange-600',
+        icon: CloudSlash,
+        iconBg: 'bg-slate-100',
+        iconColor: 'text-slate-600',
         title: title || 'Connection Error',
         message: message || 'Unable to reach the server. Please try again',
       };
     }
 
     return {
-      icon: AlertCircle,
+      icon: WarningCircle,
       iconBg: 'bg-red-100',
       iconColor: 'text-red-600',
       title: title || 'Error',
@@ -62,23 +62,23 @@ export default function ErrorStateCard({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200"
+        className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-200"
       >
         <div className="flex items-center gap-3">
           <div className={`${config.iconBg} p-2 rounded-lg`}>
-            <Icon className={`h-5 w-5 ${config.iconColor}`} />
+            <Icon size={20} weight="regular" className={config.iconColor} />
           </div>
           <div>
-            <p className="font-semibold text-gray-900 text-sm">{config.title}</p>
-            <p className="text-gray-600 text-xs">{config.message}</p>
+            <p className="font-semibold text-slate-900 text-sm">{config.title}</p>
+            <p className="text-slate-600 text-xs">{config.message}</p>
           </div>
         </div>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
           >
-            <RefreshCw className="h-4 w-4" />
+            <ArrowClockwise size={16} weight="regular" />
             Retry
           </button>
         )}
@@ -90,7 +90,7 @@ export default function ErrorStateCard({
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8"
+      className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8"
     >
       {/* Icon */}
       <div className="flex justify-center mb-6">
@@ -98,24 +98,24 @@ export default function ErrorStateCard({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-          className={`${config.iconBg} p-4 rounded-2xl shadow-lg`}
+          className={`${config.iconBg} p-4 rounded-2xl`}
         >
-          <Icon className={`h-10 w-10 ${config.iconColor}`} />
+          <Icon size={32} weight="regular" className={config.iconColor} />
         </motion.div>
       </div>
 
       {/* Title */}
-      <h3 className="text-2xl font-bold text-gray-900 text-center mb-4">
+      <h3 className="text-2xl font-bold text-slate-900 text-center mb-4">
         {config.title}
       </h3>
 
       {/* Message */}
-      <p className="text-gray-600 text-center mb-6">{config.message}</p>
+      <p className="text-slate-600 text-center mb-6">{config.message}</p>
 
       {/* Error details (only in development) */}
-      {process.env.NODE_ENV === 'development' && error?.message && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-xs font-mono text-gray-700 break-all">
+      {import.meta.env.DEV && error?.message && (
+        <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <p className="text-xs font-mono text-slate-700 break-all">
             {error.message}
           </p>
         </div>
@@ -125,9 +125,9 @@ export default function ErrorStateCard({
       {onRetry && (
         <button
           onClick={onRetry}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-all transform hover:scale-105 shadow-lg"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
         >
-          <RefreshCw className="h-5 w-5" />
+          <ArrowClockwise size={20} weight="regular" />
           Try Again
         </button>
       )}

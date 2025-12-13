@@ -1,4 +1,4 @@
-import { Building } from "lucide-react";
+import { Buildings } from "@phosphor-icons/react";
 import { useState } from "react";
 
 interface CompanyLogoProps {
@@ -25,9 +25,9 @@ const iconSizes = {
 // Simple, professional default company logo
 const DefaultCompanyLogo = ({ size, className }: { size: "sm" | "md" | "lg" | "xl"; className: string }) => (
   <div
-    className={`${sizeClasses[size]} ${className} bg-primary rounded-xl flex items-center justify-center shadow-lg`}
+    className={`${sizeClasses[size]} ${className} bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center`}
   >
-    <Building className="text-white" size={iconSizes[size]} />
+    <Buildings weight="regular" size={iconSizes[size]} className="text-primary" />
   </div>
 );
 
@@ -49,7 +49,7 @@ export default function CompanyLogo({
     <img
       src={avatarUrl}
       alt={`${companyName} logo`}
-      className={`${sizeClasses[size]} ${className} rounded-xl object-cover shadow-lg bg-white`}
+      className={`${sizeClasses[size]} ${className} rounded-2xl object-cover bg-white border border-slate-200`}
       onError={() => setImageError(true)}
     />
   );
