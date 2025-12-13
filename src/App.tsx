@@ -39,6 +39,8 @@ import TalentApplicationsPage from "./pages/talent/TalentApplicationsPage";
 import TalentProfilePage from "./pages/TalentProfilePage";
 import TalentsPage from "./pages/TalentsPage";
 import TalentPublicProfilePage from "./pages/TalentPublicProfilePage";
+import { MatchingDashboard } from "./pages/MatchingDashboard";
+import { JobMatchingResultsPage } from "./pages/company/JobMatchingResultsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -205,6 +207,7 @@ function AppContent() {
                 <Route path="matches" element={<CompanyMatchesPage />} />
                 <Route path="jobs/:jobId" element={<CompanyJobDetailPage />} />
                 <Route path="jobs/:jobId/edit" element={<EditJobPage />} />
+                <Route path="jobs/:jobId/matching" element={<JobMatchingResultsPage />} />
               </Routes>
             </ProtectedRoute>
           }
@@ -254,6 +257,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <AIMatchingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/matching"
+          element={
+            <ProtectedRoute>
+              <MatchingDashboard />
             </ProtectedRoute>
           }
         />
