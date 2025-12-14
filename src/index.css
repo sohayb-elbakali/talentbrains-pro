@@ -4,85 +4,92 @@
 
 @layer base {
   :root {
+    /* Classic, restrained color palette */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 215 25% 15%;
 
+    /* Neutral surfaces: white / slate-50 */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 25% 15%;
 
-    /* Updated to match #0a66c2 (LinkedIn Blue) */
+    /* Primary: Blue (#0a66c2 - LinkedIn Blue) */
     --primary: 210 90% 40%;
-    --primary-foreground: 210 40% 98%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Updated to match #f97316 (Orange) */
+    /* Secondary: Orange (rare, for highlights only) */
     --secondary: 24 95% 53%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted: slate-50 */
+    --muted: 210 40% 98%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent: slate-50 */
+    --accent: 210 40% 98%;
+    --accent-foreground: 215 25% 15%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Semantic: red for destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    /* Borders: slate-200 */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 210 90% 40%;
-    /* Match primary */
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar */
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 215 25% 27%;
+    --sidebar-primary: 210 90% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 215 25% 15%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 210 90% 40%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 215 25% 9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 215 25% 12%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 215 25% 12%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 90% 40%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 210 90% 50%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 24 95% 53%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 215 25% 17%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 215 25% 17%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --border: 215 25% 17%;
+    --input: 215 25% 17%;
+    --ring: 210 90% 50%;
+
+    --sidebar-background: 215 25% 10%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 210 90% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 215 25% 16%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 215 25% 16%;
+    --sidebar-ring: 210 90% 50%;
   }
 }
 
@@ -96,18 +103,20 @@
   }
 }
 
-/* Button styles */
+/* ==============================================
+   Classic Button Styles
+   ============================================== */
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-md font-medium transition-all cursor-pointer border-0 inline-flex items-center justify-center gap-2;
+    @apply px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer border-0 inline-flex items-center justify-center gap-2;
   }
 
   .btn-primary {
-    @apply bg-primary text-white hover:bg-opacity-90;
+    @apply bg-primary text-white hover:bg-blue-700;
   }
 
   .btn-secondary {
-    @apply bg-gray-600 text-white hover:bg-gray-700;
+    @apply bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200;
   }
 
   .btn-success {
@@ -119,7 +128,7 @@
   }
 
   .btn-outline {
-    @apply bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50;
+    @apply bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300;
   }
 
   .btn:disabled {
@@ -127,11 +136,27 @@
   }
 }
 
-/* Sonner Toast Customization (Preserved) */
+/* ==============================================
+   Unified Card Style
+   rounded-2xl, border, shadow-sm
+   ============================================== */
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl border border-slate-200 shadow-sm;
+  }
+
+  .card-hover {
+    @apply hover:shadow-md hover:border-primary transition-all duration-200;
+  }
+}
+
+/* ==============================================
+   Sonner Toast Customization - Classic Style
+   ============================================== */
 :root {
   --sonner-toast-bg: white;
   --sonner-toast-border: rgba(0, 0, 0, 0.08);
-  --sonner-toast-shadow: 0 10px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+  --sonner-toast-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 [data-sonner-toaster] {
@@ -143,33 +168,33 @@
   padding: 16px !important;
   box-shadow: var(--sonner-toast-shadow) !important;
   border: 1px solid var(--sonner-toast-border) !important;
-  backdrop-filter: blur(10px) !important;
   background: var(--sonner-toast-bg) !important;
 }
 
+/* Semantic toast colors - no gradients */
 [data-sonner-toast][data-type="success"] {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  background: #f0fdf4 !important;
   border-color: rgba(34, 197, 94, 0.2) !important;
 }
 
 [data-sonner-toast][data-type="error"] {
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
+  background: #fef2f2 !important;
   border-color: rgba(239, 68, 68, 0.2) !important;
 }
 
 [data-sonner-toast][data-type="info"] {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+  background: #eff6ff !important;
   border-color: rgba(59, 130, 246, 0.2) !important;
 }
 
 [data-sonner-toast][data-type="warning"] {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+  background: #fffbeb !important;
   border-color: rgba(245, 158, 11, 0.2) !important;
 }
 
 [data-sonner-toast][data-type="loading"] {
-  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%) !important;
-  border-color: rgba(0, 0, 0, 0.1) !important;
+  background: #f8fafc !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Toast content styling */
@@ -177,18 +202,17 @@
   font-weight: 500 !important;
   font-size: 14px !important;
   line-height: 1.5 !important;
-  color: #1f2937 !important;
+  color: #1e293b !important;
 }
 
 /* Close button styling */
 [data-close-button] {
   border-radius: 8px !important;
-  transition: all 0.2s ease !important;
+  transition: background-color 0.2s ease !important;
 }
 
 [data-close-button]:hover {
   background: rgba(0, 0, 0, 0.05) !important;
-  transform: scale(1.1) !important;
 }
 
 /* Loading spinner */
@@ -251,15 +275,59 @@
   }
 }
 
-/* Hover effect */
+/* Simple hover effect - no scale */
 [data-sonner-toast]:hover {
-  transform: scale(1.02) !important;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15), 0 6px 16px rgba(0, 0, 0, 0.1) !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
+  transition: box-shadow 0.2s ease !important;
 }
 
 /* Progress bar (if enabled) */
 [data-sonner-toast] [data-progress] {
   border-radius: 0 0 16px 16px !important;
   height: 3px !important;
+}
+
+/* ==============================================
+   Spacing Utilities (8/16/24/32/48)
+   ============================================== */
+@layer utilities {
+  .space-8 {
+    gap: 0.5rem;
+  }
+
+  .space-16 {
+    gap: 1rem;
+  }
+
+  .space-24 {
+    gap: 1.5rem;
+  }
+
+  .space-32 {
+    gap: 2rem;
+  }
+
+  .space-48 {
+    gap: 3rem;
+  }
+
+  .p-8 {
+    padding: 0.5rem;
+  }
+
+  .p-16 {
+    padding: 1rem;
+  }
+
+  .p-24 {
+    padding: 1.5rem;
+  }
+
+  .p-32 {
+    padding: 2rem;
+  }
+
+  .p-48 {
+    padding: 3rem;
+  }
 }

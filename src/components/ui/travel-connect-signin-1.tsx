@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Eye, EyeSlash, ArrowRight } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Helper function to merge class names
@@ -373,7 +373,7 @@ export const SignInCard = () => {
                                         className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
                                         onClick={() => setIsPasswordVisible(!isPasswordVisible)}
                                     >
-                                        {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        {isPasswordVisible ? <EyeSlash size={18} weight="regular" /> : <Eye size={18} weight="regular" />}
                                     </button>
                                 </div>
                             </div>

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import { CircleNotch } from '@phosphor-icons/react';
 import React from 'react';
 
 interface LoadingSpinnerProps {
@@ -16,26 +16,28 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   className = ''
 }) => {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12'
+    sm: 16,
+    md: 32,
+    lg: 48
   };
+
+  const iconSize = sizeClasses[size];
 
   const spinner = (
     <div className={`flex flex-col items-center justify-center ${className}`}>
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-        className={`${sizeClasses[size]} text-primary`}
+        className="text-primary"
       >
-        <Loader2 className="h-full w-full" />
+        <CircleNotch size={iconSize} weight="regular" />
       </motion.div>
       {text && (
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="mt-3 text-sm text-gray-600"
+          className="mt-3 text-sm text-slate-600"
         >
           {text}
         </motion.p>
@@ -45,7 +47,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
   if (fullScreen) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         {spinner}
       </div>
     );

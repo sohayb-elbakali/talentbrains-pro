@@ -2,24 +2,25 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Briefcase,
-  Building,
+  Buildings,
   Calendar,
-  DollarSign,
-  Edit,
+  CurrencyDollar,
+  PencilSimple,
   Eye,
   MapPin,
   Pause,
   Play,
   Star,
-  Trash2,
-  TrendingUp,
+  Trash,
+  TrendUp,
   Users,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { notify } from "../../utils/notify";
 import { db } from "../../lib/supabase/index";
 import SkillsDisplay from "../../components/skills/SkillsDisplay";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 interface Job {
   id: string;
@@ -62,7 +63,6 @@ const JobDetailPage: React.FC = () => {
         }
 
         if (data) {
-          // Fetch application count
           const { data: appCount } = await db.getJobApplicationCount(jobId);
           setJob({
             ...data,
@@ -70,7 +70,6 @@ const JobDetailPage: React.FC = () => {
           });
         }
 
-        // Fetch job skills
         const { data: skillsData } = await db.getJobSkills(jobId);
         setJobSkills(skillsData || []);
       } catch (error) {
@@ -137,29 +136,26 @@ const JobDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading job details...</p>
-        </div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading job details..." />
       </div>
     );
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Briefcase className="h-10 w-10 text-red-600" />
+          <div className="w-20 h-20 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center mx-auto mb-6">
+            <Briefcase size={40} weight="regular" className="text-slate-400" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Job Not Found</h2>
-          <p className="text-gray-600 mb-8">
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">Job Not Found</h2>
+          <p className="text-slate-600 mb-8">
             The job you're looking for doesn't exist or has been removed.
           </p>
           <button
             onClick={() => navigate("/company/jobs")}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
+            className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
             Back to Jobs
           </button>
@@ -168,78 +164,61 @@ const JobDetailPage: React.FC = () => {
     );
   }
 
-  const getStatusColor = (status: string) => {
-    const colors: any = {
-      active: "from-green-400 to-emerald-500",
-      paused: "from-yellow-400 to-orange-400",
-      draft: "from-gray-400 to-gray-500",
-      closed: "from-red-400 to-pink-400",
-    };
-    return colors[status] || "from-blue-400 to-cyan-400";
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button
           onClick={() => navigate("/company/jobs")}
-          className="mb-6 flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors group"
+          className="mb-6 flex items-center gap-2 text-slate-600 hover:text-primary transition-colors group font-medium"
         >
-          <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-medium">Back to Jobs</span>
+          <ArrowLeft size={20} weight="regular" className="group-hover:-translate-x-1 transition-transform" />
+          <span>Back to Jobs</span>
         </button>
 
         {/* Header Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8 mb-8 relative overflow-hidden"
+          className="bg-white rounded-2xl shadow-md border border-slate-200 p-8 mb-8 hover:shadow-lg transition-shadow duration-200"
         >
-          {/* Decorative Header */}
-          <div className="h-2 bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500"></div>
 
           <div className="p-8">
             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-6">
               <div className="flex-1">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="relative flex-shrink-0">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-blue-400 rounded-2xl blur opacity-30"></div>
-                    <div className="relative w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl flex items-center justify-center border-2 border-white shadow-lg">
-                      <Building className="h-8 w-8 text-purple-600" />
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-200">
+                      <Buildings size={32} weight="regular" className="text-primary" />
                     </div>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-4 mb-3">
-                      <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+                      <h1 className="text-3xl font-bold text-slate-900 leading-tight">
                         {job.title}
                       </h1>
-                      <div
-                        className={`px-4 py-2 bg-gradient-to-r ${getStatusColor(
-                          job.status
-                        )} text-white text-sm font-bold uppercase rounded-full shadow-md flex-shrink-0`}
-                      >
-                        {job.status.toUpperCase()}
+                      <div className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold capitalize rounded-lg flex-shrink-0 border border-slate-200">
+                        {job.status}
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
                       <span className="flex items-center gap-2">
-                        <div className="p-1.5 bg-purple-100 rounded-lg">
-                          <MapPin className="h-4 w-4 text-purple-600" />
+                        <div className="p-1.5 bg-slate-50 rounded-lg border border-slate-200">
+                          <MapPin size={16} weight="regular" className="text-primary" />
                         </div>
                         <span className="font-medium">{job.location}</span>
                       </span>
                       <span className="flex items-center gap-2">
-                        <div className="p-1.5 bg-blue-100 rounded-lg">
-                          <Briefcase className="h-4 w-4 text-blue-600" />
+                        <div className="p-1.5 bg-slate-50 rounded-lg border border-slate-200">
+                          <Briefcase size={16} weight="regular" className="text-primary" />
                         </div>
                         <span className="font-medium capitalize">
                           {job.employment_type.replace("_", " ")}
                         </span>
                       </span>
                       <span className="flex items-center gap-2">
-                        <div className="p-1.5 bg-gray-100 rounded-lg">
-                          <Calendar className="h-4 w-4 text-gray-600" />
+                        <div className="p-1.5 bg-slate-50 rounded-lg border border-slate-200">
+                          <Calendar size={16} weight="regular" className="text-slate-400" />
                         </div>
                         <span className="font-medium">
                           {new Date(job.created_at).toLocaleDateString()}
@@ -254,35 +233,32 @@ const JobDetailPage: React.FC = () => {
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={handleEditJob}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all transform hover:scale-105 shadow-lg"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                 >
-                  <Edit className="h-4 w-4" />
+                  <PencilSimple size={16} weight="regular" />
                   Edit
                 </button>
                 <button
                   onClick={handleToggleStatus}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg ${job.status === "active"
-                      ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600"
-                      : "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600"
-                    }`}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-700 border-2 border-slate-300 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-colors"
                 >
                   {job.status === "active" ? (
                     <>
-                      <Pause className="h-4 w-4" />
+                      <Pause size={16} weight="regular" />
                       Pause
                     </>
                   ) : (
                     <>
-                      <Play className="h-4 w-4" />
+                      <Play size={16} weight="regular" />
                       Activate
                     </>
                   )}
                 </button>
                 <button
                   onClick={handleDeleteJob}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 transition-all transform hover:scale-105 shadow-lg"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-600 border-2 border-slate-300 rounded-lg font-semibold hover:bg-slate-50 hover:border-red-300 hover:text-red-600 transition-colors"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash size={16} weight="regular" />
                   Delete
                 </button>
               </div>
@@ -293,53 +269,53 @@ const JobDetailPage: React.FC = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl shadow-xl p-6 text-white"
+            transition={{ delay: 0.05 }}
+            className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Eye className="h-6 w-6" />
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <Eye size={24} weight="regular" className="text-primary" />
               </div>
-              <TrendingUp className="h-5 w-5 opacity-50" />
+              <TrendUp size={20} weight="regular" className="text-slate-400" />
             </div>
-            <p className="text-3xl font-bold mb-1">{job.views_count || 0}</p>
-            <p className="text-blue-100 font-medium">Total Views</p>
+            <p className="text-3xl font-bold text-slate-900 mb-1">{job.views_count || 0}</p>
+            <p className="text-slate-600 font-medium">Total Views</p>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-xl p-6 text-white cursor-pointer hover:scale-105 transition-transform"
+            transition={{ delay: 0.1 }}
+            className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 cursor-pointer hover:shadow-md hover:border-primary transition-all"
             onClick={() => navigate(`/company/applicants?job=${job.id}`)}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Users className="h-6 w-6" />
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <Users size={24} weight="regular" className="text-primary" />
               </div>
-              <TrendingUp className="h-5 w-5 opacity-50" />
+              <TrendUp size={20} weight="regular" className="text-slate-400" />
             </div>
-            <p className="text-3xl font-bold mb-1">{job.applications_count || 0}</p>
-            <p className="text-green-100 font-medium">Applications</p>
+            <p className="text-3xl font-bold text-slate-900 mb-1">{job.applications_count || 0}</p>
+            <p className="text-slate-600 font-medium">Applications</p>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-xl p-6 text-white cursor-pointer hover:scale-105 transition-transform"
+            transition={{ delay: 0.15 }}
+            className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 cursor-pointer hover:shadow-md hover:border-primary transition-all"
             onClick={() => navigate(`/company/jobs/${job.id}/matching`)}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Star className="h-6 w-6" />
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <Star size={24} weight="regular" className="text-primary" />
               </div>
-              <TrendingUp className="h-5 w-5 opacity-50" />
+              <TrendUp size={20} weight="regular" className="text-slate-400" />
             </div>
-            <p className="text-3xl font-bold mb-1">Find</p>
-            <p className="text-purple-100 font-medium">Matching Talents</p>
+            <p className="text-3xl font-bold text-slate-900 mb-1">Find</p>
+            <p className="text-slate-600 font-medium">Matching Talents</p>
           </motion.div>
         </div>
 
@@ -349,18 +325,18 @@ const JobDetailPage: React.FC = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Job Description */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8"
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8"
             >
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-br from-purple-100 to-blue-100 rounded-xl">
-                  <Building className="h-6 w-6 text-purple-600" />
+              <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <div className="p-2 bg-slate-50 rounded-xl border border-slate-200">
+                  <Buildings size={24} weight="regular" className="text-primary" />
                 </div>
                 Job Description
               </h2>
-              <div className="prose max-w-none text-gray-700 leading-relaxed">
+              <div className="prose max-w-none text-slate-700 leading-relaxed">
                 <p className="whitespace-pre-wrap text-base">{job.description}</p>
               </div>
             </motion.div>
@@ -368,14 +344,14 @@ const JobDetailPage: React.FC = () => {
             {/* Skills Required */}
             {(jobSkills.length > 0 || (job.required_skills && job.required_skills.length > 0)) && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8"
+                transition={{ delay: 0.25 }}
+                className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8"
               >
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-purple-100 to-blue-100 rounded-xl">
-                    <Star className="h-6 w-6 text-purple-600" />
+                <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                  <div className="p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    <Star size={24} weight="regular" className="text-primary" />
                   </div>
                   Skills for this Job
                 </h2>
@@ -386,9 +362,9 @@ const JobDetailPage: React.FC = () => {
                     {job.required_skills?.map((skill, index) => (
                       <span
                         key={index}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 rounded-xl text-sm font-semibold border-2 border-purple-200"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold border border-slate-200"
                       >
-                        <Star className="h-4 w-4" />
+                        <Star size={16} weight="regular" />
                         {skill}
                       </span>
                     ))}
@@ -403,49 +379,49 @@ const JobDetailPage: React.FC = () => {
             {/* Salary Info */}
             {(job.salary_min || job.salary_max) && (
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-xl border-2 border-green-100 p-6"
+                transition={{ delay: 0.2 }}
+                className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"
               >
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-green-600" />
+                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <CurrencyDollar size={20} weight="regular" className="text-green-600" />
                   Compensation
                 </h3>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900 mb-2">
+                  <div className="text-3xl font-bold text-slate-900 mb-2">
                     {job.salary_min && job.salary_max
                       ? `${job.currency} ${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}`
                       : job.salary_min
                         ? `${job.currency} ${job.salary_min.toLocaleString()}+`
                         : `${job.currency} Up to ${job.salary_max?.toLocaleString()}`}
                   </div>
-                  <p className="text-gray-600 font-medium">per year</p>
+                  <p className="text-slate-600 font-medium">per year</p>
                 </div>
               </motion.div>
             )}
 
             {/* Quick Actions */}
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-6"
+              transition={{ delay: 0.25 }}
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"
             >
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <button
                   onClick={() => navigate(`/company/applicants?job=${job.id}`)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                 >
-                  <Users className="h-5 w-5" />
+                  <Users size={20} weight="regular" />
                   View Applications
                 </button>
                 <button
                   onClick={() => navigate(`/company/jobs/${job.id}/matching`)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white text-primary border border-slate-200 rounded-lg font-semibold hover:bg-slate-50 transition-colors"
                 >
-                  <Star className="h-5 w-5" />
+                  <Star size={20} weight="regular" />
                   Find Matching Talents
                 </button>
               </div>
@@ -453,40 +429,40 @@ const JobDetailPage: React.FC = () => {
 
             {/* Job Details */}
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 }}
-              className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-6"
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"
             >
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Job Details</h3>
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Job Details</h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Briefcase className="h-4 w-4 text-purple-600" />
+                  <div className="p-2 bg-slate-50 rounded-lg border border-slate-200">
+                    <Briefcase size={16} weight="regular" className="text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500">Employment Type</p>
-                    <p className="text-sm font-semibold text-gray-900 capitalize">
+                    <p className="text-sm font-medium text-slate-500">Employment Type</p>
+                    <p className="text-sm font-semibold text-slate-900 capitalize">
                       {job.employment_type.replace("_", " ")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <MapPin className="h-4 w-4 text-blue-600" />
+                  <div className="p-2 bg-slate-50 rounded-lg border border-slate-200">
+                    <MapPin size={16} weight="regular" className="text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500">Location</p>
-                    <p className="text-sm font-semibold text-gray-900">{job.location}</p>
+                    <p className="text-sm font-medium text-slate-500">Location</p>
+                    <p className="text-sm font-semibold text-slate-900">{job.location}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Calendar className="h-4 w-4 text-green-600" />
+                  <div className="p-2 bg-slate-50 rounded-lg border border-slate-200">
+                    <Calendar size={16} weight="regular" className="text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500">Posted On</p>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-medium text-slate-500">Posted On</p>
+                    <p className="text-sm font-semibold text-slate-900">
                       {new Date(job.created_at).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",

@@ -2,13 +2,11 @@ import { motion } from "framer-motion";
 import {
   Briefcase,
   Calendar,
-  DollarSign,
   Eye,
   Heart,
   MapPin,
-  MessageSquare,
   UserCircle,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
 import { notify } from "../../utils/notify";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,6 +19,7 @@ import {
 } from "../../types/talent-dashboard";
 import JobList from "../JobList";
 import { StatsSkeleton, CardSkeleton } from "../SkeletonLoader";
+import LoadingSpinner from "../LoadingSpinner";
 
 export default function TalentDashboard() {
   const { user } = useAuth();
@@ -37,7 +36,6 @@ export default function TalentDashboard() {
 
   const loadDashboardData = useCallback(async () => {
     if (!user || !talent) {
-      // Keep loading state true if we don't have user or talent yet
       setIsDashboardLoading(true);
       return;
     }
@@ -45,7 +43,6 @@ export default function TalentDashboard() {
     setIsDashboardLoading(true);
 
     try {
-      // Load all data in parallel for better performance
       const [applicationsResult, matchesResult, analyticsResult, jobsResult] = await Promise.all([
         db.getApplications({ talent_id: talent.id }),
         db.getMatches({ talent_id: user.id }),
@@ -70,7 +67,6 @@ export default function TalentDashboard() {
           messages: analyticsData.messages || 0,
         });
       } else {
-        // Set default analytics if fetch fails
         setAnalytics({
           profileViews: 0,
           applications: 0,
@@ -83,11 +79,9 @@ export default function TalentDashboard() {
         setAllJobs(jobsResult.data);
       }
     } catch (error: any) {
-      // Don't show error on network issues
       if (!error?.message?.includes('fetch') && !error?.message?.includes('network')) {
         notify.showError("Failed to load dashboard data");
       }
-      // Set default values on error
       setAnalytics({
         profileViews: 0,
         applications: 0,
@@ -99,119 +93,65 @@ export default function TalentDashboard() {
     }
   }, [user, talent]);
 
-  // Load data only once when component mounts or when user/talent changes
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // REMOVED: useDataRefresh - it was causing unnecessary reloads
-
-  // Real-time subscription disabled - can be enabled when Supabase Realtime is configured
-  // useEffect(() => {
-  //   if (!talent?.id) return;
-  //   const subscription = supabase
-  //     .channel("dashboard-applications-changes")
-  //     .on("postgres_changes", {
-  //       event: "UPDATE",
-  //       schema: "public",
-  //       table: "applications",
-  //       filter: `talent_id=eq.${talent.id}`,
-  //     }, (payload: any) => {
-  //       loadDashboardData();
-  //     })
-  //     .subscribe();
-  //   return () => subscription.unsubscribe();
-  // }, [talent?.id, loadDashboardData]);
-
   const getApplicationStatusColor = (status: string) => {
     const colors = {
-      pending: "bg-yellow-100 text-yellow-800",
-      reviewed: "bg-blue-100 text-blue-800",
-      interview: "bg-purple-100 text-purple-800",
-      offer: "bg-green-100 text-green-800",
-      accepted: "bg-green-100 text-green-800",
-      rejected: "bg-red-100 text-red-800",
-      withdrawn: "bg-gray-100 text-gray-800",
+      pending: "bg-orange-100 text-orange-700 border-orange-200",
+      reviewed: "bg-blue-100 text-blue-700 border-blue-200",
+      interview: "bg-orange-100 text-orange-700 border-orange-200",
+      offer: "bg-green-100 text-green-700 border-green-200",
+      accepted: "bg-green-100 text-green-700 border-green-200",
+      rejected: "bg-red-100 text-red-700 border-red-200",
+      withdrawn: "bg-slate-100 text-slate-700 border-slate-200",
     };
-    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800";
+    return colors[status as keyof typeof colors] || "bg-slate-100 text-slate-700 border-slate-200";
   };
 
   const getMatchColor = (score: number) => {
-    if (score >= 90) return "text-green-600 bg-green-100";
-    if (score >= 80) return "text-blue-600 bg-blue-100";
-    return "text-orange-600 bg-orange-100";
+    if (score >= 90) return "text-green-600 bg-green-100 border-green-200";
+    if (score >= 80) return "text-blue-600 bg-blue-100 border-blue-200";
+    return "text-orange-600 bg-orange-100 border-orange-200";
   };
 
-  // LinkedIn-style: Show full skeleton until ALL data is loaded
   if (isLoading || isDashboardLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header Skeleton */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 animate-pulse">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-gray-200 rounded-2xl"></div>
-              <div className="flex-1">
-                <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
-                <div className="h-5 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Skeleton */}
-          <StatsSkeleton count={4} />
-
-          {/* Content Skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-              <div className="space-y-3">
-                <div className="h-20 bg-gray-200 rounded"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-              <div className="space-y-3">
-                <div className="h-20 bg-gray-200 rounded"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading dashboard..." />
       </div>
     );
   }
+
   if (error) {
     return <div>Error loading profile: {error.message}</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
               <div className="flex items-center gap-6">
                 {profile?.avatar_url ? (
                   <img
                     src={profile.avatar_url}
                     alt="avatar"
-                    className="w-20 h-20 rounded-2xl border-4 border-primary-light shadow-lg object-cover"
+                    className="w-20 h-20 rounded-2xl border-2 border-slate-200 object-cover"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center border-4 border-primary-light shadow-lg">
-                    <UserCircle className="text-white" size={48} />
+                  <div className="w-20 h-20 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-200">
+                    <UserCircle size={48} weight="regular" className="text-slate-400" />
                   </div>
                 )}
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  <h1 className="text-3xl font-bold text-slate-900 mb-2">
                     Welcome back, {profile?.full_name}! 👋
                   </h1>
-                  <p className="text-gray-600 text-lg">
+                  <p className="text-slate-600 text-lg">
                     Here's what's happening with your job search today.
                   </p>
                 </div>
@@ -219,147 +159,123 @@ export default function TalentDashboard() {
               <div className="flex flex-wrap gap-3">
                 <Link
                   to="/talent/jobs"
-                  className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all duration-200"
+                  className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                 >
-                  <Briefcase className="mr-2 h-5 w-5" /> Browse Jobs
+                  <Briefcase size={20} weight="regular" className="mr-2" /> Browse Jobs
                 </Link>
                 <Link
                   to="/talent/applications"
-                  className="inline-flex items-center px-6 py-3 bg-white text-primary border-2 border-primary-light rounded-xl font-semibold hover:bg-primary-light hover:border-primary transition-all duration-200"
+                  className="inline-flex items-center px-6 py-3 bg-white text-primary border border-slate-200 rounded-lg font-semibold hover:bg-slate-50 transition-colors"
                 >
-                  <Eye className="mr-2 h-5 w-5" /> Applications
+                  <Eye size={20} weight="regular" className="mr-2" /> Applications
                 </Link>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Cards - Removed Messages Card */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-primary to-primary-hover p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300"
+            transition={{ delay: 0.05 }}
+            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Eye className="h-6 w-6 text-white" />
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <Eye size={24} weight="regular" className="text-primary" />
               </div>
               <div className="text-right">
                 {isDashboardLoading ? (
-                  <div className="h-9 w-16 bg-white/20 rounded animate-pulse"></div>
+                  <div className="h-9 w-16 bg-slate-100 rounded animate-pulse"></div>
                 ) : (
-                  <p className="text-3xl font-bold text-white">
+                  <p className="text-3xl font-bold text-slate-900">
                     {analytics?.profileViews || 0}
                   </p>
                 )}
               </div>
             </div>
-            <p className="text-blue-100 font-medium">Profile Views</p>
-            <p className="text-xs text-blue-200 mt-2">+12% from last week</p>
+            <p className="text-slate-600 font-medium">Profile Views</p>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+            transition={{ delay: 0.1 }}
+            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Briefcase className="h-6 w-6 text-white" />
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <Briefcase size={24} weight="regular" className="text-primary" />
               </div>
               <div className="text-right">
                 {isDashboardLoading ? (
-                  <div className="h-9 w-16 bg-white/20 rounded animate-pulse"></div>
+                  <div className="h-9 w-16 bg-slate-100 rounded animate-pulse"></div>
                 ) : (
-                  <p className="text-3xl font-bold text-white">
+                  <p className="text-3xl font-bold text-slate-900">
                     {analytics?.applications || 0}
                   </p>
                 )}
               </div>
             </div>
-            <p className="text-blue-100 font-medium">Applications</p>
-            <p className="text-xs text-blue-200 mt-2">
-              {applications.filter((app) => app.status === "reviewed").length}{" "}
-              pending
-            </p>
+            <p className="text-slate-600 font-medium">Applications</p>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+            transition={{ delay: 0.15 }}
+            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Heart className="h-6 w-6 text-white" />
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <Heart size={24} weight="regular" className="text-primary" />
               </div>
               <div className="text-right">
                 {isDashboardLoading ? (
-                  <div className="h-9 w-16 bg-white/20 rounded animate-pulse"></div>
+                  <div className="h-9 w-16 bg-slate-100 rounded animate-pulse"></div>
                 ) : (
-                  <p className="text-3xl font-bold text-white">
+                  <p className="text-3xl font-bold text-slate-900">
                     {analytics?.matches || 0}
                   </p>
                 )}
               </div>
             </div>
-            <p className="text-green-100 font-medium">AI Matches</p>
-            <p className="text-xs text-green-200 mt-2">5 new this week</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <MessageSquare className="h-6 w-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-3xl font-bold text-white">8</p>
-              </div>
-            </div>
-            <p className="text-orange-100 font-medium">Messages</p>
-            <p className="text-xs text-orange-200 mt-2">2 unread</p>
+            <p className="text-slate-600 font-medium">AI Matches</p>
           </motion.div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Top Matches */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
           >
-            <div className="bg-primary p-6">
+            <div className="bg-slate-50 p-6 border-b border-slate-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                    <Heart className="h-6 w-6 text-white" />
+                  <div className="p-2 bg-white rounded-lg border border-slate-200">
+                    <Heart size={24} weight="regular" className="text-primary" />
                   </div>
-                  <h2 className="text-xl font-bold text-white">
+                  <h2 className="text-xl font-bold text-slate-900">
                     Top AI Matches
                   </h2>
                 </div>
-                <button className="text-white hover:text-blue-100 text-sm font-medium px-4 py-2 bg-white/20 rounded-lg backdrop-blur-sm hover:bg-white/30 transition-all">
+                <button className="text-primary hover:text-blue-700 text-sm font-medium px-4 py-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
                   View All
                 </button>
               </div>
             </div>
             <div className="p-6">
               {matches.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {matches.map((match) => (
                     <div
                       key={match.id}
-                      className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg"
+                      className="flex items-start space-x-4 p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-primary hover:shadow-sm transition-all duration-200"
                     >
                       <img
                         src={
@@ -367,35 +283,26 @@ export default function TalentDashboard() {
                           "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=100"
                         }
                         alt={match.job?.companies?.name}
-                        className="w-12 h-12 rounded-lg object-cover"
+                        className="w-12 h-12 rounded-lg object-cover border border-slate-200"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="font-medium text-gray-900 truncate">
+                            <h3 className="font-medium text-slate-900 truncate">
                               {match.job?.title}
                             </h3>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-slate-600">
                               {match.job?.companies?.name}
                             </p>
-                            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                            <div className="flex items-center space-x-4 mt-2 text-xs text-slate-500">
                               <div className="flex items-center space-x-1">
-                                <MapPin className="h-3 w-3" />
+                                <MapPin size={12} weight="regular" />
                                 <span>{match.job?.location || "Remote"}</span>
                               </div>
-                              {match.job?.salary_min && (
-                                <div className="flex items-center space-x-1">
-                                  <DollarSign className="h-3 w-3" />
-                                  <span>
-                                    ${match.job.salary_min}k - $
-                                    {match.job.salary_max}k
-                                  </span>
-                                </div>
-                              )}
                             </div>
                           </div>
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${getMatchColor(
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold border ${getMatchColor(
                               match.matchScore
                             )}`}
                           >
@@ -408,9 +315,9 @@ export default function TalentDashboard() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No matches found yet</p>
-                  <p className="text-sm text-gray-400">
+                  <Heart size={48} weight="regular" className="text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-500">No matches found yet</p>
+                  <p className="text-sm text-slate-400">
                     Complete your profile to get better matches
                   </p>
                 </div>
@@ -418,26 +325,26 @@ export default function TalentDashboard() {
             </div>
           </motion.div>
 
-          {/* Recent Applications */}
+          {/* Recent Applications - Smaller & Cleaner */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-            className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
+            transition={{ delay: 0.25 }}
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
+            <div className="bg-slate-50 p-6 border-b border-slate-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                    <Briefcase className="h-6 w-6 text-white" />
+                  <div className="p-2 bg-white rounded-lg border border-slate-200">
+                    <Briefcase size={24} weight="regular" className="text-primary" />
                   </div>
-                  <h2 className="text-xl font-bold text-white">
+                  <h2 className="text-xl font-bold text-slate-900">
                     Recent Applications
                   </h2>
                 </div>
                 <Link
                   to="/talent/applications"
-                  className="text-white hover:text-blue-100 text-sm font-medium px-4 py-2 bg-white/20 rounded-lg backdrop-blur-sm hover:bg-white/30 transition-all"
+                  className="text-primary hover:text-blue-700 text-sm font-medium px-4 py-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
                 >
                   View All
                 </Link>
@@ -449,33 +356,29 @@ export default function TalentDashboard() {
                   {applications.map((application, index) => (
                     <motion.div
                       key={application.id}
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -16 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ delay: index * 0.05 }}
                       onClick={() => navigate(`/jobs/${application.job?.id}`)}
-                      className="group relative bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                      className="group bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-primary hover:shadow-sm transition-all duration-200 cursor-pointer"
                     >
-                      <div className="flex items-start space-x-4">
-                        {/* Company Logo with gradient background */}
-                        <div className="relative flex-shrink-0">
-                          <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-400 rounded-xl blur opacity-20"></div>
-                          <div className="relative w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
-                            {application.job?.companies?.name?.charAt(0) || application.job?.title?.charAt(0) || 'J'}
-                          </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-primary font-bold text-sm">
+                          {application.job?.companies?.name?.charAt(0) || application.job?.title?.charAt(0) || 'J'}
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
-                              <h3 className="font-bold text-gray-900 truncate text-base group-hover:text-blue-600 transition-colors">
+                              <h3 className="font-bold text-slate-900 truncate text-sm group-hover:text-primary transition-colors">
                                 {application.job?.title}
                               </h3>
-                              <p className="text-sm text-gray-600 font-medium mt-0.5">
+                              <p className="text-xs text-slate-600 font-medium mt-0.5">
                                 {application.job?.companies?.name}
                               </p>
-                              <div className="flex items-center gap-3 mt-2">
-                                <div className="flex items-center text-xs text-gray-500">
-                                  <Calendar className="h-3.5 w-3.5 mr-1" />
+                              <div className="flex items-center gap-2 mt-2">
+                                <div className="flex items-center text-xs text-slate-500">
+                                  <Calendar size={12} weight="regular" className="mr-1" />
                                   <span>
                                     {new Date(application.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                   </span>
@@ -483,7 +386,7 @@ export default function TalentDashboard() {
                               </div>
                             </div>
                             <span
-                              className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${getApplicationStatusColor(
+                              className={`px-2 py-1 rounded-lg text-xs font-semibold border ${getApplicationStatusColor(
                                 application.status
                               )}`}
                             >
@@ -498,18 +401,18 @@ export default function TalentDashboard() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center mx-auto mb-4">
-                    <Briefcase className="h-8 w-8 text-blue-600" />
+                  <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto mb-4">
+                    <Briefcase size={32} weight="regular" className="text-slate-400" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">No applications yet</h3>
-                  <p className="text-gray-500 mb-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">No applications yet</h3>
+                  <p className="text-slate-500 mb-6">
                     Start applying to jobs to see them here
                   </p>
                   <Link
                     to="/talent/jobs"
-                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all"
+                    className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                   >
-                    <Briefcase className="h-5 w-5 mr-2" />
+                    <Briefcase size={20} weight="regular" className="mr-2" />
                     Browse Jobs
                   </Link>
                 </div>
@@ -521,16 +424,16 @@ export default function TalentDashboard() {
         {/* Profile Completion */}
         {talent && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="mt-8 bg-primary rounded-2xl p-8 text-white shadow-2xl"
+            transition={{ delay: 0.3 }}
+            className="mt-8 bg-primary rounded-2xl p-8 text-white shadow-sm"
           >
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                    <UserCircle className="h-6 w-6 text-white" />
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <UserCircle size={24} weight="regular" className="text-white" />
                   </div>
                   <h3 className="text-2xl font-bold">
                     Complete Your Profile
@@ -541,8 +444,8 @@ export default function TalentDashboard() {
                 </p>
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex-1">
-                    <div className="bg-white/20 rounded-full h-3 backdrop-blur-sm">
-                      <div className="bg-white rounded-full h-3 w-4/5 shadow-lg"></div>
+                    <div className="bg-white/20 rounded-full h-3">
+                      <div className="bg-white rounded-full h-3 w-4/5"></div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -553,13 +456,10 @@ export default function TalentDashboard() {
               <div className="flex flex-wrap gap-3">
                 <Link
                   to="/talent-profile"
-                  className="px-6 py-3 bg-white text-primary rounded-xl hover:bg-gray-100 transition-all font-semibold shadow-lg hover:shadow-xl"
+                  className="px-6 py-3 bg-white text-primary rounded-lg hover:bg-slate-50 transition-colors font-semibold"
                 >
                   Complete Profile
                 </Link>
-                <button className="px-6 py-3 bg-primary-hover text-white rounded-xl hover:bg-primary transition-all font-semibold shadow-lg hover:shadow-xl">
-                  Add Skills
-                </button>
               </div>
             </div>
           </motion.div>
@@ -567,19 +467,19 @@ export default function TalentDashboard() {
 
         {/* Offers Section */}
         <div className="mt-12">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-primary rounded-xl">
-                  <Briefcase className="h-6 w-6 text-white" />
+                  <Briefcase size={24} weight="regular" className="text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-slate-900">
                   All Job Offers
                 </h2>
               </div>
               <Link
                 to="/talent/jobs"
-                className="px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all duration-200"
+                className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
               >
                 View All Jobs
               </Link>

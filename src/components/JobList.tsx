@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { MagnifyingGlass, Funnel } from "@phosphor-icons/react";
 import { useAuth, useUserData } from "../hooks/useAuth";
 import { db } from "../lib/supabase";
 import { JobCard, type Job } from "./JobCard";
+import LoadingSpinner from "./LoadingSpinner";
 
 interface JobListProps {
   jobs?: Job[];
@@ -148,10 +150,6 @@ const JobList: React.FC<JobListProps> = ({
       return false;
     // Remote filter - check if location includes "remote"
     if (filters.remote && job.location && !job.location.toLowerCase().includes('remote')) return false;
-    // Experience level filter - skip for now as it's not in Job type
-    // if (filters.experience_level && job.experience_level) {
-    //   if (job.experience_level.toLowerCase() !== filters.experience_level.toLowerCase()) return false;
-    // }
     if (
       filters.salary_min &&
       job.salary_min &&
@@ -177,30 +175,28 @@ const JobList: React.FC<JobListProps> = ({
 
   // UI for filters
   const filterUI = (
-    <div className="mb-8 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+    <div className="mb-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-gray-900 flex items-center">
-          <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-          </svg>
+        <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+          <Funnel size={20} weight="regular" className="mr-2 text-primary" />
           Filters
         </h3>
         <button
           onClick={() => setFilters(defaultFilters)}
-          className="text-sm text-purple-600 hover:text-purple-700 font-semibold"
+          className="text-sm text-primary hover:text-blue-700 font-medium"
         >
           Clear All
         </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <div>
-          <label htmlFor="job-type-select" className="block text-sm font-semibold text-gray-700 mb-2">
+          <label htmlFor="job-type-select" className="block text-sm font-medium text-slate-700 mb-2">
             Job Type
           </label>
           <select
             id="job-type-select"
             title="Job Type"
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+            className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white"
             value={filters.job_type}
             onChange={(e) => setFilters((f) => ({ ...f, job_type: e.target.value }))}
           >
@@ -212,26 +208,26 @@ const JobList: React.FC<JobListProps> = ({
           </select>
         </div>
         <div>
-          <label htmlFor="location-input" className="block text-sm font-semibold text-gray-700 mb-2">
+          <label htmlFor="location-input" className="block text-sm font-medium text-slate-700 mb-2">
             Location
           </label>
           <input
             id="location-input"
             title="Location"
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+            className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
             value={filters.location}
             onChange={(e) => setFilters((f) => ({ ...f, location: e.target.value }))}
             placeholder="e.g. Remote, Paris"
           />
         </div>
         <div>
-          <label htmlFor="experience-select" className="block text-sm font-semibold text-gray-700 mb-2">
+          <label htmlFor="experience-select" className="block text-sm font-medium text-slate-700 mb-2">
             Experience
           </label>
           <select
             id="experience-select"
             title="Experience Level"
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+            className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white"
             value={filters.experience_level}
             onChange={(e) => setFilters((f) => ({ ...f, experience_level: e.target.value }))}
           >
@@ -243,44 +239,44 @@ const JobList: React.FC<JobListProps> = ({
           </select>
         </div>
         <div>
-          <label htmlFor="salary-min-input" className="block text-sm font-semibold text-gray-700 mb-2">
+          <label htmlFor="salary-min-input" className="block text-sm font-medium text-slate-700 mb-2">
             Min Salary
           </label>
           <input
             id="salary-min-input"
             title="Minimum Salary"
             type="number"
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+            className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
             value={filters.salary_min}
             onChange={(e) => setFilters((f) => ({ ...f, salary_min: e.target.value }))}
             placeholder="Min"
           />
         </div>
         <div>
-          <label htmlFor="salary-max-input" className="block text-sm font-semibold text-gray-700 mb-2">
+          <label htmlFor="salary-max-input" className="block text-sm font-medium text-slate-700 mb-2">
             Max Salary
           </label>
           <input
             id="salary-max-input"
             title="Maximum Salary"
             type="number"
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+            className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
             value={filters.salary_max}
             onChange={(e) => setFilters((f) => ({ ...f, salary_max: e.target.value }))}
             placeholder="Max"
           />
         </div>
         <div className="flex items-end">
-          <label className="flex items-center space-x-2 cursor-pointer bg-purple-50 hover:bg-purple-100 rounded-xl px-4 py-2.5 transition-colors w-full">
+          <label className="flex items-center gap-2 cursor-pointer bg-slate-50 hover:bg-slate-100 rounded-lg px-4 py-2.5 transition-colors w-full border border-slate-200">
             <input
               id="remote-checkbox"
               title="Remote"
               type="checkbox"
               checked={filters.remote}
               onChange={(e) => setFilters((f) => ({ ...f, remote: e.target.checked }))}
-              className="w-5 h-5 text-purple-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+              className="w-5 h-5 text-primary border-slate-300 rounded focus:ring-2 focus:ring-primary"
             />
-            <span className="text-sm font-semibold text-gray-700">Remote Only</span>
+            <span className="text-sm font-medium text-slate-700">Remote Only</span>
           </label>
         </div>
       </div>
@@ -293,32 +289,26 @@ const JobList: React.FC<JobListProps> = ({
         <div className="mb-8">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <MagnifyingGlass size={20} weight="regular" className="text-slate-400" />
             </div>
             <input
               type="text"
               placeholder="Search by job title or company..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200 text-gray-900 placeholder-gray-400 shadow-sm"
+              className="w-full pl-12 pr-4 py-4 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white text-slate-900 placeholder-slate-400"
             />
           </div>
         </div>
       )}
       {filterUI}
       {loading && (
-        <div className="text-center p-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading amazing opportunities...</p>
+        <div className="flex justify-center items-center py-12">
+          <LoadingSpinner text="Loading amazing opportunities..." />
         </div>
       )}
       {error && (
-        <div className="text-center p-12 bg-red-50 rounded-2xl border border-red-200">
-          <svg className="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+        <div className="text-center p-12 bg-white rounded-2xl border border-red-200">
           <p className="text-red-600 font-semibold">Error: {error}</p>
         </div>
       )}
@@ -326,11 +316,11 @@ const JobList: React.FC<JobListProps> = ({
         <>
           {/* Results count */}
           <div className="mb-6 flex items-center justify-between">
-            <p className="text-gray-600">
-              Found <span className="font-bold text-purple-600">{filteredJobs.length}</span> {filteredJobs.length === 1 ? 'job' : 'jobs'}
+            <p className="text-slate-600">
+              Found <span className="font-semibold text-primary">{filteredJobs.length}</span> {filteredJobs.length === 1 ? 'job' : 'jobs'}
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredJobs.length > 0 ? (
               filteredJobs.map((job) => {
@@ -351,14 +341,12 @@ const JobList: React.FC<JobListProps> = ({
                 );
               })
             ) : (
-              <div className="md:col-span-2 lg:col-span-3 text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-100">
-                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <div className="md:col-span-2 lg:col-span-3 text-center py-16 bg-white rounded-2xl shadow-sm border border-slate-200">
+                <MagnifyingGlass size={48} weight="regular" className="text-slate-300 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">
                   No jobs found
                 </h2>
-                <p className="text-gray-500 mb-6">
+                <p className="text-slate-500 mb-6">
                   Try adjusting your filters or search terms
                 </p>
                 <button
@@ -366,7 +354,7 @@ const JobList: React.FC<JobListProps> = ({
                     setFilters(defaultFilters);
                     setSearchTerm("");
                   }}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-blue-700 transition-all"
+                  className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                 >
                   Clear All Filters
                 </button>

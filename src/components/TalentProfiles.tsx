@@ -1,4 +1,4 @@
-import { Award, Filter, Heart, MapPin, MessageCircle, Search } from 'lucide-react';
+import { Medal, Funnel, Heart, MapPin, ChatCircle, MagnifyingGlass } from '@phosphor-icons/react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TalentWithProfile } from '../types/talent';
@@ -125,13 +125,13 @@ export default function TalentProfiles() {
   const getAvailabilityColor = (status: string) => {
     switch (status) {
       case 'available':
-        return 'text-green-600 bg-green-100';
+        return 'text-green-700 bg-green-100';
       case 'busy':
-        return 'text-orange-600 bg-orange-100';
+        return 'text-orange-700 bg-orange-100';
       case 'unavailable':
-        return 'text-red-600 bg-red-100';
+        return 'text-red-700 bg-red-100';
       default:
-        return 'text-gray-600 bg-gray-100';
+        return 'text-slate-600 bg-slate-100';
     }
   };
 
@@ -141,11 +141,11 @@ export default function TalentProfiles() {
       case 'lead':
         return 'text-primary bg-blue-100';
       case 'mid':
-        return 'text-secondary bg-orange-100';
+        return 'text-slate-700 bg-slate-100';
       case 'entry':
-        return 'text-green-600 bg-green-100';
+        return 'text-slate-600 bg-slate-100';
       default:
-        return 'text-gray-600 bg-gray-100';
+        return 'text-slate-600 bg-slate-100';
     }
   };
 
@@ -157,25 +157,25 @@ export default function TalentProfiles() {
           {/* Search and Filters */}
           <div className="mb-8 space-y-4 lg:space-y-0 lg:flex lg:items-center lg:justify-between">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <MagnifyingGlass size={20} weight="regular" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search talents, skills, or roles..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
 
-            <div className="flex items-center space-x-2 overflow-x-auto">
-              <Filter className="h-5 w-5 text-gray-400 flex-shrink-0" />
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <Funnel size={20} weight="regular" className="text-slate-400 flex-shrink-0" />
               {filters.map((filter) => (
                 <button
                   key={filter.id}
                   onClick={() => setSelectedFilter(filter.id)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${selectedFilter === filter.id
                     ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-primary'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-primary'
                     }`}
                 >
                   {filter.label}
@@ -193,7 +193,7 @@ export default function TalentProfiles() {
 
           {/* Error State */}
           {error && (
-            <div className="text-center py-12 bg-red-50 rounded-2xl border border-red-200">
+            <div className="text-center py-12 bg-white rounded-2xl border border-red-200">
               <p className="text-red-600 font-semibold">Error: {error}</p>
               <button
                 onClick={() => fetchTalents(true)}
@@ -207,7 +207,7 @@ export default function TalentProfiles() {
           {/* Talent Results Count */}
           {!loading && !error && (
             <div className="mb-6">
-              <p className="text-gray-600">
+              <p className="text-slate-600">
                 Showing <span className="font-semibold">{filteredTalents.length}</span> talents
                 {searchTerm && (
                   <span> for "<span className="font-semibold">{searchTerm}</span>"</span>
@@ -220,22 +220,22 @@ export default function TalentProfiles() {
           {!loading && !error && (
             <>
               {filteredTalents.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredTalents.map((talent) => {
                     const skills = getSkills(talent);
                     return (
                       <div
                         key={talent.id}
-                        className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 hover:border-primary"
+                        className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 hover:shadow-md hover:border-primary transition-all duration-200"
                       >
                         {/* Header */}
                         <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center gap-3">
                             <div className="relative">
                               <img
                                 src={talent.profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${talent.profile.full_name}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
                                 alt={talent.profile.full_name}
-                                className="w-14 h-14 rounded-full object-cover border-2 border-primary-light shadow-md"
+                                className="w-14 h-14 rounded-full object-cover border-2 border-slate-200"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(talent.profile.full_name)}&background=0a66c2&color=fff&size=128&bold=true`;
@@ -244,37 +244,37 @@ export default function TalentProfiles() {
                               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
                             </div>
                             <div>
-                              <h3 className="font-semibold text-gray-900">{talent.profile.full_name}</h3>
-                              <p className="text-sm text-gray-600">{talent.title}</p>
+                              <h3 className="font-semibold text-slate-900">{talent.profile.full_name}</h3>
+                              <p className="text-sm text-slate-600">{talent.title}</p>
                             </div>
                           </div>
-                          <button className="p-2 text-gray-400 hover:text-red-500 transition-colors">
-                            <Heart className="h-5 w-5" />
+                          <button className="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                            <Heart size={20} weight="regular" />
                           </button>
                         </div>
 
                         {/* Stats */}
                         <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div className="text-center p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center justify-center space-x-1 mb-1">
-                              <Award className="h-4 w-4 text-primary" />
-                              <span className="font-semibold text-gray-900">{talent.years_of_experience}</span>
+                          <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <div className="flex items-center justify-center gap-1 mb-1">
+                              <Medal size={16} weight="regular" className="text-primary" />
+                              <span className="font-semibold text-slate-900">{talent.years_of_experience}</span>
                             </div>
-                            <p className="text-xs text-gray-600">Years Exp</p>
+                            <p className="text-xs text-slate-600">Years Exp</p>
                           </div>
-                          <div className="text-center p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center justify-center space-x-1 mb-1">
-                              <MapPin className="h-4 w-4 text-secondary" />
-                              <span className="font-semibold text-gray-900 text-xs">
+                          <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <div className="flex items-center justify-center gap-1 mb-1">
+                              <MapPin size={16} weight="regular" className="text-primary" />
+                              <span className="font-semibold text-slate-900 text-xs">
                                 {talent.remote_preference ? 'Remote' : 'On-site'}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-600">Work Style</p>
+                            <p className="text-xs text-slate-600">Work Style</p>
                           </div>
                         </div>
 
                         {/* Bio */}
-                        <p className="text-sm text-gray-600 mb-4 leading-relaxed line-clamp-3">
+                        <p className="text-sm text-slate-600 mb-4 leading-relaxed line-clamp-3">
                           {talent.bio || 'Experienced professional ready to contribute to your team.'}
                         </p>
 
@@ -283,13 +283,13 @@ export default function TalentProfiles() {
                           {skills.slice(0, 3).map((skill, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
+                              className="px-2 py-1 bg-slate-50 text-slate-700 text-xs rounded-lg border border-slate-200"
                             >
                               {skill}
                             </span>
                           ))}
                           {skills.length > 3 && (
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                            <span className="px-2 py-1 bg-slate-100 text-slate-500 text-xs rounded-lg">
                               +{skills.length - 3} more
                             </span>
                           )}
@@ -299,20 +299,20 @@ export default function TalentProfiles() {
                         <div className="space-y-2 mb-4">
                           {talent.location && (
                             <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-600">Location:</span>
-                              <div className="flex items-center space-x-1">
-                                <MapPin className="h-3 w-3 text-gray-400" />
-                                <span className="text-gray-900">{talent.location}</span>
+                              <span className="text-slate-500">Location:</span>
+                              <div className="flex items-center gap-1">
+                                <MapPin size={16} weight="regular" className="text-slate-400" />
+                                <span className="text-slate-900">{talent.location}</span>
                               </div>
                             </div>
                           )}
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Rate:</span>
-                            <span className="font-semibold text-gray-900">{formatHourlyRate(talent)}/hour</span>
+                            <span className="text-slate-500">Rate:</span>
+                            <span className="font-semibold text-slate-900">{formatHourlyRate(talent)}/hour</span>
                           </div>
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Experience:</span>
-                            <span className="text-gray-900">{getExperienceDisplay(talent)}</span>
+                            <span className="text-slate-500">Experience:</span>
+                            <span className="text-slate-900">{getExperienceDisplay(talent)}</span>
                           </div>
                         </div>
 
@@ -327,15 +327,15 @@ export default function TalentProfiles() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex space-x-2">
+                        <div className="flex gap-2">
                           <button
                             onClick={() => handleViewProfile(talent.profile_id)}
-                            className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-all duration-200 font-medium text-sm"
+                            className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
                           >
                             View Profile
                           </button>
-                          <button className="px-4 py-2 bg-white text-primary border border-primary-light rounded-lg hover:bg-blue-50 transition-colors">
-                            <MessageCircle className="h-4 w-4" />
+                          <button className="px-4 py-2 bg-white text-primary border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                            <ChatCircle size={20} weight="regular" />
                           </button>
                         </div>
                       </div>
@@ -343,14 +343,14 @@ export default function TalentProfiles() {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-100">
-                  <div className="text-gray-400 mb-4">
-                    <Search className="w-16 h-16 mx-auto" />
+                <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-slate-200">
+                  <div className="text-slate-400 mb-4">
+                    <MagnifyingGlass size={48} weight="regular" className="mx-auto" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">
                     {searchTerm ? 'No talents found' : 'No talents available yet'}
                   </h2>
-                  <p className="text-gray-500 mb-6">
+                  <p className="text-slate-500 mb-6">
                     {searchTerm
                       ? 'Try adjusting your search terms or filters'
                       : 'We\'re building our talent network. Check back soon for amazing professionals!'
@@ -362,7 +362,7 @@ export default function TalentProfiles() {
                         setSearchTerm('');
                         setSelectedFilter('all');
                       }}
-                      className="px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all"
+                      className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                     >
                       Clear Filters
                     </button>
@@ -378,7 +378,7 @@ export default function TalentProfiles() {
               <button
                 onClick={() => fetchTalents(false)}
                 disabled={loading}
-                className="px-8 py-4 bg-white text-primary border-2 border-primary-light rounded-xl hover:bg-blue-50 hover:border-primary transition-all duration-200 transform hover:scale-105 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-4 bg-white text-primary border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-primary transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Loading...' : 'Load More Talents'}
               </button>

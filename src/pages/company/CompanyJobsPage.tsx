@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Edit, PlusCircle, Trash2, Briefcase, MapPin, Calendar, DollarSign, Users } from 'lucide-react';
+import { PencilSimple, Plus, Trash, Briefcase, MapPin, Calendar, CurrencyDollar, Users } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { notify } from "../../utils/notify";
 import { Link, useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
 import { useRealtimeQuery } from "../../hooks/useRealtimeQuery";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 // Define the type for a job object
 interface Job {
@@ -51,7 +52,7 @@ const CompanyJobsPage: React.FC = () => {
       if (!companyData?.id) return [];
       const { data, error } = await db.getJobs({ company_id: companyData.id });
       if (error) throw error;
-      
+
       const jobsWithCounts = await Promise.all(
         (data || []).map(async (job: Job) => {
           const { data: count } = await db.getJobApplicationCount(job.id);
@@ -105,42 +106,39 @@ const CompanyJobsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg font-medium text-gray-700">Loading jobs...</p>
-        </div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading jobs..." />
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-center p-8 text-red-500">Error: {(error as any)?.message || 'An error occurred'}</div>;
+    return <div className="text-center p-8 text-red-600">Error: {(error as any)?.message || 'An error occurred'}</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
+    <div className="min-h-screen bg-white py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Your Job Postings
+              <h1 className="text-4xl font-bold text-slate-900 mb-2">
+                Your Job <span className="text-primary">Postings</span>
               </h1>
-              <p className="text-gray-600 text-lg">
+              <p className="text-slate-600 text-lg">
                 Manage your active and past job listings
               </p>
             </div>
             <Link
               to="/company/jobs/create"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
-              <PlusCircle className="h-5 w-5" />
+              <Plus size={20} weight="regular" />
               Post a New Job
             </Link>
           </div>
@@ -151,26 +149,23 @@ const CompanyJobsPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-12"
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12"
           >
             <div className="text-center max-w-md mx-auto">
-              <div className="relative inline-block mb-6">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full blur-2xl opacity-20 animate-pulse"></div>
-                <div className="relative w-24 h-24 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mx-auto">
-                  <Briefcase className="h-12 w-12 text-purple-600" />
-                </div>
+              <div className="w-24 h-24 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-slate-200">
+                <Briefcase size={48} weight="regular" className="text-slate-400" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">
                 No Jobs Posted Yet
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-slate-600 mb-6">
                 Start attracting top talent by posting your first job opening!
               </p>
               <Link
                 to="/company/jobs/create"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
               >
-                <PlusCircle className="h-5 w-5" />
+                <Plus size={20} weight="regular" />
                 Create Your First Job
               </Link>
             </div>
@@ -180,18 +175,17 @@ const CompanyJobsPage: React.FC = () => {
             {jobs.map((job, index) => (
               <motion.div
                 key={job.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+                transition={{ delay: index * 0.05 }}
+                className="bg-white rounded-2xl shadow-sm border border-slate-200 hover:shadow-md hover:border-primary transition-all duration-200 overflow-hidden group"
               >
                 {/* Status Bar */}
-                <div className={`h-2 bg-gradient-to-r ${
-                  job.status === 'active' ? 'from-green-400 to-emerald-500' :
-                  job.status === 'paused' ? 'from-yellow-400 to-orange-400' :
-                  job.status === 'draft' ? 'from-gray-400 to-gray-500' :
-                  'from-red-400 to-pink-400'
-                }`}></div>
+                <div className={`h-1 ${job.status === 'active' ? 'bg-green-500' :
+                    job.status === 'paused' ? 'bg-orange-500' :
+                      job.status === 'draft' ? 'bg-slate-400' :
+                        'bg-red-500'
+                  }`}></div>
 
                 <div className="p-6">
                   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
@@ -201,45 +195,43 @@ const CompanyJobsPage: React.FC = () => {
                       onClick={() => navigate(`/company/jobs/${job.id}`)}
                     >
                       <div className="flex items-start gap-4 mb-4">
-                        <div className="relative flex-shrink-0">
-                          <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-blue-400 rounded-xl blur opacity-30"></div>
-                          <div className="relative w-14 h-14 bg-gradient-to-br from-purple-100 to-blue-100 rounded-xl flex items-center justify-center border-2 border-white shadow-md">
-                            <Briefcase className="h-7 w-7 text-purple-600" />
+                        <div className="flex-shrink-0">
+                          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-200">
+                            <Briefcase size={28} weight="regular" className="text-primary" />
                           </div>
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">
+                          <h3 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-primary transition-colors">
                             {job.title}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase shadow-sm ${
-                              job.status === 'active' ? 'bg-green-100 text-green-800' :
-                              job.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
-                              job.status === 'draft' ? 'bg-gray-100 text-gray-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                            <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${job.status === 'active' ? 'bg-green-100 text-green-700 border border-green-200' :
+                                job.status === 'paused' ? 'bg-orange-100 text-orange-700 border border-orange-200' :
+                                  job.status === 'draft' ? 'bg-slate-100 text-slate-700 border border-slate-200' :
+                                    'bg-red-100 text-red-700 border border-red-200'
+                              }`}>
                               {job.status}
                             </span>
                             <span className="flex items-center gap-1.5">
-                              <MapPin className="h-4 w-4 text-purple-500" />
+                              <MapPin size={16} weight="regular" className="text-slate-400" />
                               {job.location || "Remote"}
                             </span>
                             <span className="flex items-center gap-1.5">
-                              <Briefcase className="h-4 w-4 text-blue-500" />
+                              <Briefcase size={16} weight="regular" className="text-slate-400" />
                               {job.employment_type?.replace("_", " ") || "Full-time"}
                             </span>
                             <span className="flex items-center gap-1.5">
-                              <Calendar className="h-4 w-4 text-gray-500" />
+                              <Calendar size={16} weight="regular" className="text-slate-400" />
                               {new Date(job.created_at).toLocaleDateString()}
                             </span>
                           </div>
                           {(job.salary_min || job.salary_max) && (
                             <div className="mt-3 flex items-center gap-2">
-                              <DollarSign className="h-5 w-5 text-green-600" />
-                              <span className="text-lg font-bold text-gray-900">
+                              <CurrencyDollar size={20} weight="regular" className="text-green-600" />
+                              <span className="text-lg font-bold text-slate-900">
                                 ${job.salary_min?.toLocaleString() || '0'} - ${job.salary_max?.toLocaleString() || '0'}
                               </span>
-                              <span className="text-sm text-gray-500">per year</span>
+                              <span className="text-sm text-slate-500">per year</span>
                             </div>
                           )}
                         </div>
@@ -250,24 +242,24 @@ const CompanyJobsPage: React.FC = () => {
                     <div className="flex flex-wrap lg:flex-col gap-3">
                       <button
                         onClick={() => navigate(`/company/applicants?job=${job.id}`)}
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-600 transition-all transform hover:scale-105 shadow-md"
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors border border-slate-200"
                       >
-                        <Users className="h-4 w-4" />
-                        <span>{job.applications_count || 0} Applications</span>
+                        <Users size={16} weight="regular" />
+                        <span>{job.applications_count || 0} Applicants</span>
                       </button>
                       <button
                         onClick={() => navigate(`/company/jobs/${job.id}/edit`)}
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-cyan-600 transition-all transform hover:scale-105 shadow-md"
+                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
                       >
-                        <Edit className="h-4 w-4" />
+                        <PencilSimple size={16} weight="regular" />
                         Edit
                       </button>
                       <button
                         onClick={() => openDeleteModal(job)}
                         disabled={isDeleting}
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold hover:from-red-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors border border-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash size={16} weight="regular" />
                         Delete
                       </button>
                     </div>
@@ -295,7 +287,7 @@ const CompanyJobsPage: React.FC = () => {
             <p>
               Are you sure you want to delete <span className="font-bold">"{jobToDelete?.title}"</span>?
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               This will permanently remove the job posting and all associated applications. This action cannot be undone.
             </p>
           </div>
