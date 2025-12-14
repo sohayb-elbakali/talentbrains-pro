@@ -22,12 +22,12 @@ const AuthErrorHandler: React.FC<AuthErrorHandlerProps> = ({ children }) => {
         console.log('Unhandled auth error detected:', error);
         event.preventDefault(); // Prevent the error from being logged to console
 
-        toast.error("Your session has expired. Please sign in again.");
+        notify.showError("Your session has expired. Please sign in again.");
         clearAuth();
 
         // Force sign out to clear any corrupted session data
         try {
-          const { auth } = await import('../../lib/supabase');
+          const { auth } = await import('../../lib/supabase/index');
           await auth.signOut();
         } catch (signOutError) {
           console.error('Error during forced sign out:', signOutError);
@@ -43,12 +43,12 @@ const AuthErrorHandler: React.FC<AuthErrorHandlerProps> = ({ children }) => {
         console.log('Window auth error detected:', error);
         event.preventDefault(); // Prevent the error from being logged to console
 
-        toast.error("Your session has expired. Please sign in again.");
+        notify.showError("Your session has expired. Please sign in again.");
         clearAuth();
 
         // Force sign out to clear any corrupted session data
         try {
-          const { auth } = await import('../../lib/supabase');
+          const { auth } = await import('../../lib/supabase/index');
           await auth.signOut();
         } catch (signOutError) {
           console.error('Error during forced sign out:', signOutError);

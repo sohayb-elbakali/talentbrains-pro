@@ -11,15 +11,15 @@ import { useCallback, useEffect, useState } from "react";
 import { notify } from "../../utils/notify";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth, useUserData } from "../../hooks/useAuth";
-import { db } from "../../lib/supabase";
+import { db } from "../../lib/supabase/index";
 import {
   JobApplication,
   JobMatch,
   TalentAnalytics,
 } from "../../types/talent-dashboard";
-import JobList from "../JobList";
-import { StatsSkeleton, CardSkeleton } from "../SkeletonLoader";
-import LoadingSpinner from "../LoadingSpinner";
+import JobList from "../jobs/JobList";
+import { StatsSkeleton, CardSkeleton } from "../ui/SkeletonLoader";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 export default function TalentDashboard() {
   const { user } = useAuth();

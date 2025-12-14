@@ -3,7 +3,7 @@
  * This service ensures optimal loading performance and prevents loading large datasets at once
  */
 
-import { db } from '../lib/supabase';
+import { db } from '../lib/supabase/index';
 import { QueryClient } from '@tanstack/react-query';
 
 // Pagination configuration - optimized for performance

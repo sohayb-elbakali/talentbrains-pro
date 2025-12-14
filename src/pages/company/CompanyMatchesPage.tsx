@@ -3,7 +3,7 @@ import { Star, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { db } from "../../lib/supabase";
+import { db } from "../../lib/supabase/index";
 
 // Define data structures
 interface Match {

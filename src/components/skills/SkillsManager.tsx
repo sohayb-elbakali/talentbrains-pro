@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Plus, Star, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { notify } from "../../utils/notify";
-import { db } from '../../lib/supabase';
+import { db } from '../../lib/supabase/index';
 
 interface Skill {
     id: string;

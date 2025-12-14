@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { MagnifyingGlass, Funnel } from "@phosphor-icons/react";
-import { useAuth, useUserData } from "../hooks/useAuth";
-import { db } from "../lib/supabase";
+import { useAuth, useUserData } from "../../hooks/useAuth";
+import { db } from "../../lib/supabase/index";
 import { JobCard, type Job } from "./JobCard";
-import LoadingSpinner from "./LoadingSpinner";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 interface JobListProps {
   jobs?: Job[];

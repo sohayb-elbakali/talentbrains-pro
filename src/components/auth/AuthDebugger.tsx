@@ -28,7 +28,7 @@ const AuthDebugger: React.FC = () => {
         code: 'PGRST301',
         message: 'JWT expired',
       };
-      
+
       // This would normally be caught by our error handlers
       throw fakeError;
     } catch (error) {
@@ -44,9 +44,9 @@ const AuthDebugger: React.FC = () => {
     }
 
     try {
-      const { db } = await import('../../lib/supabase');
+      const { db } = await import('../../lib/supabase/index');
       const result = await db.getProfile(user.id);
-      
+
       if (result.error) {
         toast.error(`Profile load error: ${result.error.message}`);
       } else {
@@ -75,15 +75,15 @@ const AuthDebugger: React.FC = () => {
       zIndex: 9999,
     }}>
       <h4 style={{ margin: '0 0 12px 0', fontSize: '14px' }}>Auth Debugger</h4>
-      
+
       <div style={{ marginBottom: '8px' }}>
         <strong>Status:</strong> {isAuthenticated ? 'Authenticated' : 'Not authenticated'}
       </div>
-      
+
       <div style={{ marginBottom: '8px' }}>
         <strong>User:</strong> {user ? user.email : 'None'}
       </div>
-      
+
       <div style={{ marginBottom: '12px' }}>
         <strong>Profile:</strong> {profile ? profile.role : 'None'}
       </div>
@@ -93,30 +93,30 @@ const AuthDebugger: React.FC = () => {
           {debugInfo}
         </div>
       )}
-      
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <button 
+        <button
           onClick={checkLocalStorage}
           style={{ padding: '4px 8px', fontSize: '11px' }}
         >
           Check LocalStorage
         </button>
-        
-        <button 
+
+        <button
           onClick={clearLocalStorage}
           style={{ padding: '4px 8px', fontSize: '11px', background: '#ff6b6b', color: 'white', border: 'none' }}
         >
           Clear LocalStorage
         </button>
-        
-        <button 
+
+        <button
           onClick={simulateAuthError}
           style={{ padding: '4px 8px', fontSize: '11px', background: '#ffa500', color: 'white', border: 'none' }}
         >
           Simulate Auth Error
         </button>
-        
-        <button 
+
+        <button
           onClick={testProfileLoad}
           style={{ padding: '4px 8px', fontSize: '11px', background: '#4dabf7', color: 'white', border: 'none' }}
         >

@@ -2,8 +2,8 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Award, Briefcase, Calendar, DollarSign, Globe, GraduationCap, Languages, MapPin, Mail, MessageCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { db } from '../lib/supabase';
-import SkillsDisplay from '../components/skills/SkillsDisplay';
+import { db } from '../../lib/supabase/index';
+import SkillsDisplay from '../../components/skills/SkillsDisplay';
 
 export default function TalentPublicProfilePage() {
   const { profileId } = useParams<{ profileId: string }>();
@@ -18,17 +18,17 @@ export default function TalentPublicProfilePage() {
 
       try {
         setLoading(true);
-        
+
         const { data: talentData } = await db.getTalent(profileId);
-        
+
         if (talentData) {
           const { data: profileData } = await db.getProfile(profileId);
-          
+
           setTalent({
             ...talentData,
             profile: profileData || talentData.profile
           });
-          
+
           const { data: skillsData } = await db.getTalentSkills(talentData.id);
           setTalentSkills(skillsData || []);
         }
@@ -106,7 +106,7 @@ export default function TalentPublicProfilePage() {
               <div className="flex-1">
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">{talent.profile?.full_name}</h1>
                 <p className="text-xl text-purple-600 font-semibold mb-4">{talent.title}</p>
-                
+
                 <div className="flex flex-wrap items-center gap-4">
                   {talent.location && (
                     <span className="flex items-center text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
@@ -121,11 +121,10 @@ export default function TalentPublicProfilePage() {
                     </span>
                   )}
                   {talent.availability_status && (
-                    <span className={`px-3 py-2 rounded-lg text-sm font-medium capitalize ${
-                      talent.availability_status === 'available' ? 'bg-green-100 text-green-700' :
+                    <span className={`px-3 py-2 rounded-lg text-sm font-medium capitalize ${talent.availability_status === 'available' ? 'bg-green-100 text-green-700' :
                       talent.availability_status === 'busy' ? 'bg-orange-100 text-orange-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
+                        'bg-red-100 text-red-700'
+                      }`}>
                       {talent.availability_status}
                     </span>
                   )}

@@ -10,7 +10,7 @@ import {
     ArrowRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import CompanyLogo from "../CompanyLogo";
+import CompanyLogo from "../profile/CompanyLogo";
 
 interface ModernJobCardProps {
     job: any;

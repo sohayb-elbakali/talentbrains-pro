@@ -5,7 +5,7 @@ import ProfileViewCard, {
   ProfileLink,
   ProfileTags,
 } from "../profile/ProfileViewCard";
-import CompanyLogo from "../CompanyLogo";
+import CompanyLogo from "../profile/CompanyLogo";
 
 interface CompanyProfileViewProps {
   onEdit?: () => void;

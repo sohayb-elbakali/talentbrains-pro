@@ -1,9 +1,9 @@
 import { ChartBar, Brain, Clock, ChatCircle, Shield, Crosshair, Users, Lightning } from '@phosphor-icons/react';
 import React from 'react';
-import { notify } from "../utils/notify";
+import { notify } from "../../utils/notify";
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import AuthModal from './auth/AuthModal';
+import { useAuth } from '../../hooks/useAuth';
+import AuthModal from '../auth/AuthModal';
 
 export default function Features() {
   const features = [

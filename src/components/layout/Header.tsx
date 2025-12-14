@@ -24,7 +24,7 @@ import { sessionManager } from "../../utils/sessionManager";
 
 import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "../auth/AuthModal";
-import CompanyLogo from "../CompanyLogo";
+import CompanyLogo from "../profile/CompanyLogo";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

@@ -3,8 +3,8 @@ import { Briefcase, Calendar, CheckCircle, Clock, Eye, Funnel, MapPin, Magnifyin
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { db } from "../../lib/supabase";
-import { CardSkeleton, StatsSkeleton } from "../../components/SkeletonLoader";
+import { db } from "../../lib/supabase/index";
+import { CardSkeleton, StatsSkeleton } from "../../components/ui/SkeletonLoader";
 import { useFilterStore } from "../../stores/filterStore";
 
 interface Application {

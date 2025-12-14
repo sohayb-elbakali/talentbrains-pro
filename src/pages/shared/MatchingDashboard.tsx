@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { MatchingStatsWidget } from '../components/matching/MatchingStatsWidget';
-import { TalentMatchingPage } from './TalentMatchingPage';
-import { CompanyMatchingPage } from './CompanyMatchingPage';
+import { MatchingStatsWidget } from '../../components/matching/MatchingStatsWidget';
+import { TalentMatchingPage } from '../talent/TalentMatchingPage';
+import { CompanyMatchingPage } from '../company/CompanyMatchingPage';
 
 export const MatchingDashboard = () => {
   const [activeTab, setActiveTab] = useState<'talent' | 'company'>('talent');
@@ -46,21 +46,19 @@ export const MatchingDashboard = () => {
             <nav className="flex -mb-px">
               <button
                 onClick={() => setActiveTab('talent')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'talent'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'talent'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Find Jobs (Talent View)
               </button>
               <button
                 onClick={() => setActiveTab('company')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'company'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'company'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Find Talents (Company View)
               </button>

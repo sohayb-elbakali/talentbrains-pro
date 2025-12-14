@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import TalentProfiles from '../components/TalentProfiles'
+import TalentProfiles from '../../components/profile/TalentProfiles'
 
 const TalentsPage = () => {
   return (

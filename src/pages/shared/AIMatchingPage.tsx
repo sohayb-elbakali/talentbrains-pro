@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import AIMatching from '../components/AIMatching'
+import AIMatching from "../../components/matching/AIMatching";
 
 const AIMatchingPage = () => {
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="p-6"
     >
