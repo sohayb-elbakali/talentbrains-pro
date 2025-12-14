@@ -6,8 +6,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
 import { useRealtimeQuery } from "../../hooks/useRealtimeQuery";
-import ConfirmationModal from "../../components/ConfirmationModal";
-import LoadingSpinner from "../../components/LoadingSpinner";
+import ConfirmationModal from "../../components/ui/ConfirmationModal";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 // Define the type for a job object
 interface Job {
@@ -182,9 +182,9 @@ const CompanyJobsPage: React.FC = () => {
               >
                 {/* Status Bar */}
                 <div className={`h-1 ${job.status === 'active' ? 'bg-green-500' :
-                    job.status === 'paused' ? 'bg-orange-500' :
-                      job.status === 'draft' ? 'bg-slate-400' :
-                        'bg-red-500'
+                  job.status === 'paused' ? 'bg-orange-500' :
+                    job.status === 'draft' ? 'bg-slate-400' :
+                      'bg-red-500'
                   }`}></div>
 
                 <div className="p-6">
@@ -206,9 +206,9 @@ const CompanyJobsPage: React.FC = () => {
                           </h3>
                           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
                             <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${job.status === 'active' ? 'bg-green-100 text-green-700 border border-green-200' :
-                                job.status === 'paused' ? 'bg-orange-100 text-orange-700 border border-orange-200' :
-                                  job.status === 'draft' ? 'bg-slate-100 text-slate-700 border border-slate-200' :
-                                    'bg-red-100 text-red-700 border border-red-200'
+                              job.status === 'paused' ? 'bg-orange-100 text-orange-700 border border-orange-200' :
+                                job.status === 'draft' ? 'bg-slate-100 text-slate-700 border border-slate-200' :
+                                  'bg-red-100 text-red-700 border border-red-200'
                               }`}>
                               {job.status}
                             </span>

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { notify } from "../../utils/notify";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { db } from '../../lib/supabase';
+import { db } from '../../lib/supabase/index';
 
 interface FormData {
   name: string;
@@ -148,7 +148,7 @@ export default function CompanyProfileCompletion() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateStep(1)) {
       setCurrentStep(1);
       return;
@@ -161,7 +161,7 @@ export default function CompanyProfileCompletion() {
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9-]/g, "");
-      
+
       // Add timestamp or random string to ensure uniqueness
       const uniqueSlug = `${baseSlug}-${Date.now().toString(36)}`;
 
@@ -200,13 +200,13 @@ export default function CompanyProfileCompletion() {
           ...companyData,
         });
       }
-      
+
       if (result.error) {
         console.error('Database error:', result.error);
-        
+
         // Provide specific error messages based on error code
         let errorMessage = 'Failed to save company profile';
-        
+
         if (result.error.code === '23505') {
           // Unique constraint violation
           errorMessage = 'A company with this name already exists. Please try a different name.';
@@ -217,7 +217,7 @@ export default function CompanyProfileCompletion() {
         } else if (result.error.message) {
           errorMessage = result.error.message;
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -290,9 +290,8 @@ export default function CompanyProfileCompletion() {
               {[1, 2].map((step) => (
                 <div
                   key={step}
-                  className={`w-3 h-3 rounded-full ${
-                    step <= currentStep ? "bg-purple-600" : "bg-gray-300"
-                  }`}
+                  className={`w-3 h-3 rounded-full ${step <= currentStep ? "bg-purple-600" : "bg-gray-300"
+                    }`}
                 />
               ))}
             </div>
@@ -324,9 +323,8 @@ export default function CompanyProfileCompletion() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    errors.name ? "border-red-500" : "border-gray-300"
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.name ? "border-red-500" : "border-gray-300"
+                    }`}
                   placeholder="Enter your company name"
                 />
                 {errors.name && (
@@ -348,9 +346,8 @@ export default function CompanyProfileCompletion() {
                   value={formData.description}
                   onChange={handleInputChange}
                   rows={4}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    errors.description ? "border-red-500" : "border-gray-300"
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.description ? "border-red-500" : "border-gray-300"
+                    }`}
                   placeholder="Describe what your company does"
                 />
                 {errors.description && (
@@ -373,9 +370,8 @@ export default function CompanyProfileCompletion() {
                   name="industry"
                   value={formData.industry}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    errors.industry ? "border-red-500" : "border-gray-300"
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.industry ? "border-red-500" : "border-gray-300"
+                    }`}
                 >
                   <option value="">Select an industry</option>
                   {industryOptions.map((option) => (
@@ -402,9 +398,8 @@ export default function CompanyProfileCompletion() {
                   name="company_size"
                   value={formData.company_size}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    errors.company_size ? "border-red-500" : "border-gray-300"
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.company_size ? "border-red-500" : "border-gray-300"
+                    }`}
                 >
                   <option value="">Select company size</option>
                   {companySizeOptions.map((option) => (
@@ -434,9 +429,8 @@ export default function CompanyProfileCompletion() {
                   name="location"
                   value={formData.location}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    errors.location ? "border-red-500" : "border-gray-300"
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.location ? "border-red-500" : "border-gray-300"
+                    }`}
                   placeholder="e.g., San Francisco, CA"
                 />
                 {errors.location && (

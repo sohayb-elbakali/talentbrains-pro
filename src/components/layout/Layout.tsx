@@ -1,7 +1,7 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import Footer from "../Footer";
+import Footer from "./Footer";
 import Header from "./Header";
 
 interface LayoutProps {

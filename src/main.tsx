@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import { env } from "./config/env";
 import "./index.css";
-import { useAuthStore } from "./store/authStore";
+import { useAuthStore } from "./stores/authStore";
 import { sessionManager } from "./utils/sessionManager";
 
 const supabaseUrl = env.VITE_SUPABASE_URL;

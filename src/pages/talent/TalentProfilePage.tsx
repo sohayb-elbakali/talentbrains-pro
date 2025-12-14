@@ -1,11 +1,11 @@
 import { Edit, User } from "lucide-react";
 import { useState } from "react";
-import { notify } from "../utils/notify";
-import AvatarSelector from "../components/AvatarSelector";
-import TalentProfileUpdateModal from "../components/talent/TalentProfileUpdateModal";
-import TalentProfileView from "../components/talent/TalentProfileView";
-import { useAuth, useUserData } from "../hooks/useAuth";
-import { db } from "../lib/supabase";
+import { notify } from "../../utils/notify";
+import AvatarSelector from "../../components/ui/AvatarSelector";
+import TalentProfileUpdateModal from "../../components/talent/TalentProfileUpdateModal";
+import TalentProfileView from "../../components/talent/TalentProfileView";
+import { useAuth, useUserData } from "../../hooks/useAuth";
+import { db } from "../../lib/supabase/index";
 
 export default function TalentProfilePage() {
   const { user } = useAuth();

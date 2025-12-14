@@ -7,12 +7,12 @@ import {
 import { useEffect, useState } from "react";
 import { notify } from "../../utils/notify";
 import { useNavigate, useParams } from "react-router-dom";
-import ConfirmationModal from "../../components/ConfirmationModal";
+import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import { useAuth } from "../../hooks/useAuth";
-import { db } from "../../lib/supabase";
+import { db } from "../../lib/supabase/index";
 import { useQueryClient } from '@tanstack/react-query';
 import SkillsDisplay from "../../components/skills/SkillsDisplay";
-import LoadingSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 interface ApplicationDetail {
   id: string;

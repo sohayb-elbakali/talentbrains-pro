@@ -14,15 +14,15 @@ import CompanyProfileCompletion from "./components/company/CompanyProfileComplet
 import AdminDashboard from "./components/dashboard/AdminDashboard";
 import TalentDashboard from "./components/dashboard/TalentDashboard";
 
-import ErrorBoundary from "./components/ErrorBoundary";
-import NetworkErrorBoundary from "./components/NetworkErrorBoundary";
-import OfflineIndicator from "./components/OfflineIndicator";
+import ErrorBoundary from "./components/error/ErrorBoundary";
+import NetworkErrorBoundary from "./components/error/NetworkErrorBoundary";
+import OfflineIndicator from "./components/notifications/OfflineIndicator";
 import Layout from "./components/layout/Layout";
-import LoadingSpinner from "./components/LoadingSpinner";
+import LoadingSpinner from "./components/ui/LoadingSpinner";
 import TalentProfileCompletion from "./components/talent/TalentProfileCompletion";
 import { useAuth } from "./hooks/useAuth";
-import AdminProfilePage from "./pages/AdminProfilePage";
-import AIMatchingPage from "./pages/AIMatchingPage";
+import AdminProfilePage from "./pages/admin/AdminProfilePage";
+import AIMatchingPage from "./pages/shared/AIMatchingPage";
 import ApplicationDetailPage from "./pages/company/ApplicationDetailPage";
 import CompanyApplicantsPage from "./pages/company/CompanyApplicantsPage";
 import CompanyJobsPage from "./pages/company/CompanyJobsPage";
@@ -30,16 +30,16 @@ import CompanyMatchesPage from "./pages/company/CompanyMatchesPage";
 import CreateJobPage from "./pages/company/CreateJobPage";
 import CompanyJobDetailPage from "./pages/company/JobDetailPage";
 import EditJobPage from "./pages/company/EditJobPage";
-import CompanyProfilePage from "./pages/CompanyProfilePage";
-import JobDetailPage from "./pages/JobDetailPage";
-import JobsPage from "./pages/JobsPage";
-import LandingPage from "./pages/LandingPage";
-import SettingsPage from "./pages/SettingsPage";
+import CompanyProfilePage from "./pages/company/CompanyProfilePage";
+import JobDetailPage from "./pages/shared/JobDetailPage";
+import JobsPage from "./pages/shared/JobsPage";
+import LandingPage from "./pages/public/LandingPage";
+import SettingsPage from "./pages/shared/SettingsPage";
 import TalentApplicationsPage from "./pages/talent/TalentApplicationsPage";
-import TalentProfilePage from "./pages/TalentProfilePage";
-import TalentsPage from "./pages/TalentsPage";
-import TalentPublicProfilePage from "./pages/TalentPublicProfilePage";
-import { MatchingDashboard } from "./pages/MatchingDashboard";
+import TalentProfilePage from "./pages/talent/TalentProfilePage";
+import TalentsPage from "./pages/talent/TalentsPage";
+import TalentPublicProfilePage from "./pages/public/TalentPublicProfilePage";
+import { MatchingDashboard } from "./pages/shared/MatchingDashboard";
 import { JobMatchingResultsPage } from "./pages/company/JobMatchingResultsPage";
 
 const queryClient = new QueryClient({
@@ -348,10 +348,10 @@ function App() {
       <NetworkErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <OfflineIndicator />
-          <Toaster 
-            position="top-right" 
-            richColors 
-            expand={false} 
+          <Toaster
+            position="top-right"
+            richColors
+            expand={false}
             closeButton
             offset="80px"
             toastOptions={{

@@ -1,6 +1,6 @@
 import { Calendar, Clock, DollarSign, MapPin, Star, User } from "lucide-react";
 import { useAuth, useUserData } from "../../hooks/useAuth";
-import { db } from "../../lib/supabase";
+import { db } from "../../lib/supabase/index";
 import { skills } from "../../lib/supabase/database/skills";
 import ProfileViewCard, {
   ProfileField,
@@ -231,7 +231,7 @@ export default function TalentProfileView({ onEdit, onAvatarEdit }: TalentProfil
                 <div key={index} className="bg-white rounded-xl border-2 border-gray-200 p-4 hover:shadow-lg transition-all">
                   {/* Skill Name */}
                   <h4 className="text-lg font-bold text-gray-900 mb-3">{skill.name || skill.skill_name}</h4>
-                  
+
                   {/* Level Badge */}
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold text-gray-600">Skill Level</span>
@@ -239,18 +239,17 @@ export default function TalentProfileView({ onEdit, onAvatarEdit }: TalentProfil
                       {levelInfo.label}
                     </span>
                   </div>
-                  
+
                   {/* Progress Bar */}
                   <div className="flex items-center gap-2">
                     <div className="flex-1 flex gap-1">
                       {[1, 2, 3, 4, 5].map((dot) => (
                         <div
                           key={dot}
-                          className={`flex-1 h-2 rounded-full transition-all ${
-                            dot <= level
+                          className={`flex-1 h-2 rounded-full transition-all ${dot <= level
                               ? `bg-gradient-to-r ${levelInfo.color}`
                               : "bg-gray-200"
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>

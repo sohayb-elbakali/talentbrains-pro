@@ -5,7 +5,7 @@ import {
 } from "@phosphor-icons/react";
 import React from "react";
 import { Link } from "react-router-dom";
-import CompanyLogo from "./CompanyLogo";
+import CompanyLogo from "../profile/CompanyLogo";
 
 export interface Job {
   id: string;

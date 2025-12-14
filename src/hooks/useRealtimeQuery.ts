@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase/client';
 
 interface RealtimeQueryOptions<T> extends Omit<UseQueryOptions<T>, 'queryKey' | 'queryFn'> {
   queryKey: any[];
@@ -52,7 +52,7 @@ export function useRealtimeQuery<T>({
           }
         )
         .subscribe();
-      
+
       return channel;
     });
 

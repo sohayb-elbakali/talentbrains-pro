@@ -1,7 +1,7 @@
 import { ArrowRight, Crosshair, TrendUp, Users, Lightning } from '@phosphor-icons/react';
 import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import AuthModal from './auth/AuthModal';
+import { useAuth } from "../../hooks/useAuth";
+import AuthModal from "../auth/AuthModal";
 
 export default function Hero() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { notify } from "../../utils/notify";
-import { db } from "../../lib/supabase";
+import { db } from "../../lib/supabase/index";
 import { APPLICATION_STATUSES } from "../../utils/constants";
 
 interface ApplicationStatusActionsProps {
@@ -67,7 +67,7 @@ const ApplicationStatusActions: React.FC<ApplicationStatusActionsProps> = ({
 
   const getAvailableStatuses = () => {
     const allStatuses = Object.values(APPLICATION_STATUSES);
-    
+
     // Define allowed transitions
     const allowedTransitions: Record<string, string[]> = {
       [APPLICATION_STATUSES.PENDING]: [
@@ -110,9 +110,8 @@ const ApplicationStatusActions: React.FC<ApplicationStatusActionsProps> = ({
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         disabled={loading}
-        className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(currentStatus)} ${
-          loading ? "opacity-50 cursor-not-allowed" : "hover:opacity-80 cursor-pointer"
-        }`}
+        className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(currentStatus)} ${loading ? "opacity-50 cursor-not-allowed" : "hover:opacity-80 cursor-pointer"
+          }`}
       >
         {loading ? "Updating..." : currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1)}
         {!loading && (

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
-import { db } from "../../lib/supabase";
+import { db } from "../../lib/supabase/index";
 
 export default function WelcomeDashboard() {
   const { profile, user } = useAuth();
@@ -226,11 +226,10 @@ export default function WelcomeDashboard() {
               className="flex items-start space-x-4 p-6 border border-gray-200 rounded-lg hover:border-purple-300 transition-colors"
             >
               <div
-                className={`p-3 rounded-full ${
-                  step.completed
+                className={`p-3 rounded-full ${step.completed
                     ? "bg-green-100 text-green-600"
                     : "bg-purple-100 text-purple-600"
-                }`}
+                  }`}
               >
                 {step.completed ? (
                   <CheckCircle className="h-6 w-6" />

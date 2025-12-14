@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { db } from '../lib/supabase';
+import { db } from '../lib/supabase/index';
 
 /**
  * Optimized hook for loading dashboard data with proper caching

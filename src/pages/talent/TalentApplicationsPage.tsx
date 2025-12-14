@@ -3,10 +3,10 @@ import { Briefcase, Calendar, CheckCircle, Clock, Eye, Filter, MapPin, Search, X
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { db } from "../../lib/supabase";
+import { db } from "../../lib/supabase/index";
 import { useRealtimeQuery } from "../../hooks/useRealtimeQuery";
 import { notify } from "../../utils/notify";
-import { CardSkeleton, StatsSkeleton } from "../../components/SkeletonLoader";
+import { CardSkeleton, StatsSkeleton } from "../../components/ui/SkeletonLoader";
 import { useFilterStore } from "../../stores/filterStore";
 
 

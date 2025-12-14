@@ -13,12 +13,12 @@ import {
   X,
 } from "@phosphor-icons/react";
 import React, { useEffect, useState, useMemo } from "react";
-import { notify } from "../utils/notify";
+import { notify } from "../../utils/notify";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth, useUserData } from "../hooks/useAuth";
-import { db } from "../lib/supabase/index";
-import SkillsDisplay from "../components/skills/SkillsDisplay";
-import LoadingSpinner from "../components/LoadingSpinner";
+import { useAuth, useUserData } from "../../hooks/useAuth";
+import { db } from "../../lib/supabase/index";
+import SkillsDisplay from "../../components/skills/SkillsDisplay";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 interface Job {
   id: string;
@@ -181,7 +181,7 @@ const JobDetailPage: React.FC = () => {
           const fileExt = resumeFile.name.split(".").pop();
           const fileName = `${user.id}/${job.id}/${Date.now()}.${fileExt}`;
 
-          const { default: supabase } = await import("../lib/supabase");
+          const { default: supabase } = await import("../../lib/supabase/index");
 
           const { error: uploadError } = await supabase.storage
             .from("resumes")

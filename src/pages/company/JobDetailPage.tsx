@@ -20,7 +20,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { notify } from "../../utils/notify";
 import { db } from "../../lib/supabase/index";
 import SkillsDisplay from "../../components/skills/SkillsDisplay";
-import LoadingSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 interface Job {
   id: string;

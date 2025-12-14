@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import React, { useCallback, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import LoadingSpinner from "../LoadingSpinner";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

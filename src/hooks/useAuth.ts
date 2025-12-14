@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { auth, db } from "../lib/supabase";
-import { useAuthStore } from "../store/authStore";
+import { auth, db } from "../lib/supabase/index";
+import { useAuthStore } from "../stores/authStore";
 import { handleError } from "../utils/errorHandling";
 import { notify } from "../utils/notify";
 import { sessionManager } from "../utils/sessionManager";

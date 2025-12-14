@@ -1,5 +1,5 @@
-import Features from "../components/Features";
-import Hero from "../components/Hero";
+import Features from "../../components/landing/Features";
+import Hero from "../../components/landing/Hero";
 
 export default function LandingPage() {
   return (

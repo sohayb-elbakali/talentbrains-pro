@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { notify } from "../../utils/notify";
 import { useAuth, useUserData } from "../../hooks/useAuth";
-import { db } from "../../lib/supabase";
+import { db } from "../../lib/supabase/index";
 import { Company, CompanyUpdateData } from "../../types/database";
 import { validateCompanyProfile } from "../../utils/profileValidation";
 import FormField, {

@@ -4,7 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useMatchJobToTalents } from '../../hooks/useMatching';
 import { MatchScoreCard } from '../../components/matching/MatchScoreCard';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { supabase } from '../../lib/supabase/client';
 import { notify } from '../../utils/notify';
 

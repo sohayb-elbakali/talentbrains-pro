@@ -9,7 +9,7 @@ import {
   Users,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import supabase from "../../lib/supabase";
+import { supabase } from "../../lib/supabase/client";
 
 export default function AdminDashboard() {
   // Use React Query for all data fetching with proper caching
@@ -256,22 +256,20 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex items-center space-x-4">
                     <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        user.role === "admin"
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${user.role === "admin"
                           ? "bg-red-100 text-red-800"
                           : user.role === "company"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-green-100 text-green-800"
-                      }`}
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
                     >
                       {user.role}
                     </span>
                     <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        user.is_active
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${user.is_active
                           ? "bg-green-100 text-green-800"
                           : "bg-gray-100 text-gray-800"
-                      }`}
+                        }`}
                     >
                       {user.is_active ? "Active" : "Inactive"}
                     </span>

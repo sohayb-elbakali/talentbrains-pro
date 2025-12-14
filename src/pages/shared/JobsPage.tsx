@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
-import { JobCard, type Job } from "../components/JobCard";
-import { db } from "../lib/supabase";
-import { useAuth } from "../hooks/useAuth";
-import LoadingSpinner from "../components/LoadingSpinner";
+import { JobCard, type Job } from "../../components/jobs/JobCard";
+import { db } from "../../lib/supabase/index";
+import { useAuth } from "../../hooks/useAuth";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 const JobsPage: React.FC = () => {
   const { user } = useAuth();

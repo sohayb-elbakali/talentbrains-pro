@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion'
 import { Edit, Mail, Shield, User, Calendar, CheckCircle } from 'lucide-react'
 import { useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
-import { notify } from "../utils/notify"
-import { db } from '../lib/supabase'
+import { useAuth } from '../../hooks/useAuth'
+import { notify } from "../../utils/notify"
+import { db } from '../../lib/supabase/index';
 
 export default function AdminProfilePage() {
   const { profile, user } = useAuth()
@@ -16,10 +16,10 @@ export default function AdminProfilePage() {
 
   const handleSave = async () => {
     if (!user) return
-    
+
     try {
       setLoading(true)
-      
+
       const { error } = await db.updateProfile(user.id, {
         full_name: editData.full_name,
         email: editData.email
@@ -85,7 +85,7 @@ export default function AdminProfilePage() {
           className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8"
         >
           <h2 className="text-lg font-semibold text-gray-900 mb-6">Profile Information</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Full Name */}
             <div>
@@ -164,12 +164,12 @@ export default function AdminProfilePage() {
                 Account Created
               </label>
               <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                {profile?.created_at 
+                {profile?.created_at
                   ? new Date(profile.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })
                   : 'Unknown'
                 }
               </p>

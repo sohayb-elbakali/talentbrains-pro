@@ -1,26 +1,26 @@
 import { motion } from 'framer-motion';
 import {
-    ArrowLeft,
-    Briefcase,
-    Calendar,
-    CheckCircle,
-    Clock,
-    DollarSign,
-    Download,
-    Eye,
-    FileText,
-    Mail,
-    MapPin,
-    Phone,
-    Star,
-    User,
-    XCircle
+  ArrowLeft,
+  Briefcase,
+  Calendar,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  Download,
+  Eye,
+  FileText,
+  Mail,
+  MapPin,
+  Phone,
+  Star,
+  User,
+  XCircle
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { notify } from "../../utils/notify";
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth, useUserData } from "../../hooks/useAuth";
-import { db } from '../../lib/supabase';
+import { db } from '../../lib/supabase/index';
 import type { Application } from '../../types/database';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -143,10 +143,10 @@ const CompanyApplicantDetailPage = () => {
 
       // Update local state immediately
       setApplication((prev) => (prev ? { ...prev, ...updates } : null));
-      
+
       // Invalidate React Query cache to refresh data
       queryClient.invalidateQueries({ queryKey: ['company-applications'] });
-      
+
       // Show success notification
       notify.showSuccess(`Application status updated to ${newStatus}`);
     } catch (err: any) {
@@ -173,10 +173,10 @@ const CompanyApplicantDetailPage = () => {
       if (error) throw error;
 
       setApplication((prev) => (prev ? { ...prev, ...updates } : null));
-      
+
       // Invalidate cache
       queryClient.invalidateQueries({ queryKey: ['company-applications'] });
-      
+
       notify.showSuccess("Notes and feedback saved successfully");
     } catch (err: any) {
       notify.showError("Failed to save notes and feedback");
@@ -525,7 +525,7 @@ const CompanyApplicantDetailPage = () => {
                 <span>Reject Application</span>
               </button>
             </div>
-            
+
             {/* Status Description */}
             <div className="mt-4 p-4 bg-white/50 backdrop-blur-sm rounded-xl border border-purple-200">
               <p className="text-sm text-gray-600">
@@ -568,9 +568,8 @@ const CompanyApplicantDetailPage = () => {
                 <button
                   key={star}
                   onClick={() => setRating(star)}
-                  className={`p-1 ${
-                    rating && star <= rating ? 'text-yellow-400' : 'text-gray-300'
-                  } hover:text-yellow-400`}
+                  className={`p-1 ${rating && star <= rating ? 'text-yellow-400' : 'text-gray-300'
+                    } hover:text-yellow-400`}
                 >
                   <Star className="h-6 w-6 fill-current" />
                 </button>

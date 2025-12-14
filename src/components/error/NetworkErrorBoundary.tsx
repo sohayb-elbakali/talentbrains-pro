@@ -1,7 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { WifiOff, RefreshCw, AlertTriangle } from 'lucide-react';
-import { isNetworkError } from '../utils/networkErrorHandler';
+import { isNetworkError } from "../../utils/networkErrorHandler";
 
 interface Props {
   children: ReactNode;
@@ -70,8 +70,8 @@ export default class NetworkErrorBoundary extends Component<Props, State> {
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
                   className={`${this.state.isNetworkError
-                      ? 'bg-blue-100'
-                      : 'bg-red-100'
+                    ? 'bg-blue-100'
+                    : 'bg-red-100'
                     } p-4 rounded-2xl shadow-lg`}
                 >
                   {this.state.isNetworkError ? (

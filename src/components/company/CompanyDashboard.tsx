@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth, useUserData } from "../../hooks/useAuth";
-import { db } from "../../lib/supabase";
+import { db } from "../../lib/supabase/index";
 import type { Job } from "../../types/database";
 import CompanyProfileUpdateModal from "./CompanyProfileUpdateModal";
 import ModernJobCard from "./ModernJobCard";
-import CompanyLogo from "../CompanyLogo";
-import { StatsSkeleton, CardSkeleton } from "../SkeletonLoader";
+import CompanyLogo from "../profile/CompanyLogo";
+import { StatsSkeleton, CardSkeleton } from "../ui/SkeletonLoader";
 
 // A small component for the stat cards to avoid repetition
 const StatCard = ({
