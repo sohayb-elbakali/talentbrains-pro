@@ -16,11 +16,11 @@ interface JobSkillsSelectorProps {
 }
 
 const PROFICIENCY_LEVELS = [
-    { value: 1, label: "Beginner", emoji: "🌱", description: "Just starting out" },
-    { value: 2, label: "Intermediate", emoji: "🌿", description: "Some experience" },
-    { value: 3, label: "Advanced", emoji: "🌟", description: "Proficient" },
-    { value: 4, label: "Expert", emoji: "🔥", description: "Highly skilled" },
-    { value: 5, label: "Master", emoji: "👑", description: "Industry expert" },
+    { value: 1, label: "Beginner", description: "Just starting out" },
+    { value: 2, label: "Intermediate", description: "Some experience" },
+    { value: 3, label: "Advanced", description: "Proficient" },
+    { value: 4, label: "Expert", description: "Highly skilled" },
+    { value: 5, label: "Master", description: "Industry expert" },
 ];
 
 export default function JobSkillsSelector({
@@ -198,8 +198,8 @@ export default function JobSkillsSelector({
                                     <div className="flex items-center gap-3">
                                         {/* Skill Name */}
                                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                                            <span className="text-xl flex-shrink-0">{profInfo.emoji}</span>
                                             <span className="text-sm font-semibold text-gray-900 truncate">{skill.skill_name}</span>
+                                            <span className="text-xs text-gray-500">({profInfo.label})</span>
                                         </div>
 
                                         {/* Controls */}
@@ -216,7 +216,7 @@ export default function JobSkillsSelector({
                                             >
                                                 {PROFICIENCY_LEVELS.map((level) => (
                                                     <option key={level.value} value={level.value}>
-                                                        {level.emoji} {level.label}
+                                                        {level.label}
                                                     </option>
                                                 ))}
                                             </select>

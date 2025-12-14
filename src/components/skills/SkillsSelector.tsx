@@ -17,11 +17,11 @@ interface SkillsSelectorProps {
 }
 
 const PROFICIENCY_LEVELS = [
-  { value: 1, label: "Beginner", emoji: "🌱", description: "Just starting out" },
-  { value: 2, label: "Intermediate", emoji: "🌿", description: "Some experience" },
-  { value: 3, label: "Advanced", emoji: "🌟", description: "Proficient" },
-  { value: 4, label: "Expert", emoji: "🔥", description: "Highly skilled" },
-  { value: 5, label: "Master", emoji: "👑", description: "Industry expert" },
+  { value: 1, label: "Beginner", description: "Just starting out" },
+  { value: 2, label: "Intermediate", description: "Some experience" },
+  { value: 3, label: "Advanced", description: "Proficient" },
+  { value: 4, label: "Expert", description: "Highly skilled" },
+  { value: 5, label: "Master", description: "Industry expert" },
 ];
 
 export default function SkillsSelector({
@@ -143,8 +143,8 @@ export default function SkillsSelector({
                 onClick={() => handleAddSkill(skill.name, skill.id)}
                 disabled={isSkillSelected(skill.name)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 ${isSkillSelected(skill.name)
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-white text-gray-700 border-2 border-gray-200 hover:border-primary-light hover:shadow-md"
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-700 border-2 border-gray-200 hover:border-primary-light hover:shadow-md"
                   }`}
               >
                 {skill.name}
@@ -210,8 +210,8 @@ export default function SkillsSelector({
             </div>
             <div className="flex items-center gap-2">
               <span className={`px-4 py-1.5 rounded-full text-sm font-bold shadow-md transition-all ${selectedSkills.length >= maxSkills
-                  ? "bg-gradient-to-r from-red-500 to-pink-500 text-white animate-pulse"
-                  : "bg-gradient-to-r from-green-400 to-emerald-500 text-white"
+                ? "bg-gradient-to-r from-red-500 to-pink-500 text-white animate-pulse"
+                : "bg-gradient-to-r from-green-400 to-emerald-500 text-white"
                 }`}>
                 {selectedSkills.length}/{maxSkills}
               </span>
@@ -227,17 +227,16 @@ export default function SkillsSelector({
                   <div
                     key={skill.skill_name}
                     className={`rounded-xl p-4 border-2 transition-all ${skill.is_primary
-                        ? "bg-blue-50 border-primary-light"
-                        : "bg-white border-gray-200 hover:border-primary-light"
+                      ? "bg-blue-50 border-primary-light"
+                      : "bg-white border-gray-200 hover:border-primary-light"
                       }`}
                   >
                     <div className="flex flex-col gap-3">
-                      {/* Skill Name & Emoji */}
+                      {/* Skill Name */}
                       <div className="flex items-center gap-3">
-                        <span className="text-3xl">{profInfo.emoji}</span>
                         <div className="flex-1">
                           <h4 className="text-base font-bold text-gray-900">{skill.skill_name}</h4>
-                          <p className="text-xs text-gray-500">{profInfo.description}</p>
+                          <p className="text-xs text-gray-500">{profInfo.label} - {profInfo.description}</p>
                         </div>
                       </div>
 

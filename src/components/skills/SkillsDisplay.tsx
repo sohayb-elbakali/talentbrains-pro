@@ -1,5 +1,3 @@
-
-
 interface Skill {
   skill_id?: string;
   skill_name?: string;
@@ -34,16 +32,11 @@ export default function SkillsDisplay({
   };
 
   const getSkillData = (skill: string | Skill): Skill | null => {
-    if (typeof skill === "string") {
-      console.log("⚠️ Skill is a string:", skill);
-      return null;
-    }
-    // Ensure proficiency_level is a number
+    if (typeof skill === "string") return null;
     if (skill && typeof skill === 'object') {
       const profLevel = skill.proficiency_level !== undefined && skill.proficiency_level !== null
         ? Number(skill.proficiency_level)
         : 3;
-      console.log("✅ Skill object:", skill.name || skill.skill_name, "proficiency:", skill.proficiency_level, "→", profLevel);
       return {
         ...skill,
         proficiency_level: profLevel
@@ -52,7 +45,16 @@ export default function SkillsDisplay({
     return skill;
   };
 
-
+  const getProficiencyLabel = (level: number): string => {
+    const labels: Record<number, string> = {
+      1: "Beginner",
+      2: "Intermediate",
+      3: "Advanced",
+      4: "Expert",
+      5: "Master",
+    };
+    return labels[level] || "Advanced";
+  };
 
   if (variant === "compact") {
     return (
@@ -61,25 +63,15 @@ export default function SkillsDisplay({
           const skillName = getSkillName(skill);
           const skillData = getSkillData(skill);
           const proficiencyLevel = skillData?.proficiency_level || 3;
-          const profInfo = {
-            1: { emoji: "🌱", color: "from-gray-400 to-gray-500" },
-            2: { emoji: "🌿", color: "from-green-400 to-emerald-500" },
-            3: { emoji: "🌟", color: "from-primary to-primary-hover" },
-            4: { emoji: "🔥", color: "from-secondary to-secondary-hover" },
-            5: { emoji: "👑", color: "from-purple-500 to-purple-600" },
-          }[proficiencyLevel] || { emoji: "🌟", color: "from-primary to-primary-hover" };
 
           return (
             <span
               key={`${skillName}-${index}`}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-bold transition-all hover:scale-105 shadow-sm ${showProficiency && proficiencyLevel > 0
-                  ? `bg-gradient-to-r ${profInfo.color} text-white shadow-md`
-                  : "bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 border border-gray-200 hover:border-gray-300"
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${showProficiency && proficiencyLevel > 0
+                  ? "bg-primary text-white"
+                  : "bg-slate-100 text-slate-700 border border-slate-200"
                 }`}
             >
-              {showProficiency && proficiencyLevel > 0 && (
-                <span className="text-base">{profInfo.emoji}</span>
-              )}
               {skillName}
               {showProficiency && proficiencyLevel > 0 && (
                 <span className="text-xs opacity-90">
@@ -90,7 +82,7 @@ export default function SkillsDisplay({
           );
         })}
         {remainingCount > 0 && (
-          <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700">
+          <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-200 text-slate-700">
             +{remainingCount} more
           </span>
         )}
@@ -105,56 +97,32 @@ export default function SkillsDisplay({
           const skillName = getSkillName(skill);
           const skillData = getSkillData(skill);
           const proficiencyLevel = skillData?.proficiency_level || 3;
-          const profInfo = {
-            1: { emoji: "🌱", label: "Beginner", color: "from-gray-400 to-gray-500" },
-            2: { emoji: "🌿", label: "Intermediate", color: "from-green-400 to-emerald-500" },
-            3: { emoji: "🌟", label: "Advanced", color: "from-primary to-primary-hover" },
-            4: { emoji: "🔥", label: "Expert", color: "from-secondary to-secondary-hover" },
-            5: { emoji: "👑", label: "Master", color: "from-purple-500 to-purple-600" },
-          }[proficiencyLevel] || { emoji: "🌟", label: "Advanced", color: "from-primary to-primary-hover" };
+          const profLabel = getProficiencyLabel(proficiencyLevel);
 
           return (
             <div
               key={`${skillName}-${index}`}
-              className="flex items-center justify-between p-4 rounded-xl border-2 hover:shadow-lg transition-all bg-white border-gray-200 hover:border-primary-light"
+              className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:border-primary hover:shadow-sm transition-all"
             >
-              <div className="flex items-center gap-4 flex-1">
-                {/* Emoji Icon */}
-                <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br ${profInfo.color} shadow-md`}>
-                  {profInfo.emoji}
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="font-semibold text-slate-900">{skillName}</span>
+                  <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600">
+                    {profLabel}
+                  </span>
                 </div>
 
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-gray-900 text-lg">{skillName}</span>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {/* Proficiency Level */}
-                    <div className="flex items-center gap-1.5">
-                      <span className={`px-2 py-0.5 rounded-lg text-xs font-bold bg-gradient-to-r ${profInfo.color} text-white`}>
-                        {profInfo.label}
-                      </span>
-                      <span className="text-xs font-semibold text-gray-500">
-                        {proficiencyLevel}/5
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Visual Progress Dots */}
-              <div className="flex-shrink-0 ml-4">
-                <div className="flex gap-1.5">
-                  {[1, 2, 3, 4, 5].map((level) => (
+                {/* Progress Bar */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      key={level}
-                      className={`w-2.5 h-10 rounded-full transition-all ${level <= proficiencyLevel
-                          ? `bg-gradient-to-b ${profInfo.color} shadow-md`
-                          : "bg-gray-200"
-                        }`}
+                      className="h-full bg-primary rounded-full transition-all"
+                      style={{ width: `${(proficiencyLevel / 5) * 100}%` }}
                     />
-                  ))}
+                  </div>
+                  <span className="text-xs font-medium text-slate-500">
+                    {proficiencyLevel}/5
+                  </span>
                 </div>
               </div>
             </div>
@@ -162,7 +130,7 @@ export default function SkillsDisplay({
         })}
         {remainingCount > 0 && (
           <div className="text-center py-2">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-slate-600">
               and {remainingCount} more skill{remainingCount !== 1 ? 's' : ''}
             </span>
           </div>
@@ -177,66 +145,47 @@ export default function SkillsDisplay({
         {displaySkills.map((skill, index) => {
           const skillName = getSkillName(skill);
           const skillData = getSkillData(skill);
-          console.log("🎨 Displaying skill:", { skillName, skillData, proficiency: skillData?.proficiency_level });
           const proficiencyLevel = skillData?.proficiency_level || 3;
-          const profInfo = {
-            1: { emoji: "🌱", label: "Beginner", color: "from-gray-400 to-gray-500" },
-            2: { emoji: "🌿", label: "Intermediate", color: "from-green-400 to-emerald-500" },
-            3: { emoji: "🌟", label: "Advanced", color: "from-primary to-primary-hover" },
-            4: { emoji: "🔥", label: "Expert", color: "from-secondary to-secondary-hover" },
-            5: { emoji: "👑", label: "Master", color: "from-purple-500 to-purple-600" },
-          }[proficiencyLevel] || { emoji: "🌟", label: "Advanced", color: "from-primary to-primary-hover" };
+          const profLabel = getProficiencyLabel(proficiencyLevel);
 
           return (
             <div
               key={`${skillName}-${index}`}
-              className="relative p-5 rounded-2xl border-2 transition-all hover:scale-105 hover:shadow-xl bg-white border-gray-200 hover:border-primary-light"
+              className="p-4 rounded-xl border border-slate-200 bg-white hover:border-primary hover:shadow-md transition-all"
             >
-              {/* Proficiency Level Badge - Top Right */}
-              <div className="absolute -top-3 right-3">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-lg bg-gradient-to-r ${profInfo.color} text-white`}>
-                  <span className="text-base">{profInfo.emoji}</span>
-                  {profInfo.label}
-                </span>
-              </div>
-
               {/* Skill Name */}
-              <div className="mt-4 mb-3">
-                <h4 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  {skillName}
-                </h4>
-              </div>
+              <h4 className="text-base font-semibold text-slate-900 mb-3">
+                {skillName}
+              </h4>
 
-              {/* Proficiency Visual Bar */}
-              <div className="space-y-2 mb-3">
-                <div className="flex items-center justify-between text-xs font-semibold">
-                  <span className="text-gray-600">Skill Level</span>
-                  <span className={`bg-gradient-to-r ${profInfo.color} bg-clip-text text-transparent`}>
+              {/* Proficiency Level */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium text-slate-600">{profLabel}</span>
+                  <span className="font-semibold text-primary">
                     {proficiencyLevel}/5
                   </span>
                 </div>
 
-                {/* Creative Dot Progress Bar */}
+                {/* Progress Dots */}
                 <div className="flex gap-1.5">
                   {[1, 2, 3, 4, 5].map((level) => (
                     <div
                       key={level}
-                      className={`flex-1 h-2.5 rounded-full transition-all duration-300 ${level <= proficiencyLevel
-                          ? `bg-gradient-to-r ${profInfo.color} shadow-md`
-                          : "bg-gray-200"
+                      className={`flex-1 h-2 rounded-full transition-all ${level <= proficiencyLevel
+                          ? "bg-primary"
+                          : "bg-slate-200"
                         }`}
                     />
                   ))}
                 </div>
               </div>
-
-
             </div>
           );
         })}
         {remainingCount > 0 && (
-          <div className="flex items-center justify-center p-5 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 hover:border-primary-light transition-all">
-            <span className="text-sm font-bold text-gray-600">
+          <div className="flex items-center justify-center p-4 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50">
+            <span className="text-sm font-medium text-slate-600">
               +{remainingCount} more skill{remainingCount !== 1 ? 's' : ''}
             </span>
           </div>
