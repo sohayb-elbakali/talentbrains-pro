@@ -178,14 +178,6 @@ export default function CompanyProfileView({
               </ProfileField>
             </div>
           </div>
-          {onEdit && (
-            <button
-              onClick={onEdit}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ml-4"
-            >
-              Update Profile
-            </button>
-          )}
         </div>
         <div className="mt-6">
           <ProfileField label="Description" value={company.description} />
