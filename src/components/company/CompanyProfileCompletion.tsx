@@ -187,9 +187,15 @@ export default function CompanyProfileCompletion() {
         throw new Error(errorMessage);
       }
 
-      await checkProfileCompletion(true)
+      // Force refresh the profile completion status
+      await checkProfileCompletion(true);
+
       notify.showSuccess("Company profile completed successfully!");
-      navigate('/company')
+
+      // Small delay to ensure state is updated before navigation
+      setTimeout(() => {
+        navigate('/company', { replace: true });
+      }, 100);
     } catch (error: any) {
       console.error('Error updating company profile:', error)
       const errorMessage = error?.message || 'Failed to save company profile. Please try again.';

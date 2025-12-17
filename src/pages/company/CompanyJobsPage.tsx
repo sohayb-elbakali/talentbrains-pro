@@ -7,7 +7,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
 import { useRealtimeQuery } from "../../hooks/useRealtimeQuery";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
-import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 // Define the type for a job object
 interface Job {
@@ -106,8 +105,36 @@ const CompanyJobsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading jobs..." />
+      <div className="min-h-screen bg-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header Skeleton */}
+          <div className="mb-8 animate-pulse">
+            <div className="h-10 bg-slate-200 rounded w-1/3 mb-2"></div>
+            <div className="h-5 bg-slate-200 rounded w-1/4"></div>
+          </div>
+
+          {/* Jobs Skeleton */}
+          <div className="space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-pulse">
+                <div className="h-1 bg-slate-200"></div>
+                <div className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 bg-slate-200 rounded-2xl"></div>
+                    <div className="flex-1">
+                      <div className="h-6 bg-slate-200 rounded w-1/2 mb-3"></div>
+                      <div className="flex gap-3">
+                        <div className="h-6 bg-slate-200 rounded w-16"></div>
+                        <div className="h-6 bg-slate-200 rounded w-20"></div>
+                        <div className="h-6 bg-slate-200 rounded w-24"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

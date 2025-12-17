@@ -170,7 +170,11 @@ export default function TalentProfileCompletion() {
 
       await checkProfileCompletion(true);
       notify.showProfileCompletionSuccess();
-      navigate('/talent');
+
+      // Small delay to ensure state is updated before navigation
+      setTimeout(() => {
+        navigate('/talent', { replace: true });
+      }, 100);
     } catch (error: any) {
       console.error('Profile completion error:', error);
       const errorMessage = error?.message || 'Failed to save profile. Please try again.';
