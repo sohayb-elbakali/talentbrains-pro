@@ -153,6 +153,8 @@ export const useAuth = () => {
           if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
             if (session?.user) {
               setUser(session.user);
+              // Reset profile completion status to avoid stale redirects
+              setProfileCompletionStatus({ needsCompletion: false, type: null });
               // For auth state listener, don't show error notifications to avoid duplicates
               await loadUserProfile(
                 session.user.id,
@@ -721,8 +723,7 @@ export const useAuth = () => {
           return { needsCompletion: false, type: null };
         }
 
-        needsCompletion =
-          !companyData || !companyData.name || !companyData.description;
+        needsCompletion = !companyData || !companyData.name;
         type = "company";
       } else if (profile.role === "talent") {
         const { data: talentData, error } = await db.getTalent(profile.id);

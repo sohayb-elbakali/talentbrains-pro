@@ -25,6 +25,7 @@ import { sessionManager } from "../../utils/sessionManager";
 import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "../auth/AuthModal";
 import CompanyLogo from "../profile/CompanyLogo";
+import { Skeleton } from "../ui/Skeleton";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -75,21 +76,32 @@ export default function Header() {
   ];
 
   const { isAuthenticated, profile, signOut, user } = useAuth();
-  const { data: userData } = useUserData(user?.id);
+  const { data: userData, isLoading: isUserDataLoading } = useUserData(user?.id);
 
-  // Get display name based on role
+  // Check if we're still loading user data
+  const isLoadingUserInfo = isAuthenticated && (!profile || isUserDataLoading);
+
+  // Get display name based on role - only return real data, no placeholders
   const getDisplayName = () => {
-    if (!profile) return 'User';
+    if (!profile) return null;
 
-    // For company users, ONLY show company name (not full_name from profile)
+    // For company users, only show company name if loaded
     if (profile.role === 'company') {
-      return userData?.company?.name || 'Company';
+      return userData?.company?.name || null;
     }
 
-    return profile.full_name || 'User';
+    return profile.full_name || null;
   };
 
   const displayName = getDisplayName();
+
+  // Get avatar URL - only return real data, no placeholders
+  const getAvatarUrl = () => {
+    if (!profile) return null;
+    return profile.avatar_url || null;
+  };
+
+  const avatarUrl = getAvatarUrl();
 
   // Get the appropriate home URL based on user role
   const getHomeUrl = () => {
@@ -364,31 +376,45 @@ export default function Header() {
                     className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors group"
                   >
                     <div className="relative">
-                      {profile?.role === 'company' ? (
+                      {isLoadingUserInfo ? (
+                        <Skeleton variant="circular" className="w-10 h-10" />
+                      ) : profile?.role === 'company' ? (
                         <div className="w-9 h-9 rounded-lg overflow-hidden border-2 border-primary-light group-hover:border-primary transition-colors">
-                          <CompanyLogo
-                            avatarUrl={profile?.avatar_url}
-                            companyName={displayName}
-                            size="sm"
-                            className="w-full h-full"
-                          />
+                          {avatarUrl ? (
+                            <CompanyLogo
+                              avatarUrl={avatarUrl}
+                              companyName={displayName || 'Company'}
+                              size="sm"
+                              className="w-full h-full"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-primary flex items-center justify-center text-white text-sm font-bold">
+                              {displayName ? displayName.charAt(0).toUpperCase() : 'C'}
+                            </div>
+                          )}
                         </div>
-                      ) : (
+                      ) : avatarUrl ? (
                         <img
-                          src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
-                          alt={displayName}
+                          src={avatarUrl}
+                          alt={displayName || 'User'}
                           className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:ring-primary transition-all"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8B5CF6&color=fff&size=128&bold=true`;
-                          }}
                         />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold ring-2 ring-white shadow-sm group-hover:ring-primary transition-all">
+                          {displayName ? displayName.charAt(0).toUpperCase() : 'U'}
+                        </div>
                       )}
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                      {!isLoadingUserInfo && (
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                      )}
                     </div>
-                    <span className="text-base font-semibold text-gray-900 group-hover:text-primary transition-colors">
-                      {displayName}
-                    </span>
+                    {isLoadingUserInfo ? (
+                      <Skeleton className="h-4 w-20" />
+                    ) : (
+                      <span className="text-base font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                        {displayName || 'User'}
+                      </span>
+                    )}
                   </button>
 
                   <AnimatePresence>
@@ -406,23 +432,29 @@ export default function Header() {
                             <div className="relative">
                               {profile?.role === 'company' ? (
                                 <div className="w-14 h-14 rounded-xl overflow-hidden border-2 border-white/30 shadow-lg">
-                                  <CompanyLogo
-                                    avatarUrl={profile?.avatar_url}
-                                    companyName={displayName}
-                                    size="md"
-                                    className="w-full h-full"
-                                  />
+                                  {avatarUrl ? (
+                                    <CompanyLogo
+                                      avatarUrl={avatarUrl}
+                                      companyName={displayName || 'Company'}
+                                      size="md"
+                                      className="w-full h-full"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full bg-white/20 flex items-center justify-center text-white text-xl font-bold">
+                                      {displayName ? displayName.charAt(0).toUpperCase() : 'C'}
+                                    </div>
+                                  )}
                                 </div>
-                              ) : (
+                              ) : avatarUrl ? (
                                 <img
-                                  src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
-                                  alt={displayName}
+                                  src={avatarUrl}
+                                  alt={displayName || 'User'}
                                   className="w-16 h-16 rounded-full object-cover shadow-lg ring-4 ring-white"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8B5CF6&color=fff&size=128&bold=true`;
-                                  }}
                                 />
+                              ) : (
+                                <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white text-xl font-bold shadow-lg ring-4 ring-white/30">
+                                  {displayName ? displayName.charAt(0).toUpperCase() : 'U'}
+                                </div>
                               )}
                               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
                             </div>
@@ -554,35 +586,54 @@ export default function Header() {
                     <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
                       <div className="flex items-center space-x-3">
                         <div className="relative">
-                          {profile?.role === 'company' ? (
+                          {isLoadingUserInfo ? (
+                            <Skeleton variant="circular" className="w-12 h-12" />
+                          ) : profile?.role === 'company' ? (
                             <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-primary-light shadow-md">
-                              <CompanyLogo
-                                avatarUrl={profile?.avatar_url}
-                                companyName={displayName}
-                                size="lg"
-                                className="w-full h-full"
-                              />
+                              {avatarUrl ? (
+                                <CompanyLogo
+                                  avatarUrl={avatarUrl}
+                                  companyName={displayName || 'Company'}
+                                  size="lg"
+                                  className="w-full h-full"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-primary flex items-center justify-center text-white text-xl font-bold">
+                                  {displayName ? displayName.charAt(0).toUpperCase() : 'C'}
+                                </div>
+                              )}
                             </div>
-                          ) : (
+                          ) : avatarUrl ? (
                             <img
-                              src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
-                              alt={displayName}
-                              className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8B5CF6&color=fff&size=128&bold=true`;
-                              }}
+                              src={avatarUrl}
+                              alt={displayName || 'User'}
+                              className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-sm"
                             />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold ring-2 ring-white shadow-sm">
+                              {displayName ? displayName.charAt(0).toUpperCase() : 'U'}
+                            </div>
                           )}
-                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                          {!isLoadingUserInfo && (
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                          )}
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900">
-                            {displayName || 'User'}
-                          </p>
-                          <p className="text-sm text-gray-500 capitalize">
-                            {profile?.role} Account
-                          </p>
+                          {isLoadingUserInfo ? (
+                            <div className="space-y-2">
+                              <Skeleton className="h-4 w-24" />
+                              <Skeleton className="h-3 w-16" />
+                            </div>
+                          ) : (
+                            <>
+                              <p className="font-bold text-gray-900">
+                                {displayName || 'User'}
+                              </p>
+                              <p className="text-sm text-gray-500 capitalize">
+                                {profile?.role} Account
+                              </p>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -126,6 +126,30 @@ export default function CompanyProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 mb-6 p-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
+                <Building className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {companyData?.name || "Company Profile"}
+                </h1>
+                <p className="text-gray-600">Manage your company information</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsUpdateModalOpen(true)}
+              className="px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all duration-200"
+            >
+              <Edit className="inline h-5 w-5 mr-2" />
+              Edit Profile
+            </button>
+          </div>
+        </div>
+
         {/* Profile Content */}
         <CompanyProfileView
           onEdit={() => setIsUpdateModalOpen(true)}

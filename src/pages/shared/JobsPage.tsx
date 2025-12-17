@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { JobCard, type Job } from "../../components/jobs/JobCard";
 import { db } from "../../lib/supabase/index";
 import { useAuth } from "../../hooks/useAuth";
-import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 const JobsPage: React.FC = () => {
   const { user } = useAuth();
@@ -113,8 +112,26 @@ const JobsPage: React.FC = () => {
 
         {/* Loading State */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
-            <LoadingSpinner text="Loading amazing opportunities..." size="lg" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-pulse">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-14 h-14 bg-slate-200 rounded-2xl"></div>
+                  <div className="flex-1">
+                    <div className="h-5 bg-slate-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+                <div className="space-y-3 mb-4">
+                  <div className="h-4 bg-slate-200 rounded w-full"></div>
+                  <div className="h-4 bg-slate-200 rounded w-2/3"></div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-6 bg-slate-200 rounded w-16"></div>
+                  <div className="h-6 bg-slate-200 rounded w-20"></div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

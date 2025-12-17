@@ -5,12 +5,10 @@ import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
 import { Company, CompanyUpdateData } from "../../types/database";
 import { validateCompanyProfile } from "../../utils/profileValidation";
-import FormField, {
-  CheckboxGroup,
-  Input,
-  Select,
-  Textarea,
-} from "../profile/FormField";
+import Input from "../ui/Input";
+import Select from "../ui/Select";
+import Textarea from "../ui/Textarea";
+import CheckboxGroup from "../ui/CheckboxGroup";
 import ProfileUpdateModal from "../profile/ProfileUpdateModal";
 
 interface CompanyProfileUpdateModalProps {
@@ -269,7 +267,7 @@ export default function CompanyProfileUpdateModal({
         title="Update Company Profile"
       >
         <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <span className="ml-2 text-gray-600">Loading company data...</span>
         </div>
       </ProfileUpdateModal>
@@ -293,90 +291,84 @@ export default function CompanyProfileUpdateModal({
             Basic Information
           </h3>
 
-          <FormField label="Company Name" required error={errors.name}>
-            <Input
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Enter your company name"
-              error={!!errors.name}
-            />
-          </FormField>
+          <Input
+            label="Company Name"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            placeholder="Enter your company name"
+            error={errors.name}
+            required
+          />
 
-          <FormField label="Description" required error={errors.description}>
-            <Textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              rows={4}
-              placeholder="Describe what your company does"
-              error={!!errors.description}
-            />
-          </FormField>
+          <Textarea
+            label="Description"
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+            rows={4}
+            placeholder="Describe what your company does"
+            error={errors.description}
+            required
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField label="Industry" required error={errors.industry}>
-              <Select
-                name="industry"
-                value={formData.industry}
-                onChange={handleInputChange}
-                options={industryOptions}
-                placeholder="Select an industry"
-                error={!!errors.industry}
-              />
-            </FormField>
-
-            <FormField
-              label="Company Size"
+            <Select
+              label="Industry"
+              name="industry"
+              value={formData.industry}
+              onChange={handleInputChange}
+              options={industryOptions}
+              placeholder="Select an industry"
+              error={errors.industry}
               required
+            />
+
+            <Select
+              label="Company Size"
+              name="company_size"
+              value={formData.company_size}
+              onChange={handleInputChange}
+              options={companySizeOptions}
+              placeholder="Select company size"
               error={errors.company_size}
-            >
-              <Select
-                name="company_size"
-                value={formData.company_size}
-                onChange={handleInputChange}
-                options={companySizeOptions}
-                placeholder="Select company size"
-                error={!!errors.company_size}
-              />
-            </FormField>
+              required
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField label="Location" required error={errors.location}>
-              <Input
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                placeholder="e.g., San Francisco, CA"
-                error={!!errors.location}
-              />
-            </FormField>
+            <Input
+              label="Location"
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              placeholder="e.g., San Francisco, CA"
+              error={errors.location}
+              required
+            />
 
-            <FormField label="Founded Year" error={errors.founded_year}>
-              <Input
-                type="number"
-                name="founded_year"
-                value={formData.founded_year || ""}
-                onChange={handleInputChange}
-                min="1800"
-                max={new Date().getFullYear()}
-                placeholder="e.g., 2015"
-                error={!!errors.founded_year}
-              />
-            </FormField>
+            <Input
+              label="Founded Year"
+              type="number"
+              name="founded_year"
+              value={formData.founded_year || ""}
+              onChange={handleInputChange}
+              min="1800"
+              max={new Date().getFullYear()}
+              placeholder="e.g., 2015"
+              error={errors.founded_year ? String(errors.founded_year) : undefined}
+            />
           </div>
 
-          <FormField label="Website" error={errors.website}>
-            <Input
-              type="url"
-              name="website"
-              value={formData.website}
-              onChange={handleInputChange}
-              placeholder="https://yourcompany.com"
-              error={!!errors.website}
-            />
-          </FormField>
+          <Input
+            label="Website"
+            type="url"
+            name="website"
+            value={formData.website}
+            onChange={handleInputChange}
+            placeholder="https://yourcompany.com"
+            error={errors.website}
+          />
         </div>
 
         {/* Culture & Values */}
@@ -385,24 +377,22 @@ export default function CompanyProfileUpdateModal({
             Culture & Values
           </h3>
 
-          <FormField
+          <CheckboxGroup
             label="Culture Values"
-            description="Select up to 5 values that represent your company culture"
-          >
-            <CheckboxGroup
-              options={cultureValueOptions}
-              selectedValues={formData.culture_values || []}
-              onChange={(values) => handleArrayChange("culture_values", values)}
-              maxSelections={5}
-              columns={2}
-            />
-          </FormField>
+            helperText="Select up to 5 values that represent your company culture"
+            options={cultureValueOptions}
+            selectedValues={formData.culture_values || []}
+            onChange={(values) => handleArrayChange("culture_values", values)}
+            maxSelections={5}
+            columns={2}
+          />
 
-          <FormField
-            label="Benefits Offered"
-            description="Select all benefits that your company offers"
-          >
-            <div className="max-h-40 overflow-y-auto">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Benefits Offered
+            </label>
+            <p className="text-sm text-slate-500 mb-2">Select all benefits that your company offers</p>
+            <div className="max-h-40 overflow-y-auto border border-slate-200 rounded-lg p-2">
               <CheckboxGroup
                 options={benefitOptions}
                 selectedValues={formData.benefits || []}
@@ -410,7 +400,7 @@ export default function CompanyProfileUpdateModal({
                 columns={2}
               />
             </div>
-          </FormField>
+          </div>
         </div>
 
         {/* Social Media Links */}
@@ -420,45 +410,41 @@ export default function CompanyProfileUpdateModal({
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField label="LinkedIn URL">
-              <Input
-                type="url"
-                name="social_links.linkedin"
-                value={formData.social_links?.linkedin || ""}
-                onChange={handleInputChange}
-                placeholder="https://linkedin.com/company/yourcompany"
-              />
-            </FormField>
+            <Input
+              label="LinkedIn URL"
+              type="url"
+              name="social_links.linkedin"
+              value={formData.social_links?.linkedin || ""}
+              onChange={handleInputChange}
+              placeholder="https://linkedin.com/company/yourcompany"
+            />
 
-            <FormField label="Twitter URL">
-              <Input
-                type="url"
-                name="social_links.twitter"
-                value={formData.social_links?.twitter || ""}
-                onChange={handleInputChange}
-                placeholder="https://twitter.com/yourcompany"
-              />
-            </FormField>
+            <Input
+              label="Twitter URL"
+              type="url"
+              name="social_links.twitter"
+              value={formData.social_links?.twitter || ""}
+              onChange={handleInputChange}
+              placeholder="https://twitter.com/yourcompany"
+            />
 
-            <FormField label="Facebook URL">
-              <Input
-                type="url"
-                name="social_links.facebook"
-                value={formData.social_links?.facebook || ""}
-                onChange={handleInputChange}
-                placeholder="https://facebook.com/yourcompany"
-              />
-            </FormField>
+            <Input
+              label="Facebook URL"
+              type="url"
+              name="social_links.facebook"
+              value={formData.social_links?.facebook || ""}
+              onChange={handleInputChange}
+              placeholder="https://facebook.com/yourcompany"
+            />
 
-            <FormField label="Additional Website">
-              <Input
-                type="url"
-                name="social_links.website"
-                value={formData.social_links?.website || ""}
-                onChange={handleInputChange}
-                placeholder="https://additional-site.com"
-              />
-            </FormField>
+            <Input
+              label="Additional Website"
+              type="url"
+              name="social_links.website"
+              value={formData.social_links?.website || ""}
+              onChange={handleInputChange}
+              placeholder="https://additional-site.com"
+            />
           </div>
         </div>
       </div>

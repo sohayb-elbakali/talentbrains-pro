@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useEffect } from "react";
 import {
   Navigate,
   Route,
@@ -9,38 +9,42 @@ import {
 import { Toaster } from "sonner";
 import { notify } from "./utils/notify";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import CompanyDashboard from "./components/company/CompanyDashboard";
-import CompanyProfileCompletion from "./components/company/CompanyProfileCompletion";
-import AdminDashboard from "./components/dashboard/AdminDashboard";
-import TalentDashboard from "./components/dashboard/TalentDashboard";
-
 import ErrorBoundary from "./components/error/ErrorBoundary";
 import NetworkErrorBoundary from "./components/error/NetworkErrorBoundary";
 import OfflineIndicator from "./components/notifications/OfflineIndicator";
 import Layout from "./components/layout/Layout";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
-import TalentProfileCompletion from "./components/talent/TalentProfileCompletion";
 import { useAuth } from "./hooks/useAuth";
-import AdminProfilePage from "./pages/admin/AdminProfilePage";
-import AIMatchingPage from "./pages/shared/AIMatchingPage";
-import ApplicationDetailPage from "./pages/company/ApplicationDetailPage";
-import CompanyApplicantsPage from "./pages/company/CompanyApplicantsPage";
-import CompanyJobsPage from "./pages/company/CompanyJobsPage";
-import CompanyMatchesPage from "./pages/company/CompanyMatchesPage";
-import CreateJobPage from "./pages/company/CreateJobPage";
-import CompanyJobDetailPage from "./pages/company/JobDetailPage";
-import EditJobPage from "./pages/company/EditJobPage";
-import CompanyProfilePage from "./pages/company/CompanyProfilePage";
-import JobDetailPage from "./pages/shared/JobDetailPage";
-import JobsPage from "./pages/shared/JobsPage";
-import LandingPage from "./pages/public/LandingPage";
-import SettingsPage from "./pages/shared/SettingsPage";
-import TalentApplicationsPage from "./pages/talent/TalentApplicationsPage";
-import TalentProfilePage from "./pages/talent/TalentProfilePage";
-import TalentsPage from "./pages/talent/TalentsPage";
-import TalentPublicProfilePage from "./pages/public/TalentPublicProfilePage";
-import { MatchingDashboard } from "./pages/shared/MatchingDashboard";
-import { JobMatchingResultsPage } from "./pages/company/JobMatchingResultsPage";
+
+// Lazy loaded components
+import {
+  LandingPage,
+  TalentPublicProfilePage,
+  CompanyDashboard,
+  CompanyJobsPage,
+  CreateJobPage,
+  EditJobPage,
+  CompanyJobDetailPage,
+  CompanyApplicantsPage,
+  ApplicationDetailPage,
+  CompanyMatchesPage,
+  CompanyProfilePage,
+  JobMatchingResultsPage,
+  TalentDashboard,
+  TalentApplicationsPage,
+  TalentProfilePage,
+  TalentsPage,
+  AdminDashboard,
+  AdminProfilePage,
+  JobsPage,
+  JobDetailPage,
+  SettingsPage,
+  AIMatchingPage,
+  MatchingDashboard,
+  CompanyProfileCompletion,
+  TalentProfileCompletion,
+} from "./lib/lazyComponents";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,26 +67,7 @@ if (typeof window !== 'undefined') {
 }
 
 function AppContent() {
-  const {
-    isAuthenticated,
-    profile,
-    loading,
-    checkProfileCompletion,
-    profileCompletionStatus,
-  } = useAuth();
-  const [completionChecked, setCompletionChecked] = useState(false);
-
-  // Check profile completion status when user is authenticated
-  const checkCompletion = useCallback(async () => {
-    if (isAuthenticated && profile && !completionChecked) {
-      await checkProfileCompletion(true); // Force refresh to get latest status
-      setCompletionChecked(true);
-    }
-  }, [isAuthenticated, profile, checkProfileCompletion, completionChecked]);
-
-  useEffect(() => {
-    checkCompletion();
-  }, [checkCompletion]);
+  const { isAuthenticated, profile, loading } = useAuth();
 
   // Show loading spinner while auth is loading
   if (loading) {
@@ -92,16 +77,8 @@ function AppContent() {
   const getDashboardRedirect = () => {
     if (!isAuthenticated) return <Navigate to="/" replace />;
 
-    // Check if profile completion is needed
-    if (profile && profileCompletionStatus.needsCompletion) {
-      if (profileCompletionStatus.type === "company") {
-        return <Navigate to="/company-profile-completion" replace />;
-      } else if (profileCompletionStatus.type === "talent") {
-        return <Navigate to="/talent-profile-completion" replace />;
-      }
-      // Admin users don't have a separate completion form, just redirect to dashboard
-    }
-
+    // Simply redirect to role-based dashboard
+    // Profile completion pages are accessed directly via routes when needed
     let dashboardUrl = "/company"; // default
     if (profile?.role === "talent") {
       dashboardUrl = "/talent";
@@ -116,200 +93,202 @@ function AppContent() {
 
   return (
     <Layout>
-      <Routes>
-        {/* Always show landing page at root */}
-        <Route path="/" element={<LandingPage />} />
+      <Suspense fallback={<LoadingSpinner fullScreen text="Loading..." />}>
+        <Routes>
+          {/* Always show landing page at root */}
+          <Route path="/" element={<LandingPage />} />
 
-        {/* Dashboard redirect route */}
-        <Route path="/dashboard" element={getDashboardRedirect()} />
+          {/* Dashboard redirect route */}
+          <Route path="/dashboard" element={getDashboardRedirect()} />
 
-        {/* Public Route */}
-        <Route path="/landing" element={<LandingPage />} />
+          {/* Public Route */}
+          <Route path="/landing" element={<LandingPage />} />
 
-        {/* Profile Completion Routes */}
-        <Route
-          path="/profile-completion"
-          element={
-            profile?.role === "company" ? (
-              <Navigate to="/company-profile-completion" replace />
-            ) : profile?.role === "talent" ? (
-              <Navigate to="/talent-profile-completion" replace />
-            ) : (
-              <Navigate to="/dashboard" replace />
-            )
-          }
-        />
-        <Route
-          path="/company-profile-completion"
-          element={<CompanyProfileCompletion />}
-        />
-        <Route
-          path="/talent-profile-completion"
-          element={<TalentProfileCompletion />}
-        />
-
-        {/* Profile Pages */}
-        <Route
-          path="/company-profile"
-          element={
-            <ProtectedRoute allowedRoles={["company"]}>
-              <CompanyProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/talent-profile"
-          element={
-            <ProtectedRoute allowedRoles={["talent"]}>
-              <TalentProfilePage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Protected Routes */}
-        <Route
-          path="/talent"
-          element={
-            <ProtectedRoute allowedRoles={["talent"]}>
-              <TalentDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/talent/applications"
-          element={
-            <ProtectedRoute allowedRoles={["talent"]}>
-              <TalentApplicationsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/talent/jobs"
-          element={
-            <ProtectedRoute allowedRoles={["talent"]}>
-              <JobsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/company/*"
-          element={
-            <ProtectedRoute allowedRoles={["company"]}>
-              <Routes>
-                <Route index element={<CompanyDashboard />} />
-                <Route path="jobs/create" element={<CreateJobPage />} />
-                <Route path="jobs" element={<CompanyJobsPage />} />
-                <Route path="applicants" element={<CompanyApplicantsPage />} />
-                <Route
-                  path="applicants/:applicationId"
-                  element={<ApplicationDetailPage />}
-                />
-                <Route path="matches" element={<CompanyMatchesPage />} />
-                <Route path="jobs/:jobId" element={<CompanyJobDetailPage />} />
-                <Route path="jobs/:jobId/edit" element={<EditJobPage />} />
-                <Route path="jobs/:jobId/matching" element={<JobMatchingResultsPage />} />
-              </Routes>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/jobs"
-          element={
-            <ProtectedRoute>
-              <JobsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/jobs/:jobId"
-          element={
-            <ProtectedRoute>
-              <JobDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/talents"
-          element={
-            <ProtectedRoute allowedRoles={["company"]}>
-              <TalentsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/talents/:profileId"
-          element={
-            <ProtectedRoute allowedRoles={["company"]}>
-              <TalentPublicProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/ai-matching"
-          element={
-            <ProtectedRoute>
-              <AIMatchingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/matching"
-          element={
-            <ProtectedRoute>
-              <MatchingDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              {profile?.role === "talent" ? (
-                <TalentProfilePage />
-              ) : profile?.role === "admin" ? (
-                <AdminProfilePage />
+          {/* Profile Completion Routes */}
+          <Route
+            path="/profile-completion"
+            element={
+              profile?.role === "company" ? (
+                <Navigate to="/company-profile-completion" replace />
+              ) : profile?.role === "talent" ? (
+                <Navigate to="/talent-profile-completion" replace />
               ) : (
-                <CompanyProfilePage />
-              )}
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          }
-        />
-        {/* Legacy dashboard route - redirect to new dashboard route */}
-        <Route
-          path="/dashboard-legacy"
-          element={
-            <Navigate
-              to={
-                profile?.role === "admin"
-                  ? "/admin"
-                  : profile?.role === "company"
-                    ? "/company"
-                    : "/talent"
-              }
-              replace
-            />
-          }
-        />
+                <Navigate to="/dashboard" replace />
+              )
+            }
+          />
+          <Route
+            path="/company-profile-completion"
+            element={<CompanyProfileCompletion />}
+          />
+          <Route
+            path="/talent-profile-completion"
+            element={<TalentProfileCompletion />}
+          />
 
-        {/* Catch-all redirects to the landing page */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Profile Pages */}
+          <Route
+            path="/company-profile"
+            element={
+              <ProtectedRoute allowedRoles={["company"]}>
+                <CompanyProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/talent-profile"
+            element={
+              <ProtectedRoute allowedRoles={["talent"]}>
+                <TalentProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected Routes */}
+          <Route
+            path="/talent"
+            element={
+              <ProtectedRoute allowedRoles={["talent"]}>
+                <TalentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/talent/applications"
+            element={
+              <ProtectedRoute allowedRoles={["talent"]}>
+                <TalentApplicationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/talent/jobs"
+            element={
+              <ProtectedRoute allowedRoles={["talent"]}>
+                <JobsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/*"
+            element={
+              <ProtectedRoute allowedRoles={["company"]}>
+                <Routes>
+                  <Route index element={<CompanyDashboard />} />
+                  <Route path="jobs/create" element={<CreateJobPage />} />
+                  <Route path="jobs" element={<CompanyJobsPage />} />
+                  <Route path="applicants" element={<CompanyApplicantsPage />} />
+                  <Route
+                    path="applicants/:applicationId"
+                    element={<ApplicationDetailPage />}
+                  />
+                  <Route path="matches" element={<CompanyMatchesPage />} />
+                  <Route path="jobs/:jobId" element={<CompanyJobDetailPage />} />
+                  <Route path="jobs/:jobId/edit" element={<EditJobPage />} />
+                  <Route path="jobs/:jobId/matching" element={<JobMatchingResultsPage />} />
+                </Routes>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/jobs"
+            element={
+              <ProtectedRoute>
+                <JobsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/jobs/:jobId"
+            element={
+              <ProtectedRoute>
+                <JobDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/talents"
+            element={
+              <ProtectedRoute allowedRoles={["company"]}>
+                <TalentsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/talents/:profileId"
+            element={
+              <ProtectedRoute allowedRoles={["company"]}>
+                <TalentPublicProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ai-matching"
+            element={
+              <ProtectedRoute>
+                <AIMatchingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/matching"
+            element={
+              <ProtectedRoute>
+                <MatchingDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                {profile?.role === "talent" ? (
+                  <TalentProfilePage />
+                ) : profile?.role === "admin" ? (
+                  <AdminProfilePage />
+                ) : (
+                  <CompanyProfilePage />
+                )}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Legacy dashboard route - redirect to new dashboard route */}
+          <Route
+            path="/dashboard-legacy"
+            element={
+              <Navigate
+                to={
+                  profile?.role === "admin"
+                    ? "/admin"
+                    : profile?.role === "company"
+                      ? "/company"
+                      : "/talent"
+                }
+                replace
+              />
+            }
+          />
+
+          {/* Catch-all redirects to the landing page */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </Layout>
   );
 }

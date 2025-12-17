@@ -7,7 +7,6 @@ import {
   CheckCircle,
   CurrencyDollar,
   FileText,
-  Link as LinkIcon,
   MapPin,
   Upload,
   X,
@@ -181,7 +180,7 @@ const JobDetailPage: React.FC = () => {
           const fileExt = resumeFile.name.split(".").pop();
           const fileName = `${user.id}/${job.id}/${Date.now()}.${fileExt}`;
 
-          const { default: supabase } = await import("../../lib/supabase/index");
+          const { supabase } = await import("../../lib/supabase/index");
 
           const { error: uploadError } = await supabase.storage
             .from("resumes")
@@ -492,18 +491,18 @@ const JobDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Apply Modal */}
+      {/* Apply Modal - Simplified */}
       {showApplyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative max-h-[90vh] overflow-y-auto border border-slate-200"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative border border-slate-200"
           >
-            <div className="sticky top-0 bg-primary text-white p-6 rounded-t-2xl z-10">
+            {/* Header - Compact */}
+            <div className="border-b border-slate-100 px-4 py-3">
               <button
-                className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-all"
+                className="absolute top-3 right-3 p-1.5 hover:bg-slate-100 rounded-full transition-all text-slate-400"
                 onClick={() => {
                   setShowApplyModal(false);
                   setCoverLetter("");
@@ -512,156 +511,91 @@ const JobDetailPage: React.FC = () => {
                 }}
                 aria-label="Close"
               >
-                <X size={20} weight="regular" />
+                <X size={18} weight="regular" />
               </button>
-              <div className="flex items-center gap-3 pr-12">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <FileText size={24} weight="regular" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold">Apply for {job.title}</h2>
-                  <p className="text-blue-100 mt-1">
-                    Complete your application details below
-                  </p>
-                </div>
-              </div>
+              <h2 className="text-base font-semibold text-slate-900 pr-8">{job.title}</h2>
+              <p className="text-slate-500 text-xs">{job.company_name}</p>
             </div>
 
-            <form onSubmit={handleApply} className="p-6 space-y-6">
-              {/* Cover Letter */}
+            <form onSubmit={handleApply} className="p-4 space-y-3">
+              {/* Applying As - Compact */}
+              {talent && (
+                <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+                  <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold text-sm">
+                    {profile?.full_name?.charAt(0) || "U"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900 truncate">
+                      {profile?.full_name || profile?.email}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Cover Letter - Smaller */}
               <div>
-                <label className="block text-slate-900 font-bold mb-3 flex items-center text-base">
-                  <FileText size={20} weight="regular" className="mr-2 text-primary" />
-                  Cover Letter
-                  <span className="text-red-500 ml-1">*</span>
+                <label className="block text-slate-700 font-medium mb-1 text-xs">
+                  Cover Letter <span className="text-red-500">*</span>
                 </label>
                 <textarea
-                  className="w-full border-2 border-slate-300 rounded-xl p-4 min-h-[150px] focus:border-primary focus:ring-2 focus:ring-blue-200 transition-all resize-none"
+                  className="w-full border border-slate-300 rounded-lg p-2.5 min-h-[80px] focus:border-primary focus:ring-1 focus:ring-blue-100 transition-all resize-none text-sm"
                   value={coverLetter}
                   onChange={(e) => setCoverLetter(e.target.value)}
                   required
-                  placeholder="Tell us why you're a great fit for this position..."
+                  placeholder="Why are you a great fit?"
                 />
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-sm text-slate-500">
-                    {coverLetter.length} characters
-                  </p>
-                  {coverLetter.length > 0 && (
-                    <span className="text-xs text-green-600 font-medium">✓ Looking good!</span>
-                  )}
-                </div>
               </div>
 
-              {/* Resume Section */}
-              <div className="bg-slate-50 rounded-xl p-5 border-2 border-slate-200">
-                <label className="block text-slate-900 font-bold mb-3 flex items-center text-base">
-                  <Upload size={20} weight="regular" className="mr-2 text-primary" />
-                  Resume / CV
-                  <span className="text-red-500 ml-1">*</span>
+              {/* Resume - Compact */}
+              <div>
+                <label className="block text-slate-700 font-medium mb-1 text-xs">
+                  Resume <span className="text-red-500">*</span>
                 </label>
 
-                {/* Resume Upload */}
-                <div className="mb-4">
-                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-primary hover:bg-blue-50/50 transition-all cursor-pointer">
-                    <input
-                      type="file"
-                      id="resume-upload"
-                      className="hidden"
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleFileChange}
-                    />
-                    <label
-                      htmlFor="resume-upload"
-                      className="cursor-pointer flex flex-col items-center"
-                    >
-                      {resumeFile ? (
-                        <motion.div
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="flex items-center gap-3 bg-white rounded-lg px-4 py-3 shadow-sm border border-primary"
-                        >
-                          <FileText size={32} weight="regular" className="text-primary" />
-                          <div className="text-left">
-                            <p className="font-semibold text-primary">
-                              {resumeFile.name}
-                            </p>
-                            <p className="text-sm text-slate-500">
-                              {(resumeFile.size / 1024).toFixed(2)} KB
-                            </p>
-                          </div>
-                          <CheckCircle size={20} weight="regular" className="text-green-500" />
-                        </motion.div>
-                      ) : (
-                        <>
-                          <Upload size={48} weight="regular" className="text-slate-400 mb-3" />
-                          <p className="text-slate-900 font-semibold mb-1">
-                            Click to upload your resume
-                          </p>
-                          <p className="text-sm text-slate-500">
-                            PDF, DOC, or DOCX (max 5MB)
-                          </p>
-                        </>
-                      )}
-                    </label>
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-300"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-3 bg-slate-50 text-slate-500 font-medium">OR</span>
-                  </div>
-                </div>
-
-                {/* Resume URL Alternative */}
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-2 flex items-center text-sm">
-                    <LinkIcon size={16} weight="regular" className="mr-2 text-primary" />
-                    Provide Resume URL
+                {/* File Upload - Smaller */}
+                <div className="border border-dashed border-slate-300 rounded-lg p-3 text-center hover:border-primary hover:bg-slate-50 transition-all cursor-pointer">
+                  <input
+                    type="file"
+                    id="resume-upload"
+                    className="hidden"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileChange}
+                  />
+                  <label htmlFor="resume-upload" className="cursor-pointer">
+                    {resumeFile ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <FileText size={18} className="text-primary" />
+                        <span className="text-sm font-medium text-slate-900 truncate">{resumeFile.name}</span>
+                        <CheckCircle size={16} className="text-green-500" />
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2">
+                        <Upload size={18} className="text-slate-400" />
+                        <span className="text-sm text-slate-500">Upload file</span>
+                      </div>
+                    )}
                   </label>
+                </div>
+
+                {/* OR + URL - Inline compact */}
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs text-slate-400">or</span>
                   <input
                     type="url"
-                    className="w-full border-2 border-slate-300 rounded-xl p-3 focus:border-primary focus:ring-2 focus:ring-blue-200 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="flex-1 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:border-primary focus:ring-1 focus:ring-blue-100 transition-all text-xs disabled:bg-slate-50"
                     value={resumeUrl}
                     onChange={(e) => {
                       setResumeUrl(e.target.value);
                       if (e.target.value) setResumeFile(null);
                     }}
-                    placeholder="https://drive.google.com/your-resume"
+                    placeholder="Paste resume link"
                     disabled={!!resumeFile}
                   />
-                  <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                    <span>💡</span>
-                    Link to your resume on Google Drive, Dropbox, or personal website
-                  </p>
                 </div>
               </div>
 
-              {/* Profile Info */}
-              {talent && (
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                      {profile?.full_name?.charAt(0) || "U"}
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-600 font-medium">Applying as:</p>
-                      <p className="font-bold text-slate-900">
-                        {profile?.full_name || profile?.email}
-                      </p>
-                      {talent.title && (
-                        <p className="text-sm text-primary font-medium">{talent.title}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <div className="flex gap-3 pt-4 border-t-2 border-slate-100">
+              {/* Buttons - Compact */}
+              <div className="flex gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => {
@@ -670,26 +604,24 @@ const JobDetailPage: React.FC = () => {
                     setResumeUrl("");
                     setResumeFile(null);
                   }}
-                  className="flex-1 py-3 px-6 border-2 border-slate-300 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all"
+                  className="flex-1 py-2 border border-slate-300 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-all"
                 >
                   Cancel
                 </button>
-                <motion.button
+                <button
                   type="submit"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex-1 py-3 px-6 bg-primary text-white rounded-xl font-bold hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                  className="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-1.5"
                   disabled={submitting || uploadingResume || !coverLetter.trim() || (!resumeUrl.trim() && !resumeFile)}
                 >
                   {submitting || uploadingResume ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      {uploadingResume ? "Uploading..." : "Submitting..."}
+                      <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></div>
+                      <span>{uploadingResume ? "Uploading" : "Sending"}</span>
                     </>
                   ) : (
-                    "Submit Application"
+                    "Apply"
                   )}
-                </motion.button>
+                </button>
               </div>
             </form>
           </motion.div>
