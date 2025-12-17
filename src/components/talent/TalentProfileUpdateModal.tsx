@@ -10,12 +10,10 @@ import {
   TalentUpdateData,
 } from "../../types/database";
 import { validateTalentProfile } from "../../utils/profileValidation";
-import FormField, {
-  CheckboxGroup,
-  Input,
-  Select,
-  Textarea,
-} from "../profile/FormField";
+import Input from "../ui/Input";
+import Select from "../ui/Select";
+import Textarea from "../ui/Textarea";
+import CheckboxGroup from "../ui/CheckboxGroup";
 import ProfileUpdateModal from "../profile/ProfileUpdateModal";
 import SkillsSelector from "../skills/SkillsSelector";
 
@@ -273,7 +271,7 @@ export default function TalentProfileUpdateModal({
         queryClient.invalidateQueries({ queryKey: ['talent-analytics'] }),
         queryClient.invalidateQueries({ queryKey: ['welcome-dashboard'] }),
       ]);
-      
+
       // Force refetch of skills
       await queryClient.refetchQueries({ queryKey: ['talent-skills', result.data?.id] });
 
@@ -333,88 +331,80 @@ export default function TalentProfileUpdateModal({
             Basic Information
           </h3>
 
-          <FormField label="Job Title" required error={errors.title}>
+          <Input
+            label="Job Title"
+            name="title"
+            value={formData.title}
+            onChange={handleInputChange}
+            placeholder="e.g., Senior Software Engineer"
+            error={errors.title}
+            required
+          />
+
+          <Textarea
+            label="Professional Bio"
+            name="bio"
+            value={formData.bio}
+            onChange={handleInputChange}
+            rows={4}
+            placeholder="Tell us about your professional background and expertise"
+            error={errors.bio}
+            required
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
-              name="title"
-              value={formData.title}
+              label="Location"
+              name="location"
+              value={formData.location}
               onChange={handleInputChange}
-              placeholder="e.g., Senior Software Engineer"
-              error={!!errors.title}
-            />
-          </FormField>
-
-          <FormField label="Professional Bio" required error={errors.bio}>
-            <Textarea
-              name="bio"
-              value={formData.bio}
-              onChange={handleInputChange}
-              rows={4}
-              placeholder="Tell us about your professional background and expertise"
-              error={!!errors.bio}
-            />
-          </FormField>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField label="Location" required error={errors.location}>
-              <Input
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                placeholder="e.g., San Francisco, CA"
-                error={!!errors.location}
-              />
-            </FormField>
-
-            <FormField
-              label="Years of Experience"
+              placeholder="e.g., San Francisco, CA"
+              error={errors.location}
               required
-              error={errors.years_of_experience}
-            >
-              <Input
-                type="number"
-                name="years_of_experience"
-                value={formData.years_of_experience || ""}
-                onChange={handleInputChange}
-                min="0"
-                max="50"
-                placeholder="e.g., 5"
-                error={!!errors.years_of_experience}
-              />
-            </FormField>
+            />
+
+            <Input
+              label="Years of Experience"
+              type="number"
+              name="years_of_experience"
+              value={formData.years_of_experience || ""}
+              onChange={handleInputChange}
+              min={0}
+              max={50}
+              placeholder="e.g., 5"
+              error={errors.years_of_experience ? String(errors.years_of_experience) : undefined}
+              required
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField label="Experience Level">
-              <Select
-                name="experience_level"
-                value={formData.experience_level}
-                onChange={handleInputChange}
-                options={experienceLevels}
-              />
-            </FormField>
+            <Select
+              label="Experience Level"
+              name="experience_level"
+              value={formData.experience_level}
+              onChange={handleInputChange}
+              options={experienceLevels}
+            />
 
-            <FormField label="Availability Status">
-              <Select
-                name="availability_status"
-                value={formData.availability_status}
-                onChange={handleInputChange}
-                options={availabilityOptions}
-              />
-            </FormField>
+            <Select
+              label="Availability Status"
+              name="availability_status"
+              value={formData.availability_status}
+              onChange={handleInputChange}
+              options={availabilityOptions}
+            />
           </div>
 
-          <FormField label="Remote Work Preference">
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                name="remote_preference"
-                checked={formData.remote_preference}
-                onChange={handleInputChange}
-                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-              />
-              <span className="text-sm text-gray-700">Open to remote work</span>
-            </label>
-          </FormField>
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="checkbox"
+              name="remote_preference"
+              checked={formData.remote_preference}
+              onChange={handleInputChange}
+              className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+            />
+            <span className="text-sm text-gray-700">Open to remote work</span>
+          </label>
         </div>
 
         {/* Compensation */}
@@ -423,10 +413,13 @@ export default function TalentProfileUpdateModal({
             Compensation Expectations
           </h3>
 
-          <FormField
-            label="Hourly Rate Range (USD)"
-            description="Optional - for contract/freelance work"
-          >
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Hourly Rate Range (USD)
+            </label>
+            <p className="text-sm text-slate-500 mb-2">
+              Optional - for contract/freelance work
+            </p>
             <div className="grid grid-cols-2 gap-4">
               <Input
                 type="number"
@@ -443,12 +436,15 @@ export default function TalentProfileUpdateModal({
                 placeholder="Max (e.g., 100)"
               />
             </div>
-          </FormField>
+          </div>
 
-          <FormField
-            label="Annual Salary Expectation (USD)"
-            description="Optional - for full-time positions"
-          >
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Annual Salary Expectation (USD)
+            </label>
+            <p className="text-sm text-slate-500 mb-2">
+              Optional - for full-time positions
+            </p>
             <div className="grid grid-cols-2 gap-4">
               <Input
                 type="number"
@@ -465,7 +461,7 @@ export default function TalentProfileUpdateModal({
                 placeholder="Max (e.g., 120000)"
               />
             </div>
-          </FormField>
+          </div>
         </div>
 
         {/* Professional Links */}
@@ -475,49 +471,45 @@ export default function TalentProfileUpdateModal({
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField label="Portfolio URL" error={errors.portfolio_url}>
-              <Input
-                type="url"
-                name="portfolio_url"
-                value={formData.portfolio_url}
-                onChange={handleInputChange}
-                placeholder="https://yourportfolio.com"
-                error={!!errors.portfolio_url}
-              />
-            </FormField>
+            <Input
+              label="Portfolio URL"
+              type="url"
+              name="portfolio_url"
+              value={formData.portfolio_url}
+              onChange={handleInputChange}
+              placeholder="https://yourportfolio.com"
+              error={errors.portfolio_url}
+            />
 
-            <FormField label="Resume URL" error={errors.resume_url}>
-              <Input
-                type="url"
-                name="resume_url"
-                value={formData.resume_url}
-                onChange={handleInputChange}
-                placeholder="https://link-to-your-resume.com"
-                error={!!errors.resume_url}
-              />
-            </FormField>
+            <Input
+              label="Resume URL"
+              type="url"
+              name="resume_url"
+              value={formData.resume_url}
+              onChange={handleInputChange}
+              placeholder="https://link-to-your-resume.com"
+              error={errors.resume_url}
+            />
 
-            <FormField label="GitHub URL" error={errors.github_url}>
-              <Input
-                type="url"
-                name="github_url"
-                value={formData.github_url}
-                onChange={handleInputChange}
-                placeholder="https://github.com/yourusername"
-                error={!!errors.github_url}
-              />
-            </FormField>
+            <Input
+              label="GitHub URL"
+              type="url"
+              name="github_url"
+              value={formData.github_url}
+              onChange={handleInputChange}
+              placeholder="https://github.com/yourusername"
+              error={errors.github_url}
+            />
 
-            <FormField label="LinkedIn URL" error={errors.linkedin_url}>
-              <Input
-                type="url"
-                name="linkedin_url"
-                value={formData.linkedin_url}
-                onChange={handleInputChange}
-                placeholder="https://linkedin.com/in/yourprofile"
-                error={!!errors.linkedin_url}
-              />
-            </FormField>
+            <Input
+              label="LinkedIn URL"
+              type="url"
+              name="linkedin_url"
+              value={formData.linkedin_url}
+              onChange={handleInputChange}
+              placeholder="https://linkedin.com/in/yourprofile"
+              error={errors.linkedin_url}
+            />
           </div>
         </div>
 
@@ -527,34 +519,31 @@ export default function TalentProfileUpdateModal({
             Additional Information
           </h3>
 
-          <FormField label="Languages Spoken">
-            <CheckboxGroup
-              options={languageOptions}
-              selectedValues={formData.languages || []}
-              onChange={handleLanguageChange}
-              columns={3}
-            />
-          </FormField>
+          <CheckboxGroup
+            label="Languages Spoken"
+            options={languageOptions}
+            selectedValues={formData.languages || []}
+            onChange={handleLanguageChange}
+            columns={3}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField label="Timezone">
-              <Select
-                name="timezone"
-                value={formData.timezone}
-                onChange={handleInputChange}
-                options={timezoneOptions}
-              />
-            </FormField>
+            <Select
+              label="Timezone"
+              name="timezone"
+              value={formData.timezone}
+              onChange={handleInputChange}
+              options={timezoneOptions}
+            />
 
-            <FormField label="Work Authorization">
-              <Select
-                name="work_authorization"
-                value={formData.work_authorization}
-                onChange={handleInputChange}
-                options={workAuthOptions}
-                placeholder="Select work authorization"
-              />
-            </FormField>
+            <Select
+              label="Work Authorization"
+              name="work_authorization"
+              value={formData.work_authorization}
+              onChange={handleInputChange}
+              options={workAuthOptions}
+              placeholder="Select work authorization"
+            />
           </div>
         </div>
 

@@ -4,6 +4,11 @@ import { notify } from "../../utils/notify";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { db } from '../../lib/supabase/index';
+import Input from '../ui/Input';
+import Select from '../ui/Select';
+import Textarea from '../ui/Textarea';
+import Button from '../ui/Button';
+import CheckboxGroup from '../ui/CheckboxGroup';
 
 interface FormData {
   name: string;
@@ -49,60 +54,27 @@ export default function CompanyProfileCompletion() {
 
   // Options
   const industryOptions = [
-    "Technology",
-    "Healthcare",
-    "Finance",
-    "Education",
-    "Retail",
-    "Manufacturing",
-    "Consulting",
-    "Media",
-    "Real Estate",
-    "Transportation",
-    "Energy",
-    "Government",
-    "Non-profit",
-    "Other",
-  ];
+    "Technology", "Healthcare", "Finance", "Education", "Retail",
+    "Manufacturing", "Consulting", "Media", "Real Estate",
+    "Transportation", "Energy", "Government", "Non-profit", "Other",
+  ].map(opt => ({ value: opt, label: opt }));
 
   const companySizeOptions = [
-    "1-10",
-    "11-50",
-    "51-200",
-    "201-500",
-    "501-1000",
-    "1000+",
-  ];
+    "1-10", "11-50", "51-200", "201-500", "501-1000", "1000+",
+  ].map(opt => ({ value: opt, label: `${opt} employees` }));
 
   const cultureValueOptions = [
-    "Innovation",
-    "Collaboration",
-    "Integrity",
-    "Excellence",
-    "Diversity",
-    "Work-life balance",
-    "Growth mindset",
-    "Customer focus",
-    "Transparency",
-    "Sustainability",
-    "Agility",
-    "Respect",
+    "Innovation", "Collaboration", "Integrity", "Excellence",
+    "Diversity", "Work-life balance", "Growth mindset",
+    "Customer focus", "Transparency", "Sustainability",
+    "Agility", "Respect",
   ];
 
   const benefitOptions = [
-    "Health insurance",
-    "Dental insurance",
-    "Vision insurance",
-    "401(k)",
-    "Paid time off",
-    "Remote work",
-    "Flexible hours",
-    "Professional development",
-    "Stock options",
-    "Gym membership",
-    "Free meals",
-    "Commuter benefits",
-    "Parental leave",
+    "Health insurance", "Dental insurance", "Vision insurance",
+    "401(k)", "Paid time off", "Remote work", "Flexible hours",
+    "Professional development", "Stock options", "Gym membership",
+    "Free meals", "Commuter benefits", "Parental leave",
     "Mental health support",
   ];
 
@@ -112,7 +84,7 @@ export default function CompanyProfileCompletion() {
         <div className="bg-white p-8 rounded-xl shadow text-center">
           <h2 className="text-xl font-bold mb-2 text-gray-900">User not found</h2>
           <p className="text-gray-600 mb-4">You must be logged in to complete your company profile.</p>
-          <a href="/" className="text-purple-600 hover:underline">Go to Home</a>
+          <Button onClick={() => navigate('/')}>Go to Home</Button>
         </div>
       </div>
     )
@@ -156,18 +128,15 @@ export default function CompanyProfileCompletion() {
 
     setLoading(true)
     try {
-      // Generate a unique slug by appending a random string
       const baseSlug = formData.name
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9-]/g, "");
 
-      // Add timestamp or random string to ensure uniqueness
       const uniqueSlug = `${baseSlug}-${Date.now().toString(36)}`;
 
       const { data: existingCompany } = await db.getCompany(user.id);
 
-      // Ensure social_links is a proper object (not undefined or null)
       const socialLinks = {
         linkedin: formData.social_links?.linkedin || "",
         twitter: formData.social_links?.twitter || "",
@@ -177,7 +146,7 @@ export default function CompanyProfileCompletion() {
 
       const companyData = {
         name: formData.name,
-        slug: existingCompany ? existingCompany.slug : uniqueSlug, // Keep existing slug if updating
+        slug: existingCompany ? existingCompany.slug : uniqueSlug,
         description: formData.description,
         website: formData.website || null,
         industry: formData.industry,
@@ -203,12 +172,9 @@ export default function CompanyProfileCompletion() {
 
       if (result.error) {
         console.error('Database error:', result.error);
-
-        // Provide specific error messages based on error code
         let errorMessage = 'Failed to save company profile';
 
         if (result.error.code === '23505') {
-          // Unique constraint violation
           errorMessage = 'A company with this name already exists. Please try a different name.';
         } else if (result.error.code === '406' || result.error.status === 406) {
           errorMessage = 'Invalid data format. Please check your inputs.';
@@ -221,9 +187,7 @@ export default function CompanyProfileCompletion() {
         throw new Error(errorMessage);
       }
 
-      // Force refresh of profile completion status
       await checkProfileCompletion(true)
-
       notify.showSuccess("Company profile completed successfully!");
       navigate('/company')
     } catch (error: any) {
@@ -258,42 +222,26 @@ export default function CompanyProfileCompletion() {
     }
   };
 
-  const handleArrayToggle = (
-    arrayName: "culture_values" | "benefits",
-    value: string
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [arrayName]: prev[arrayName].includes(value)
-        ? prev[arrayName].filter((item) => item !== value)
-        : [...prev[arrayName], value],
-    }));
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl"
+        className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl border border-slate-200"
       >
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">
             Complete Your Company Profile
           </h1>
-          <p className="text-gray-600">
+          <p className="text-slate-600">
             Tell us about your company to get started
           </p>
-          <div className="flex justify-center mt-4">
-            <div className="flex space-x-2">
-              {[1, 2].map((step) => (
-                <div
-                  key={step}
-                  className={`w-3 h-3 rounded-full ${step <= currentStep ? "bg-purple-600" : "bg-gray-300"
-                    }`}
-                />
-              ))}
+          <div className="flex justify-center mt-6">
+            <div className="flex items-center space-x-2">
+              <div className={`h-2.5 w-2.5 rounded-full ${currentStep >= 1 ? "bg-primary" : "bg-slate-200"}`} />
+              <div className={`h-1 w-8 rounded-full ${currentStep >= 2 ? "bg-primary" : "bg-slate-200"}`} />
+              <div className={`h-2.5 w-2.5 rounded-full ${currentStep >= 2 ? "bg-primary" : "bg-slate-200"}`} />
             </div>
           </div>
         </div>
@@ -303,149 +251,71 @@ export default function CompanyProfileCompletion() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
+              className="space-y-5"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">
                 Basic Information
               </h2>
 
-              {/* Company Name */}
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Company Name *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.name ? "border-red-500" : "border-gray-300"
-                    }`}
-                  placeholder="Enter your company name"
-                />
-                {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-                )}
-              </div>
+              <Input
+                label="Company Name"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                error={errors.name}
+                placeholder="Enter your company name"
+              />
 
-              {/* Description */}
-              <div>
-                <label
-                  htmlFor="description"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Company Description *
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.description ? "border-red-500" : "border-gray-300"
-                    }`}
-                  placeholder="Describe what your company does"
-                />
-                {errors.description && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.description}
-                  </p>
-                )}
-              </div>
+              <Textarea
+                label="Company Description"
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={4}
+                error={errors.description}
+                placeholder="Describe what your company does"
+              />
 
-              {/* Industry */}
-              <div>
-                <label
-                  htmlFor="industry"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Industry *
-                </label>
-                <select
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <Select
+                  label="Industry"
                   id="industry"
                   name="industry"
                   value={formData.industry}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.industry ? "border-red-500" : "border-gray-300"
-                    }`}
-                >
-                  <option value="">Select an industry</option>
-                  {industryOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-                {errors.industry && (
-                  <p className="text-red-500 text-sm mt-1">{errors.industry}</p>
-                )}
-              </div>
+                  options={industryOptions}
+                  error={errors.industry}
+                  placeholder="Select an industry"
+                />
 
-              {/* Company Size */}
-              <div>
-                <label
-                  htmlFor="company_size"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Company Size *
-                </label>
-                <select
+                <Select
+                  label="Company Size"
                   id="company_size"
                   name="company_size"
                   value={formData.company_size}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.company_size ? "border-red-500" : "border-gray-300"
-                    }`}
-                >
-                  <option value="">Select company size</option>
-                  {companySizeOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option} employees
-                    </option>
-                  ))}
-                </select>
-                {errors.company_size && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.company_size}
-                  </p>
-                )}
-              </div>
-
-              {/* Location */}
-              <div>
-                <label
-                  htmlFor="location"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Location *
-                </label>
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.location ? "border-red-500" : "border-gray-300"
-                    }`}
-                  placeholder="e.g., San Francisco, CA"
+                  options={companySizeOptions}
+                  error={errors.company_size}
+                  placeholder="Select company size"
                 />
-                {errors.location && (
-                  <p className="text-red-500 text-sm mt-1">{errors.location}</p>
-                )}
               </div>
 
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
-                >
-                  Next
-                </button>
+              <Input
+                label="Location"
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                error={errors.location}
+                placeholder="e.g., San Francisco, CA"
+              />
+
+              <div className="flex justify-end pt-4">
+                <Button type="button" onClick={handleNext}>
+                  Next Step
+                </Button>
               </div>
             </motion.div>
           )}
@@ -456,38 +326,23 @@ export default function CompanyProfileCompletion() {
               animate={{ opacity: 1, x: 0 }}
               className="space-y-6"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">
                 Additional Details
               </h2>
 
-              {/* Website */}
-              <div>
-                <label
-                  htmlFor="website"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Website
-                </label>
-                <input
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <Input
+                  label="Website"
                   type="url"
                   id="website"
                   name="website"
                   value={formData.website}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="https://yourcompany.com"
                 />
-              </div>
 
-              {/* Founded Year */}
-              <div>
-                <label
-                  htmlFor="founded_year"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Founded Year
-                </label>
-                <input
+                <Input
+                  label="Founded Year"
                   type="number"
                   id="founded_year"
                   name="founded_year"
@@ -495,103 +350,67 @@ export default function CompanyProfileCompletion() {
                   onChange={handleInputChange}
                   min="1800"
                   max={new Date().getFullYear()}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="e.g., 2015"
                 />
               </div>
 
               {/* Culture Values */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Culture Values (Select up to 5)
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {cultureValueOptions.map((value) => (
-                    <label
-                      key={value}
-                      className="flex items-center space-x-2 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.culture_values.includes(value)}
-                        onChange={() =>
-                          handleArrayToggle("culture_values", value)
-                        }
-                        disabled={
-                          formData.culture_values.length >= 5 &&
-                          !formData.culture_values.includes(value)
-                        }
-                        className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                      />
-                      <span className="text-sm text-gray-700">{value}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+              <CheckboxGroup
+                label="Culture Values (Select up to 5)"
+                options={cultureValueOptions}
+                selectedValues={formData.culture_values || []}
+                onChange={(values) => setFormData(prev => ({ ...prev, culture_values: values }))}
+                maxSelections={5}
+                columns={2}
+              />
 
               {/* Benefits */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Benefits Offered (Select all that apply)
+                <label className="block text-sm font-medium text-slate-700 mb-3">
+                  Benefits Offered
                 </label>
-                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                  {benefitOptions.map((benefit) => (
-                    <label
-                      key={benefit}
-                      className="flex items-center space-x-2 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.benefits.includes(benefit)}
-                        onChange={() => handleArrayToggle("benefits", benefit)}
-                        className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                      />
-                      <span className="text-sm text-gray-700">{benefit}</span>
-                    </label>
-                  ))}
+                <div className="max-h-60 overflow-y-auto pr-2">
+                  <CheckboxGroup
+                    options={benefitOptions}
+                    selectedValues={formData.benefits || []}
+                    onChange={(values) => setFormData(prev => ({ ...prev, benefits: values }))}
+                    columns={2}
+                  />
                 </div>
               </div>
 
               {/* Social Links */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-3">
                   Social Media Links
                 </label>
-                <div className="space-y-3">
-                  <input
+                <div className="space-y-4">
+                  <Input
                     type="url"
                     name="social_links.linkedin"
                     value={formData.social_links.linkedin}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     placeholder="LinkedIn URL"
+                    leftIcon={<span className="text-xs font-bold text-slate-400">IN</span>}
                   />
-                  <input
+                  <Input
                     type="url"
                     name="social_links.twitter"
                     value={formData.social_links.twitter}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     placeholder="Twitter URL"
+                    leftIcon={<span className="text-xs font-bold text-slate-400">TW</span>}
                   />
                 </div>
               </div>
 
-              <div className="flex justify-between">
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="bg-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-400 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-                >
+              <div className="flex justify-between pt-4">
+                <Button variant="secondary" type="button" onClick={handleBack}>
                   Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {loading ? "Saving..." : "Complete Profile"}
-                </button>
+                </Button>
+                <Button type="submit" loading={loading}>
+                  Complete Profile
+                </Button>
               </div>
             </motion.div>
           )}
@@ -600,3 +419,4 @@ export default function CompanyProfileCompletion() {
     </div>
   );
 }
+

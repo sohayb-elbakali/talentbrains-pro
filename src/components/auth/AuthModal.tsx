@@ -5,7 +5,9 @@ import { createPortal } from 'react-dom';
 import { notify } from "../../utils/notify";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Button, Input, cn } from '../ui/travel-connect-signin-1';
+import Button from '../ui/Button';
+import Input from '../ui/Input';
+import { cn } from '../../lib/utils';
 
 interface AuthModalProps {
   isOpen: boolean
@@ -30,7 +32,6 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
   const { signIn, signUp, loading, isAuthenticated, profile } = useAuth()
   const navigate = useNavigate()
 
-  // Update mode when defaultMode changes (when modal opens with different button)
   useEffect(() => {
     if (isOpen) {
       setMode(defaultMode);
@@ -87,7 +88,6 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
       const result = await signIn(formData.email, formData.password)
       if (result && result.success) {
         onClose();
-        // Wait a bit longer for profile to be loaded, then navigate based on actual profile role
         setTimeout(() => {
           if (profile?.role === "company") {
             navigate("/company");
@@ -96,7 +96,6 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
           } else if (profile?.role === "admin") {
             navigate("/admin");
           } else {
-            // If profile is still not loaded, navigate to dashboard and let the app handle routing
             navigate("/dashboard");
           }
         }, 500);
@@ -154,7 +153,6 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
             <X size={20} weight="regular" />
           </button>
 
-          {/* Form */}
           <div className="w-full flex-1 overflow-y-auto">
             <div className="p-5">
               <motion.div
@@ -171,7 +169,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                     : 'Join thousands of professionals and companies'}
                 </p>
 
-                <form onSubmit={handleSubmit} className="space-y-3">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   {mode === 'signup' && (
                     <div className="mb-4 grid grid-cols-2 gap-3">
                       <button
@@ -204,139 +202,72 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
                   )}
 
                   {mode === 'signup' && (
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Full Name <span className="text-primary">*</span>
-                      </label>
-                      <div className="relative">
-                        <Input
-                          value={formData.fullName}
-                          onChange={(e) => handleInputChange('fullName', e.target.value)}
-                          placeholder="John Doe"
-                          className={cn(
-                            "pl-10",
-                            errors.fullName && "border-red-500 focus-visible:ring-red-500"
-                          )}
-                        />
-                        <User size={20} weight="regular" className="absolute left-3 top-2.5 text-slate-400" />
-                      </div>
-                      {errors.fullName && <p className="text-red-600 text-xs mt-1">{errors.fullName}</p>}
-                    </div>
+                    <Input
+                      label="Full Name"
+                      value={formData.fullName}
+                      onChange={(e) => handleInputChange('fullName', e.target.value)}
+                      placeholder="John Doe"
+                      error={errors.fullName}
+                      leftIcon={<User size={20} className="text-slate-400" />}
+                    />
                   )}
 
                   {mode === 'signup' && userType === 'company' && (
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Company Name <span className="text-primary">*</span>
-                      </label>
-                      <div className="relative">
-                        <Input
-                          value={formData.companyName}
-                          onChange={(e) => handleInputChange('companyName', e.target.value)}
-                          placeholder="Acme Inc."
-                          className={cn(
-                            "pl-10",
-                            errors.companyName && "border-red-500 focus-visible:ring-red-500"
-                          )}
-                        />
-                        <Buildings size={20} weight="regular" className="absolute left-3 top-2.5 text-slate-400" />
-                      </div>
-                      {errors.companyName && <p className="text-red-600 text-xs mt-1">{errors.companyName}</p>}
-                    </div>
+                    <Input
+                      label="Company Name"
+                      value={formData.companyName}
+                      onChange={(e) => handleInputChange('companyName', e.target.value)}
+                      placeholder="Acme Inc."
+                      error={errors.companyName}
+                      leftIcon={<Buildings size={20} className="text-slate-400" />}
+                    />
                   )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Email <span className="text-primary">*</span>
-                    </label>
-                    <div className="relative">
-                      <Input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        placeholder="you@example.com"
-                        className={cn(
-                          "pl-10",
-                          errors.email && "border-red-500 focus-visible:ring-red-500"
-                        )}
-                      />
-                      <Envelope size={20} weight="regular" className="absolute left-3 top-2.5 text-slate-400" />
-                    </div>
-                    {errors.email && <p className="text-red-600 text-xs mt-1">{errors.email}</p>}
-                  </div>
+                  <Input
+                    label="Email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="you@example.com"
+                    error={errors.email}
+                    leftIcon={<Envelope size={20} className="text-slate-400" />}
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Password <span className="text-primary">*</span>
-                    </label>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={(e) => handleInputChange('password', e.target.value)}
-                        placeholder="••••••••"
-                        className={cn(
-                          "pl-10 pr-10",
-                          errors.password && "border-red-500 focus-visible:ring-red-500"
-                        )}
-                      />
-                      <Lock size={20} weight="regular" className="absolute left-3 top-2.5 text-slate-400" />
-                      <button
-                        type="button"
-                        className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-700"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeSlash size={20} weight="regular" /> : <Eye size={20} weight="regular" />}
-                      </button>
-                    </div>
-                    {errors.password && <p className="text-red-600 text-xs mt-1">{errors.password}</p>}
-                  </div>
+                  <Input
+                    label="Password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    placeholder="••••••••"
+                    error={errors.password}
+                    leftIcon={<Lock size={20} className="text-slate-400" />}
+                    rightIcon={showPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                    onRightIconClick={() => setShowPassword(!showPassword)}
+                  />
 
                   {mode === 'signup' && (
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Confirm Password <span className="text-primary">*</span>
-                      </label>
-                      <div className="relative">
-                        <Input
-                          type={showConfirmPassword ? "text" : "password"}
-                          value={formData.confirmPassword}
-                          onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                          placeholder="••••••••"
-                          className={cn(
-                            "pl-10 pr-10",
-                            errors.confirmPassword && "border-red-500 focus-visible:ring-red-500"
-                          )}
-                        />
-                        <Lock size={20} weight="regular" className="absolute left-3 top-2.5 text-slate-400" />
-                        <button
-                          type="button"
-                          className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-700"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        >
-                          {showConfirmPassword ? <EyeSlash size={20} weight="regular" /> : <Eye size={20} weight="regular" />}
-                        </button>
-                      </div>
-                      {errors.confirmPassword && <p className="text-red-600 text-xs mt-1">{errors.confirmPassword}</p>}
-                    </div>
+                    <Input
+                      label="Confirm Password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                      placeholder="••••••••"
+                      error={errors.confirmPassword}
+                      leftIcon={<Lock size={20} className="text-slate-400" />}
+                      rightIcon={showConfirmPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                      onRightIconClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    />
                   )}
 
                   <div className="pt-2">
                     <Button
                       type="submit"
-                      disabled={loading || isAuthenticated}
-                      className="w-full py-6 text-base transition-colors"
+                      loading={loading || !!isAuthenticated} // Force boolean
+                      fullWidth
+                      size="lg"
                     >
-                      <span className="flex items-center justify-center">
-                        {loading ? (
-                          <span>Processing...</span>
-                        ) : (
-                          <>
-                            {mode === 'signin' ? 'Sign In' : 'Create Account'}
-                            <ArrowRight size={20} weight="regular" className="ml-2" />
-                          </>
-                        )}
-                      </span>
+                      {mode === 'signin' ? 'Sign In' : 'Create Account'}
+                      <ArrowRight size={20} className="ml-2" />
                     </Button>
                   </div>
 
@@ -369,3 +300,4 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
     document.body
   )
 }
+

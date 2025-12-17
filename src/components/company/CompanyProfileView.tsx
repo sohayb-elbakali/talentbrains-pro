@@ -60,7 +60,7 @@ export default function CompanyProfileView({
           {onEdit && (
             <button
               onClick={onEdit}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+              className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Complete Profile
             </button>
@@ -77,7 +77,7 @@ export default function CompanyProfileView({
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           {/* Logo Display */}
           <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-blue-400 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-400 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
             <div className="relative">
               <div className="w-32 h-32 rounded-2xl border-4 border-white shadow-2xl overflow-hidden bg-white">
                 <CompanyLogo
@@ -90,7 +90,7 @@ export default function CompanyProfileView({
               {onAvatarEdit && (
                 <button
                   onClick={onAvatarEdit}
-                  className="absolute -bottom-2 -right-2 w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full flex items-center justify-center shadow-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-110 border-4 border-white"
+                  className="absolute -bottom-2 -right-2 w-12 h-12 bg-gradient-to-r from-primary to-blue-600 text-white rounded-full flex items-center justify-center shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all transform hover:scale-110 border-4 border-white"
                   title="Upload Company Logo"
                 >
                   <Camera className="w-5 h-5" />
@@ -107,7 +107,7 @@ export default function CompanyProfileView({
             )}
             <div className="flex flex-wrap gap-3 justify-center md:justify-start">
               {company.industry && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm font-semibold">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-primary rounded-lg text-sm font-semibold border border-blue-100">
                   <Building className="h-4 w-4" />
                   {company.industry}
                 </span>
