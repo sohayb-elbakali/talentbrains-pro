@@ -67,7 +67,7 @@ if (typeof window !== 'undefined') {
 }
 
 function AppContent() {
-  const { isAuthenticated, profile, loading } = useAuth();
+  const { isAuthenticated, profile, loading, profileCompletionStatus } = useAuth();
 
   // Show loading spinner while auth is loading
   if (loading) {
@@ -77,8 +77,12 @@ function AppContent() {
   const getDashboardRedirect = () => {
     if (!isAuthenticated) return <Navigate to="/" replace />;
 
+    // Check if profile completion is needed
+    if (profileCompletionStatus.needsCompletion) {
+      return <Navigate to="/profile-completion" replace />;
+    }
+
     // Simply redirect to role-based dashboard
-    // Profile completion pages are accessed directly via routes when needed
     let dashboardUrl = "/company"; // default
     if (profile?.role === "talent") {
       dashboardUrl = "/talent";

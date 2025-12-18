@@ -13,7 +13,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   allowedRoles,
 }) => {
-  const { isAuthenticated, loading, profile } = useAuth();
+  const { isAuthenticated, loading, profile, profileCompletionStatus } = useAuth();
 
   // Show loading while auth is being checked
   if (loading) {
@@ -28,6 +28,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Wait for profile to be loaded
   if (!profile) {
     return <LoadingSpinner fullScreen text="Loading profile..." />;
+  }
+
+  // Redirect to profile completion if needed
+  if (profileCompletionStatus.needsCompletion) {
+    return <Navigate to="/profile-completion" replace />;
   }
 
   // Check role-based access
