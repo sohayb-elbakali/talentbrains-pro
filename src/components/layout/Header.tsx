@@ -75,7 +75,7 @@ export default function Header() {
     }
   ];
 
-  const { isAuthenticated, profile, signOut, user } = useAuth();
+  const { isAuthenticated, profile, signOut, user, profileCompletionStatus } = useAuth();
   const { data: userData, isLoading: isUserDataLoading } = useUserData(user?.id);
 
   // Check if we're still loading user data
@@ -83,17 +83,25 @@ export default function Header() {
 
   // Get display name based on role - only return real data, no placeholders
   const getDisplayName = () => {
-    if (!profile) return null;
+    // 1. Check profile state (best for real-time updates)
+    if (profile?.full_name?.trim()) return profile.full_name;
 
-    // For company users, only show company name if loaded
-    if (profile.role === 'company') {
-      return userData?.company?.name || null;
-    }
+    // 2. Check ANY possible metadata key from the signup form
+    const meta = user?.user_metadata;
+    if (meta?.full_name?.trim()) return meta.full_name;
+    if (meta?.fullName?.trim()) return meta.fullName;
+    if (meta?.company_name?.trim()) return meta.company_name;
+    if (meta?.companyName?.trim()) return meta.companyName;
 
-    return profile.full_name || null;
+    // 3. Fallback to loaded company data
+    if (userData?.company?.name) return userData.company.name;
+
+    return null;
   };
 
   const displayName = getDisplayName();
+
+
 
   // Get avatar URL - only return real data, no placeholders
   const getAvatarUrl = () => {
@@ -389,7 +397,7 @@ export default function Header() {
                             />
                           ) : (
                             <div className="w-full h-full bg-primary flex items-center justify-center text-white text-sm font-bold">
-                              {displayName ? displayName.charAt(0).toUpperCase() : 'C'}
+                              {displayName ? displayName.charAt(0).toUpperCase() : (profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'C')}
                             </div>
                           )}
                         </div>
@@ -411,8 +419,8 @@ export default function Header() {
                     {isLoadingUserInfo ? (
                       <Skeleton className="h-4 w-20" />
                     ) : (
-                      <span className="text-base font-semibold text-gray-900 group-hover:text-primary transition-colors">
-                        {displayName || 'User'}
+                      <span className={`text-base font-semibold transition-colors ${(profileCompletionStatus.needsCompletion && !displayName) ? "text-blue-600 animate-pulse" : "text-gray-900 group-hover:text-primary"}`}>
+                        {displayName || (profileCompletionStatus.needsCompletion ? 'Complete Profile' : (profileCompletionStatus.lastChecked === null && !profile?.full_name) ? 'Setting up...' : 'Account')}
                       </span>
                     )}
                   </button>
@@ -441,29 +449,29 @@ export default function Header() {
                                     />
                                   ) : (
                                     <div className="w-full h-full bg-white/20 flex items-center justify-center text-white text-xl font-bold">
-                                      {displayName ? displayName.charAt(0).toUpperCase() : 'C'}
+                                      {displayName ? displayName.charAt(0).toUpperCase() : (profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'C')}
                                     </div>
                                   )}
                                 </div>
                               ) : avatarUrl ? (
                                 <img
                                   src={avatarUrl}
-                                  alt={displayName || 'User'}
+                                  alt={displayName || profile?.full_name || 'User'}
                                   className="w-16 h-16 rounded-full object-cover shadow-lg ring-4 ring-white"
                                 />
                               ) : (
                                 <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white text-xl font-bold shadow-lg ring-4 ring-white/30">
-                                  {displayName ? displayName.charAt(0).toUpperCase() : 'U'}
+                                  {displayName ? displayName.charAt(0).toUpperCase() : (profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U')}
                                 </div>
                               )}
                               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
                             </div>
                             <div>
                               <p className="text-base font-bold text-white">
-                                {displayName || 'User'}
+                                {displayName || (profileCompletionStatus.needsCompletion ? 'Complete Profile' : (profileCompletionStatus.lastChecked === null && !profile?.full_name) ? 'Setting up...' : 'Account')}
                               </p>
-                              <p className="text-xs text-blue-100 capitalize font-medium">
-                                {profile?.role} Account
+                              <p className={`text-xs capitalize font-medium ${profileCompletionStatus.needsCompletion ? "text-red-100 italic" : "text-blue-100"}`}>
+                                {profileCompletionStatus.needsCompletion ? "Profile Incomplete" : `${profile?.role} Account`}
                               </p>
                             </div>
                           </div>
@@ -599,19 +607,19 @@ export default function Header() {
                                 />
                               ) : (
                                 <div className="w-full h-full bg-primary flex items-center justify-center text-white text-xl font-bold">
-                                  {displayName ? displayName.charAt(0).toUpperCase() : 'C'}
+                                  {displayName ? displayName.charAt(0).toUpperCase() : (profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'C')}
                                 </div>
                               )}
                             </div>
                           ) : avatarUrl ? (
                             <img
                               src={avatarUrl}
-                              alt={displayName || 'User'}
+                              alt={displayName || profile?.full_name || 'User'}
                               className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-sm"
                             />
                           ) : (
                             <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold ring-2 ring-white shadow-sm">
-                              {displayName ? displayName.charAt(0).toUpperCase() : 'U'}
+                              {displayName ? displayName.charAt(0).toUpperCase() : (profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U')}
                             </div>
                           )}
                           {!isLoadingUserInfo && (
@@ -626,11 +634,11 @@ export default function Header() {
                             </div>
                           ) : (
                             <>
-                              <p className="font-bold text-gray-900">
-                                {displayName || 'User'}
+                              <p className={`font-bold ${profileCompletionStatus.needsCompletion ? "text-blue-600" : "text-gray-900"}`}>
+                                {displayName || (profileCompletionStatus.needsCompletion ? 'Complete Profile' : (profileCompletionStatus.lastChecked === null && !profile?.full_name) ? 'Setting up...' : 'Account')}
                               </p>
-                              <p className="text-sm text-gray-500 capitalize">
-                                {profile?.role} Account
+                              <p className={`text-sm capitalize ${profileCompletionStatus.needsCompletion ? "text-red-500 font-bold" : "text-gray-500"}`}>
+                                {profileCompletionStatus.needsCompletion ? "Action Required" : `${profile?.role} Account`}
                               </p>
                             </>
                           )}

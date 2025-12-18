@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { auth, db } from "../lib/supabase/index";
@@ -63,6 +63,7 @@ export const useAuth = () => {
     setProfileCompletionStatus,
     clearAuth,
   } = useAuthStore();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -153,8 +154,8 @@ export const useAuth = () => {
           if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
             if (session?.user) {
               setUser(session.user);
-              // Reset profile completion status to avoid stale redirects
-              setProfileCompletionStatus({ needsCompletion: false, type: null });
+              // Don't reset needsCompletion here to avoid UI flicker in Header
+              // It will be updated by loadUserProfile -> checkProfileCompletion
               // For auth state listener, don't show error notifications to avoid duplicates
               await loadUserProfile(
                 session.user.id,
@@ -273,11 +274,14 @@ export const useAuth = () => {
 
       if (profileData) {
         setProfile(profileData);
+        // Invalidate user data query to ensure fresh data across app
+        queryClient.invalidateQueries({ queryKey: ["user-data", userId] });
+        // Check completion status for the existing profile
+        await checkProfileCompletion(true);
         return;
       }
 
-      // If no profile exists, this is a critical error - profiles should be created during signup
-      // We should not auto-create profiles here as we don't know the intended role
+
       const { user: currentUser } = await auth.getCurrentUser();
       if (!currentUser) {
         throw new Error("No authenticated user found");
@@ -295,7 +299,7 @@ export const useAuth = () => {
       const newProfile = {
         id: userId,
         email: currentUser.email || "unknown@example.com",
-        full_name: currentUser.user_metadata?.full_name || "",
+        full_name: "", // Don't pre-fill from metadata
         role: userRole,
         is_verified: false,
         is_active: true,
@@ -324,11 +328,8 @@ export const useAuth = () => {
       } else if (userRole === "company") {
         const companyData = {
           profile_id: userId,
-          name: currentUser.user_metadata?.company_name || "New Company",
-          slug: (currentUser.user_metadata?.company_name || `company-${userId}`)
-            .toLowerCase()
-            .replace(/\s+/g, "-")
-            .replace(/[^a-z0-9-]/g, ""),
+          name: "", // Don't pre-fill from metadata
+          slug: `company-${userId}`,
         };
         const { error: companyError } = await db.createCompany(companyData);
         if (companyError) {
@@ -338,6 +339,10 @@ export const useAuth = () => {
       }
 
       setProfile(createdProfile);
+      // Invalidate user data query for the new profile
+      queryClient.invalidateQueries({ queryKey: ["user-data", userId] });
+      // Check completion status for the new profile
+      await checkProfileCompletion(true);
     } catch (criticalError: any) {
       console.error(
         "A critical error occurred in loadUserProfile:",
@@ -405,38 +410,55 @@ export const useAuth = () => {
 
         const userId = data.user.id;
 
-        // Wait a moment for the trigger to create the profile
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // 2. Poll for the automatically created profile (favors DB trigger)
+        let profile = null;
+        let retries = 3;
+        while (retries > 0 && !profile) {
+          console.log(`Polling for profile... (${retries} attempts left)`);
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          const { data: p } = await db.getProfile(userId);
+          if (p) profile = p;
+          retries--;
+        }
 
-        // Get the automatically created profile
-        const { data: profile, error: profileError } = await db.getProfile(
-          userId
-        );
-        if (profileError || !profile) {
-          console.error("Profile not found after signup:", profileError);
-          // Profile creation might have failed, let's try to create it manually
+        // If profile was found by trigger but has no avatar, set a default for talent
+        if (profile && !profile.avatar_url && userData.role === 'talent') {
+          const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(data.user.email || userId)}`;
+          await db.updateProfile(userId, { avatar_url: defaultAvatar });
+          profile.avatar_url = defaultAvatar;
+        }
+
+        if (!profile) {
+          console.error("Profile not created by trigger, attempting manual creation...");
           const profileData = {
             id: userId,
             email: data.user.email!,
-            full_name: userData.full_name || userData.company_name || "",
+            full_name: userData.full_name || "",
             role: userData.role,
-            avatar_url: null,
+            avatar_url: userData.role === 'talent' ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(data.user.email || userId)}` : null,
             is_verified: false,
             is_active: true,
             preferences: {},
           };
           const { data: createdProfile, error: createError } =
             await db.createProfile(profileData);
+
           if (createError) {
+            console.error("Manual profile creation failed:", createError);
+            if (createError.message?.includes("row-level security")) {
+              console.warn("RLS policy blocked insert. This usually means the trigger is still working or policies are missing.");
+            }
             handleError(createError, "Profile Creation");
             return { success: false, error: createError };
           }
-          setUser(data.user);
-          setProfile(createdProfile);
-        } else {
-          setUser(data.user);
-          setProfile(profile);
+          profile = createdProfile;
         }
+
+        setUser(data.user);
+        setProfile(profile);
+
+        // Check completion status for the new user
+        await checkProfileCompletion(true);
 
         // Create the role-specific record if needed
         if (userData.role === "talent") {
@@ -459,13 +481,8 @@ export const useAuth = () => {
           if (!existingCompany) {
             const companyData = {
               profile_id: userId,
-              name: userData.company_name || "New Company",
-              slug: userData.company_name
-                ? userData.company_name
-                  .toLowerCase()
-                  .replace(/\s+/g, "-")
-                  .replace(/[^a-z0-9-]/g, "")
-                : `company-${userId}`,
+              name: "", // Don't pre-fill
+              slug: `company-${userId}`,
             };
             const { error: companyError } = await db.createCompany(companyData);
             if (companyError) {
@@ -474,6 +491,8 @@ export const useAuth = () => {
             }
           }
         }
+        // Invalidate and refetch user data
+        await queryClient.invalidateQueries({ queryKey: ["user-data", userId] });
         // Do not run profile/job validation here. Only sign up schema is validated.
         notify.showSignUpSuccess();
         return { success: true, data };
@@ -507,8 +526,7 @@ export const useAuth = () => {
       }
 
       if (data?.user) {
-        // Don't call setUser or loadUserProfile here - the auth state listener will handle it
-        // This prevents duplicate profile loading and error notifications
+
       }
 
       return { success: true, data };
@@ -625,6 +643,9 @@ export const useAuth = () => {
 
       if (data) {
         setProfile(data);
+        // Refresh everything after update
+        queryClient.invalidateQueries({ queryKey: ["user-data", user.id] });
+        await checkProfileCompletion(true);
         notify.showProfileUpdateSuccess();
         return { success: true, data };
       }
@@ -713,7 +734,7 @@ export const useAuth = () => {
 
     try {
       let needsCompletion = false;
-      let type = null;
+      let type: "company" | "talent" | "admin" | null = null;
 
       if (profile.role === "company") {
         const { data: companyData, error } = await db.getCompany(profile.id);
@@ -723,7 +744,11 @@ export const useAuth = () => {
           return { needsCompletion: false, type: null };
         }
 
-        needsCompletion = !companyData || !companyData.name;
+        needsCompletion =
+          !profile.full_name ||
+          !companyData ||
+          !companyData.name ||
+          !companyData.description;
         type = "company";
       } else if (profile.role === "talent") {
         const { data: talentData, error } = await db.getTalent(profile.id);
@@ -733,7 +758,11 @@ export const useAuth = () => {
           return { needsCompletion: false, type: null };
         }
 
-        needsCompletion = !talentData || !talentData.title || !talentData.bio;
+        needsCompletion =
+          !profile.full_name ||
+          !talentData ||
+          !talentData.title ||
+          !talentData.bio;
         type = "talent";
       } else if (profile.role === "admin") {
         // Admin users don't need additional profile completion beyond basic profile
@@ -767,6 +796,9 @@ export const useAuth = () => {
     signIn,
     signOut,
     updateProfile,
+    loadUserProfile,
+    setProfile,
+    setProfileCompletionStatus,
     checkProfileCompletion,
     validateSession,
     isAuthenticated: !!user,

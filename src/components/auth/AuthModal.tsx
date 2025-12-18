@@ -114,11 +114,9 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
       const result = await signUp(formData.email, formData.password, userData)
       if (result && result.success) {
         onClose()
-        if (userType === 'company') {
-          navigate('/company')
-        } else {
-          navigate('/talent')
-        }
+        // Always redirect to profile-completion after signup
+        // The /profile-completion route will handle role-based redirection
+        navigate('/profile-completion')
       } else {
         notify.showError(result?.error?.message || 'Sign up failed. Please try again.')
       }
