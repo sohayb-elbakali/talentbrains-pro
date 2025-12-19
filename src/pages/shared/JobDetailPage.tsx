@@ -10,6 +10,9 @@ import {
   MapPin,
   Upload,
   X,
+  Info,
+  Clock,
+  Users,
 } from "@phosphor-icons/react";
 import React, { useEffect, useState, useMemo } from "react";
 import { notify } from "../../utils/notify";
@@ -281,111 +284,117 @@ const JobDetailPage: React.FC = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 py-8">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate("/jobs")}
-          className="mb-6 flex items-center text-slate-600 hover:text-primary transition-colors font-medium"
-        >
-          <ArrowLeft size={20} weight="regular" className="mr-2" />
-          Back to Jobs
-        </button>
+  const getStatusBadge = (status: string) => {
+    const statuses: Record<string, { color: string; bg: string; icon: any }> = {
+      pending: { color: "text-amber-700", bg: "bg-amber-50 border-amber-200", icon: Clock },
+      reviewed: { color: "text-blue-700", bg: "bg-blue-50 border-blue-200", icon: Info },
+      interview: { color: "text-purple-700", bg: "bg-purple-50 border-purple-200", icon: Users },
+      offered: { color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200", icon: CheckCircle },
+      rejected: { color: "text-red-700", bg: "bg-red-50 border-red-200", icon: X },
+      withdrawn: { color: "text-slate-500", bg: "bg-slate-50 border-slate-200", icon: X },
+    };
 
-        {/* Header Card */}
+    const config = statuses[status.toLowerCase()] || statuses.pending;
+    const Icon = config.icon;
+
+    return (
+      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border ${config.bg} ${config.color} text-xs font-bold uppercase tracking-wider`}>
+        <Icon size={14} weight="bold" />
+        {status}
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Navigation */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={() => navigate("/jobs")}
+            className="flex items-center text-slate-500 hover:text-primary transition-all font-semibold group"
+          >
+            <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-100 mr-3 group-hover:border-primary/20 transition-all">
+              <ArrowLeft size={18} weight="bold" />
+            </div>
+            Back to Job Board
+          </button>
+        </div>
+
+        {/* Hero Card */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-md border border-slate-200 p-8 mb-8 hover:shadow-lg transition-shadow duration-200"
+          className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 mb-8 relative overflow-hidden"
         >
-          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
-            <div className="flex-1">
-              <div className="flex items-start gap-4 mb-4">
-                {/* Company Logo */}
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-200">
-                    {job.avatar_url ? (
-                      <img
-                        src={job.avatar_url}
-                        alt={job.company_name || "Company"}
-                        className="w-full h-full object-contain p-2 rounded-2xl"
-                      />
-                    ) : (
-                      <Buildings size={32} weight="regular" className="text-primary" />
-                    )}
-                  </div>
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+            <div className="flex gap-6 items-start">
+              {/* Company Logo */}
+              <div className="flex-shrink-0">
+                <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 shadow-inner">
+                  {job.avatar_url ? (
+                    <img
+                      src={job.avatar_url}
+                      alt={job.company_name || "Company"}
+                      className="w-full h-full object-contain p-3 rounded-2xl"
+                    />
+                  ) : (
+                    <Buildings size={40} weight="regular" className="text-slate-300" />
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+                    {job.title}
+                  </h1>
+                  <span className={`px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-slate-200`}>
+                    {job.status}
+                  </span>
                 </div>
 
-                <div className="flex-1">
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <h1 className="text-3xl font-bold text-slate-900 leading-tight">
-                      {job.title}
-                    </h1>
-                    <div className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold capitalize rounded-lg flex-shrink-0 border border-slate-200">
-                      {job.status}
-                    </div>
+                <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-slate-500">
+                  <div className="flex items-center font-bold text-slate-700">
+                    <Buildings size={18} className="mr-1.5 text-primary" />
+                    {job.company_name}
                   </div>
-
-                  {job.company_name && (
-                    <p className="text-lg text-slate-700 mb-3 font-medium flex items-center">
-                      <Buildings size={20} weight="regular" className="mr-2 text-primary" />
-                      {job.company_name}
-                    </p>
-                  )}
-
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
-                    <span className="flex items-center gap-2">
-                      <div className="p-1.5 bg-slate-50 rounded-lg border border-slate-200">
-                        <MapPin size={16} weight="regular" className="text-primary" />
-                      </div>
-                      <span className="font-medium">{job.location}</span>
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <div className="p-1.5 bg-slate-50 rounded-lg border border-slate-200">
-                        <Briefcase size={16} weight="regular" className="text-primary" />
-                      </div>
-                      <span className="font-medium capitalize">
-                        {job.employment_type.replace("_", " ")}
-                      </span>
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <div className="p-1.5 bg-slate-50 rounded-lg border border-slate-200">
-                        <Calendar size={16} weight="regular" className="text-slate-400" />
-                      </div>
-                      <span className="font-medium">
-                        Posted {new Date(job.created_at).toLocaleDateString()}
-                      </span>
-                    </span>
+                  <div className="flex items-center text-sm font-medium">
+                    <MapPin size={18} className="mr-1.5 text-slate-400" />
+                    {job.location}
+                  </div>
+                  <div className="flex items-center text-sm font-medium">
+                    <Briefcase size={18} className="mr-1.5 text-slate-400" />
+                    {job.employment_type.replace("_", " ")}
+                  </div>
+                  <div className="flex items-center text-sm font-medium">
+                    <Calendar size={18} className="mr-1.5 text-slate-400" />
+                    Posted {new Date(job.created_at).toLocaleDateString()}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Apply Button */}
-            <div className="flex-shrink-0">
+            {/* Action Section */}
+            <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-3">
               {checkingApplication ? (
-                <button
-                  disabled
-                  className="w-full md:w-auto px-8 py-3 bg-slate-300 text-slate-600 rounded-lg text-lg font-semibold cursor-not-allowed"
-                >
-                  Checking...
-                </button>
+                <div className="w-full lg:w-48 h-12 bg-slate-100 animate-pulse rounded-xl" />
               ) : existingApplication ? (
-                <div className="flex flex-col items-end gap-2">
-                  <div className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg shadow-md">
-                    <CheckCircle size={24} weight="regular" />
-                    <span className="text-lg font-semibold">Applied</span>
+                <div className="flex flex-col items-center lg:items-end gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 w-full lg:w-auto">
+                  <div className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-100 font-bold">
+                    <CheckCircle size={20} weight="bold" />
+                    Applied
                   </div>
-                  <span className="text-sm text-slate-600 capitalize">
-                    Status: <span className="font-semibold text-primary">{existingApplication.status}</span>
-                  </span>
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <span>Application Status:</span>
+                    {getStatusBadge(existingApplication.status)}
+                  </div>
                 </div>
               ) : (
                 <button
                   onClick={() => setShowApplyModal(true)}
                   disabled={job.status !== "active" || !user}
-                  className="w-full md:w-auto px-8 py-3 bg-primary text-white rounded-lg hover:bg-blue-700 text-lg font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full lg:w-48 py-3.5 bg-primary text-white rounded-xl hover:bg-blue-700 font-bold text-lg shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
                 >
                   {!user ? "Sign In to Apply" : "Apply Now"}
                 </button>
@@ -394,99 +403,90 @@ const JobDetailPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Job Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Job Description */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8"
-            >
-              <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center">
-                <FileText size={24} weight="regular" className="mr-3 text-primary" />
-                Job Description
-              </h2>
-              <div className="prose max-w-none text-slate-700 leading-relaxed">
-                <p className="whitespace-pre-wrap">{job.description}</p>
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* Main Info */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Description */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-blue-50 rounded-lg text-primary">
+                  <FileText size={24} weight="bold" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900">Job Description</h2>
               </div>
-            </motion.div>
+              <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed whitespace-pre-wrap">
+                {job.description}
+              </div>
+            </div>
 
-            {/* Skills for this Job */}
+            {/* Skills */}
             {jobSkills.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8"
-              >
-                <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center">
-                  <CheckCircle size={24} weight="regular" className="mr-3 text-primary" />
-                  Skills for this Job
-                </h2>
+              <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                    <CheckCircle size={24} weight="bold" />
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-900">Skills Requirements</h2>
+                </div>
                 <SkillsDisplay skills={transformedJobSkills} variant="card" showProficiency={true} />
-              </motion.div>
+              </div>
             )}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Salary Info */}
+            {/* Compensation Card */}
             {(job.salary_min || job.salary_max) && (
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"
-              >
-                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
-                  <CurrencyDollar size={20} weight="regular" className="mr-2 text-green-600" />
+              <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
+                <div className="flex items-center gap-2 mb-4 text-slate-500 font-bold uppercase text-[10px] tracking-widest">
+                  <CurrencyDollar size={18} weight="bold" className="text-emerald-500" />
                   Compensation
-                </h3>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-slate-900 mb-2">
-                    {job.salary_min && job.salary_max
-                      ? `${job.currency} ${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}`
-                      : job.salary_min
-                        ? `${job.currency} ${job.salary_min.toLocaleString()}+`
-                        : `${job.currency} Up to ${job.salary_max?.toLocaleString()}`}
-                  </div>
-                  <p className="text-slate-600 text-sm">per year</p>
                 </div>
-              </motion.div>
+                <div className="text-2xl font-black text-slate-900">
+                  {job.salary_min && job.salary_max
+                    ? `${job.currency} ${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}`
+                    : job.salary_min
+                      ? `${job.currency} ${job.salary_min.toLocaleString()}+`
+                      : `${job.currency} Up to ${job.salary_max?.toLocaleString()}`}
+                </div>
+                <div className="text-slate-500 text-sm mt-1">per year estimated</div>
+              </div>
             )}
 
-            {/* Quick Info */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"
-            >
-              <h3 className="text-lg font-bold text-slate-900 mb-4">
-                Job Details
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-start">
-                  <Briefcase size={20} weight="regular" className="text-primary mt-0.5 mr-3" />
+            {/* Job Details Card */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-6">Position Details</h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 flex-shrink-0">
+                    <Briefcase size={20} className="text-primary" />
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-900">
-                      Employment Type
-                    </p>
-                    <p className="text-sm text-slate-600 capitalize">{job.employment_type.replace("_", " ")}</p>
+                    <div className="text-sm font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">Type</div>
+                    <div className="text-slate-700 font-bold capitalize">{job.employment_type.replace("_", " ")}</div>
                   </div>
                 </div>
-                <div className="flex items-start">
-                  <MapPin size={20} weight="regular" className="text-primary mt-0.5 mr-3" />
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 flex-shrink-0">
+                    <MapPin size={20} className="text-blue-500" />
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-900">Location</p>
-                    <p className="text-sm text-slate-600">{job.location}</p>
+                    <div className="text-sm font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">Location</div>
+                    <div className="text-slate-700 font-bold">{job.location}</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 flex-shrink-0">
+                    <Calendar size={20} className="text-amber-500" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">Posted On</div>
+                    <div className="text-slate-700 font-bold">{new Date(job.created_at).toLocaleDateString()}</div>
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

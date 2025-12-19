@@ -75,10 +75,10 @@ export const JobMatchingResultsPage = () => {
     fetchTalentsInfo();
   }, [matches]);
 
-  if (isLoading) {
+  if (isLoading || loadingTalents) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
-        <LoadingSpinner />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex flex-col items-center justify-center">
+        <LoadingSpinner size="lg" text="Analyzing matches and profiles..." />
       </div>
     );
   }

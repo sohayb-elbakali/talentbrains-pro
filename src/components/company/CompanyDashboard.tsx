@@ -9,6 +9,7 @@ import CompanyProfileUpdateModal from "./CompanyProfileUpdateModal";
 import ModernJobCard from "./ModernJobCard";
 import CompanyLogo from "../profile/CompanyLogo";
 import { StatsSkeleton, CardSkeleton } from "../ui/SkeletonLoader";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 // A small component for the stat cards to avoid repetition
 const StatCard = ({
@@ -130,28 +131,8 @@ const CompanyDashboard = () => {
   // LinkedIn-style: Don't show page until data is loaded
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header Skeleton */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 animate-pulse">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-gray-200 rounded-2xl"></div>
-              <div className="flex-1">
-                <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
-                <div className="h-5 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Skeleton */}
-          <StatsSkeleton count={3} />
-
-          {/* Jobs Skeleton */}
-          <div className="mt-8">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6 animate-pulse"></div>
-            <CardSkeleton count={3} />
-          </div>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <LoadingSpinner size="lg" text="Preparing your dashboard..." />
       </div>
     );
   }

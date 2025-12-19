@@ -6,6 +6,9 @@ import {
   Heart,
   MapPin,
   UserCircle,
+  Lightning,
+  ChartLineUp,
+  CheckCircle,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
 import { notify } from "../../utils/notify";
@@ -18,6 +21,7 @@ import {
   TalentAnalytics,
 } from "../../types/talent-dashboard";
 import JobList from "../jobs/JobList";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 export default function TalentDashboard() {
   const { user } = useAuth();
@@ -116,59 +120,8 @@ export default function TalentDashboard() {
 
   if (isLoading || isDashboardLoading) {
     return (
-      <div className="min-h-screen bg-white p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header Skeleton */}
-          <div className="mb-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 animate-pulse">
-              <div className="flex items-center gap-6">
-                <div className="w-20 h-20 bg-slate-200 rounded-2xl"></div>
-                <div className="flex-1">
-                  <div className="h-8 bg-slate-200 rounded w-1/3 mb-2"></div>
-                  <div className="h-5 bg-slate-200 rounded w-1/2"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white border border-slate-200 p-6 rounded-2xl animate-pulse">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-slate-200 rounded-xl"></div>
-                  <div className="h-9 w-16 bg-slate-200 rounded"></div>
-                </div>
-                <div className="h-5 bg-slate-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-
-          {/* Content Skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {[1, 2].map((i) => (
-              <div key={i} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-pulse">
-                <div className="bg-slate-50 p-6 border-b border-slate-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-200 rounded-lg"></div>
-                    <div className="h-6 bg-slate-200 rounded w-1/3"></div>
-                  </div>
-                </div>
-                <div className="p-6 space-y-4">
-                  {[1, 2, 3].map((j) => (
-                    <div key={j} className="flex items-start space-x-4 p-4 bg-slate-50 rounded-xl">
-                      <div className="w-12 h-12 bg-slate-200 rounded-lg"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-slate-200 rounded w-1/2"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+        <LoadingSpinner size="lg" text="Preparing your dashboard..." />
       </div>
     );
   }
@@ -223,75 +176,62 @@ export default function TalentDashboard() {
           </div>
         </div>
 
-        {/* Stats Cards - Removed Messages Card */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
+            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <Eye size={24} weight="regular" className="text-primary" />
+              <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                <Eye size={24} weight="duotone" className="text-blue-600" />
               </div>
               <div className="text-right">
-                {isDashboardLoading ? (
-                  <div className="h-9 w-16 bg-slate-100 rounded animate-pulse"></div>
-                ) : (
-                  <p className="text-3xl font-bold text-slate-900">
-                    {analytics?.profileViews || 0}
-                  </p>
-                )}
+                <p className="text-3xl font-bold text-slate-900 tracking-tight">
+                  {analytics?.profileViews || 0}
+                </p>
               </div>
             </div>
-            <p className="text-slate-600 font-medium">Profile Views</p>
+            <p className="text-slate-500 font-semibold text-sm uppercase tracking-wider">Profile Views</p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
+            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-primary-200 transition-all duration-200"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <Briefcase size={24} weight="regular" className="text-primary" />
+              <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
+                <Briefcase size={24} weight="duotone" className="text-primary" />
               </div>
               <div className="text-right">
-                {isDashboardLoading ? (
-                  <div className="h-9 w-16 bg-slate-100 rounded animate-pulse"></div>
-                ) : (
-                  <p className="text-3xl font-bold text-slate-900">
-                    {analytics?.applications || 0}
-                  </p>
-                )}
+                <p className="text-3xl font-bold text-slate-900 tracking-tight">
+                  {analytics?.applications || 0}
+                </p>
               </div>
             </div>
-            <p className="text-slate-600 font-medium">Applications</p>
+            <p className="text-slate-500 font-semibold text-sm uppercase tracking-wider">Applications</p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
+            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-200 transition-all duration-200"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <Heart size={24} weight="regular" className="text-primary" />
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
+                <Lightning size={24} weight="duotone" className="text-amber-600" />
               </div>
               <div className="text-right">
-                {isDashboardLoading ? (
-                  <div className="h-9 w-16 bg-slate-100 rounded animate-pulse"></div>
-                ) : (
-                  <p className="text-3xl font-bold text-slate-900">
-                    {analytics?.matches || 0}
-                  </p>
-                )}
+                <p className="text-3xl font-bold text-slate-900 tracking-tight">
+                  {analytics?.matches || 0}
+                </p>
               </div>
             </div>
-            <p className="text-slate-600 font-medium">AI Matches</p>
+            <p className="text-slate-500 font-semibold text-sm uppercase tracking-wider">AI Matches</p>
           </motion.div>
         </div>
 
@@ -470,44 +410,39 @@ export default function TalentDashboard() {
           </motion.div>
         </div>
 
-        {/* Profile Completion */}
+        {/* Simplified Profile Completion */}
         {talent && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 bg-primary rounded-2xl p-8 text-white shadow-sm"
+            className="mt-8 bg-slate-50 border border-blue-100 rounded-2xl p-6 relative overflow-hidden"
           >
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <UserCircle size={24} weight="regular" className="text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold">
-                    Complete Your Profile
-                  </h3>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-blue-100 rounded-xl">
+                  <ChartLineUp size={24} weight="bold" className="text-blue-600" />
                 </div>
-                <p className="text-blue-100 text-lg mb-4">
-                  A complete profile gets 3x more views from companies
-                </p>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex-1">
-                    <div className="bg-white/20 rounded-full h-3">
-                      <div className="bg-white rounded-full h-3 w-4/5"></div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold">85%</div>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Boost your visibility</h3>
+                  <p className="text-slate-500 text-sm">A complete profile gets 3x more views from top companies.</p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-3">
+
+              <div className="flex items-center gap-6 w-full md:w-auto">
+                <div className="flex-1 md:w-48">
+                  <div className="flex justify-between items-center mb-1.5 text-xs font-bold text-slate-400">
+                    <span>COMPLETION</span>
+                    <span className="text-blue-600">85%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div className="bg-blue-600 h-full rounded-full w-[85%]" />
+                  </div>
+                </div>
                 <Link
                   to="/talent-profile"
-                  className="px-6 py-3 bg-white text-primary rounded-lg hover:bg-slate-50 transition-colors font-semibold"
+                  className="whitespace-nowrap px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-sm"
                 >
-                  Complete Profile
+                  Finish Now
                 </Link>
               </div>
             </div>
