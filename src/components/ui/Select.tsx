@@ -1,4 +1,4 @@
-import { SelectHTMLAttributes, forwardRef } from 'react';
+import { SelectHTMLAttributes, forwardRef, ReactNode } from 'react';
 import { CaretDown } from '@phosphor-icons/react';
 
 interface SelectOption {
@@ -7,7 +7,7 @@ interface SelectOption {
 }
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-    label?: string;
+    label?: ReactNode;
     error?: string;
     helperText?: string;
     options: SelectOption[];

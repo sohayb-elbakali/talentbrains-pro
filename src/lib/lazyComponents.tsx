@@ -18,7 +18,7 @@ function lazyWithPrefetch<T extends ComponentType<any>>(
 
 // Public Pages
 export const LandingPage = lazyWithPrefetch(() => import('../pages/public/LandingPage'));
-export const TalentPublicProfilePage = lazyWithPrefetch(() => import('../pages/public/TalentPublicProfilePage'));
+export const TalentPublicProfilePage = lazyWithPrefetch(() => import('../pages/shared/TalentPublicProfilePage'));
 
 // Company Pages
 export const CompanyDashboard = lazyWithPrefetch(() => import('../components/company/CompanyDashboard'));
@@ -37,6 +37,7 @@ export const TalentDashboard = lazyWithPrefetch(() => import('../components/dash
 export const TalentApplicationsPage = lazyWithPrefetch(() => import('../pages/talent/TalentApplicationsPage'));
 export const TalentProfilePage = lazyWithPrefetch(() => import('../pages/talent/TalentProfilePage'));
 export const TalentsPage = lazyWithPrefetch(() => import('../pages/talent/TalentsPage'));
+export const TalentMatchesPage = lazyWithPrefetch(() => import('../pages/talent/TalentMatchingPage'));
 
 // Admin Pages
 export const AdminDashboard = lazyWithPrefetch(() => import('../components/dashboard/AdminDashboard'));

@@ -3,9 +3,12 @@ import {
   Briefcase,
   Calendar,
   Eye,
-  Heart,
   MapPin,
   UserCircle,
+  Lightning,
+  ChartLineUp,
+  Buildings,
+  Star,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
 import { notify } from "../../utils/notify";
@@ -18,12 +21,14 @@ import {
   TalentAnalytics,
 } from "../../types/talent-dashboard";
 import JobList from "../jobs/JobList";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 export default function TalentDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data, isLoading, error } = useUserData(user?.id);
-  const [matches, setMatches] = useState<JobMatch[]>([]);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [excellentMatchCount, setExcellentMatchCount] = useState(0);
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [analytics, setAnalytics] = useState<TalentAnalytics | null>(null);
   const [allJobs, setAllJobs] = useState<any[]>([]);
@@ -52,23 +57,71 @@ export default function TalentDashboard() {
         setApplications(applicationsResult.data.slice(0, 4));
       }
 
-      if (matchesResult.data) {
-        setMatches(matchesResult.data.slice(0, 5));
+      // Fetch real matches from backend matching API
+      let allMatches: any[] = [];
+
+      try {
+        const matchResponse = await fetch(`http://localhost:8000/api/matching/talent/${talent.id}/jobs?limit=10`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (matchResponse.ok) {
+          const matchingResults = await matchResponse.json();
+
+          // Get job details
+          const jobsMap = new Map((jobsResult.data || []).map((j: any) => [j.id, j]));
+
+          allMatches = matchingResults.map((m: any) => {
+            const jobData: any = jobsMap.get(m.job_id) || {};
+            return {
+              id: `match-${m.job_id}`,
+              job_id: m.job_id,
+              matchScore: m.match_score || 0,
+              skillScore: m.skill_match_score || 0,
+              experienceScore: m.experience_match_score || 0,
+              locationScore: m.location_match_score || 0,
+              matched_skills: m.matched_skills || [],
+              job: {
+                id: m.job_id,
+                title: jobData.title || m.job_title || 'Position',
+                location: jobData.location || m.location,
+                companies: jobData.companies || { name: m.company || 'Company' },
+              },
+            };
+          });
+        }
+      } catch (err) {
+        // Fallback to stored matches if API fails
+        if (matchesResult.data && matchesResult.data.length > 0) {
+          allMatches = matchesResult.data.map((m: any) => ({
+            ...m,
+            matchScore: m.match_score || 0,
+          }));
+        }
       }
+
+      // Sort by score and get top 3
+      allMatches.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+      setMatches(allMatches.slice(0, 3));
+
+      // Count excellent matches (80%+)
+      const excellent = allMatches.filter(m => (m.matchScore || 0) >= 80).length;
+      setExcellentMatchCount(excellent);
 
       if (analyticsResult && !analyticsResult.error) {
         const analyticsData = "data" in analyticsResult ? analyticsResult.data : analyticsResult;
         setAnalytics({
           profileViews: analyticsData.profileViews || 0,
           applications: analyticsData.applications || 0,
-          matches: analyticsData.matches || 0,
+          matches: allMatches.length,
           messages: analyticsData.messages || 0,
         });
       } else {
         setAnalytics({
           profileViews: 0,
           applications: 0,
-          matches: 0,
+          matches: allMatches.length,
           messages: 0,
         });
       }
@@ -109,66 +162,15 @@ export default function TalentDashboard() {
   };
 
   const getMatchColor = (score: number) => {
-    if (score >= 90) return "text-green-600 bg-green-100 border-green-200";
     if (score >= 80) return "text-blue-600 bg-blue-100 border-blue-200";
-    return "text-orange-600 bg-orange-100 border-orange-200";
+    if (score >= 60) return "text-blue-600 bg-blue-50 border-blue-100";
+    return "text-slate-600 bg-slate-100 border-slate-200";
   };
 
   if (isLoading || isDashboardLoading) {
     return (
-      <div className="min-h-screen bg-white p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header Skeleton */}
-          <div className="mb-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 animate-pulse">
-              <div className="flex items-center gap-6">
-                <div className="w-20 h-20 bg-slate-200 rounded-2xl"></div>
-                <div className="flex-1">
-                  <div className="h-8 bg-slate-200 rounded w-1/3 mb-2"></div>
-                  <div className="h-5 bg-slate-200 rounded w-1/2"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white border border-slate-200 p-6 rounded-2xl animate-pulse">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-slate-200 rounded-xl"></div>
-                  <div className="h-9 w-16 bg-slate-200 rounded"></div>
-                </div>
-                <div className="h-5 bg-slate-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-
-          {/* Content Skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {[1, 2].map((i) => (
-              <div key={i} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-pulse">
-                <div className="bg-slate-50 p-6 border-b border-slate-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-200 rounded-lg"></div>
-                    <div className="h-6 bg-slate-200 rounded w-1/3"></div>
-                  </div>
-                </div>
-                <div className="p-6 space-y-4">
-                  {[1, 2, 3].map((j) => (
-                    <div key={j} className="flex items-start space-x-4 p-4 bg-slate-50 rounded-xl">
-                      <div className="w-12 h-12 bg-slate-200 rounded-lg"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-slate-200 rounded w-1/2"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+        <LoadingSpinner size="lg" text="Preparing your dashboard..." />
       </div>
     );
   }
@@ -223,80 +225,88 @@ export default function TalentDashboard() {
           </div>
         </div>
 
-        {/* Stats Cards - Removed Messages Card */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
+            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <Eye size={24} weight="regular" className="text-primary" />
+              <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                <Eye size={24} weight="duotone" className="text-blue-600" />
               </div>
               <div className="text-right">
-                {isDashboardLoading ? (
-                  <div className="h-9 w-16 bg-slate-100 rounded animate-pulse"></div>
-                ) : (
-                  <p className="text-3xl font-bold text-slate-900">
-                    {analytics?.profileViews || 0}
-                  </p>
-                )}
+                <p className="text-3xl font-bold text-slate-900 tracking-tight">
+                  {analytics?.profileViews || 0}
+                </p>
               </div>
             </div>
-            <p className="text-slate-600 font-medium">Profile Views</p>
+            <p className="text-slate-500 font-semibold text-sm uppercase tracking-wider">Profile Views</p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
+            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-primary-200 transition-all duration-200"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <Briefcase size={24} weight="regular" className="text-primary" />
+              <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
+                <Briefcase size={24} weight="duotone" className="text-primary" />
               </div>
               <div className="text-right">
-                {isDashboardLoading ? (
-                  <div className="h-9 w-16 bg-slate-100 rounded animate-pulse"></div>
-                ) : (
-                  <p className="text-3xl font-bold text-slate-900">
-                    {analytics?.applications || 0}
-                  </p>
-                )}
+                <p className="text-3xl font-bold text-slate-900 tracking-tight">
+                  {analytics?.applications || 0}
+                </p>
               </div>
             </div>
-            <p className="text-slate-600 font-medium">Applications</p>
+            <p className="text-slate-500 font-semibold text-sm uppercase tracking-wider">Applications</p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200"
+            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-200 transition-all duration-200"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <Heart size={24} weight="regular" className="text-primary" />
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
+                <Lightning size={24} weight="duotone" className="text-amber-600" />
               </div>
               <div className="text-right">
-                {isDashboardLoading ? (
-                  <div className="h-9 w-16 bg-slate-100 rounded animate-pulse"></div>
-                ) : (
-                  <p className="text-3xl font-bold text-slate-900">
-                    {analytics?.matches || 0}
-                  </p>
-                )}
+                <p className="text-3xl font-bold text-slate-900 tracking-tight">
+                  {analytics?.matches || 0}
+                </p>
               </div>
             </div>
-            <p className="text-slate-600 font-medium">AI Matches</p>
+            <p className="text-slate-500 font-semibold text-sm uppercase tracking-wider">AI Matches</p>
+          </motion.div>
+
+          {/* Excellent Matches Counter */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-blue-50 border border-blue-200 p-6 rounded-2xl shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-blue-600 rounded-xl">
+                <Star size={24} weight="fill" className="text-white" />
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-blue-600 tracking-tight">
+                  {excellentMatchCount}
+                </p>
+              </div>
+            </div>
+            <p className="text-blue-600 font-semibold text-sm uppercase tracking-wider">Excellent (80%+)</p>
           </motion.div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Top Matches */}
+          {/* Top 3 Matches */}
           <motion.div
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
@@ -307,64 +317,62 @@ export default function TalentDashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-white rounded-lg border border-slate-200">
-                    <Heart size={24} weight="regular" className="text-primary" />
+                    <Lightning size={24} weight="fill" className="text-blue-600" />
                   </div>
                   <h2 className="text-xl font-bold text-slate-900">
                     Top AI Matches
                   </h2>
                 </div>
-                <button className="text-primary hover:text-blue-700 text-sm font-medium px-4 py-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                <Link to="/talent/matches" className="text-primary hover:text-blue-700 text-sm font-medium px-4 py-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
                   View All
-                </button>
+                </Link>
               </div>
             </div>
             <div className="p-6">
               {matches.length > 0 ? (
-                <div className="space-y-3">
-                  {matches.map((match) => (
-                    <div
-                      key={match.id}
-                      className="flex items-start space-x-4 p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-primary hover:shadow-sm transition-all duration-200"
+                <div className="space-y-4">
+                  {matches.map((match, idx) => (
+                    <motion.div
+                      key={match.id || idx}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-sm transition-all duration-200"
                     >
-                      <img
-                        src={
-                          match.job?.companies?.logo_url ||
-                          "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=100"
-                        }
-                        alt={match.job?.companies?.name}
-                        className="w-12 h-12 rounded-lg object-cover border border-slate-200"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-medium text-slate-900 truncate">
-                              {match.job?.title}
-                            </h3>
-                            <p className="text-sm text-slate-600">
-                              {match.job?.companies?.name}
-                            </p>
-                            <div className="flex items-center space-x-4 mt-2 text-xs text-slate-500">
-                              <div className="flex items-center space-x-1">
-                                <MapPin size={12} weight="regular" />
-                                <span>{match.job?.location || "Remote"}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <span
-                            className={`px-3 py-1 rounded-lg text-xs font-semibold border ${getMatchColor(
-                              match.matchScore
-                            )}`}
-                          >
-                            {Math.round(match.matchScore)}% match
-                          </span>
-                        </div>
+                      <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                        <Buildings size={24} weight="regular" className="text-blue-600" />
                       </div>
-                    </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-slate-900 truncate">
+                          {match.job?.title}
+                        </h3>
+                        <p className="text-sm text-blue-600 font-medium">
+                          {match.job?.companies?.name}
+                        </p>
+                        {match.job?.location && (
+                          <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                            <MapPin size={12} weight="regular" />
+                            {match.job.location}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1.5 rounded-xl text-sm font-bold border ${getMatchColor(match.matchScore)}`}>
+                          {match.matchScore > 0 ? `${Math.round(match.matchScore)}%` : 'New'}
+                        </span>
+                        <Link
+                          to={`/jobs/${match.job?.id || match.job_id}`}
+                          className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          View
+                        </Link>
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Heart size={48} weight="regular" className="text-slate-300 mx-auto mb-4" />
+                  <Lightning size={48} weight="regular" className="text-slate-300 mx-auto mb-4" />
                   <p className="text-slate-500">No matches found yet</p>
                   <p className="text-sm text-slate-400">
                     Complete your profile to get better matches
@@ -374,7 +382,7 @@ export default function TalentDashboard() {
             </div>
           </motion.div>
 
-          {/* Recent Applications - Smaller & Cleaner */}
+          {/* Recent Applications */}
           <motion.div
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
@@ -475,39 +483,34 @@ export default function TalentDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 bg-primary rounded-2xl p-8 text-white shadow-sm"
+            className="mt-8 bg-slate-50 border border-blue-100 rounded-2xl p-6 relative overflow-hidden"
           >
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <UserCircle size={24} weight="regular" className="text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold">
-                    Complete Your Profile
-                  </h3>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-blue-100 rounded-xl">
+                  <ChartLineUp size={24} weight="bold" className="text-blue-600" />
                 </div>
-                <p className="text-blue-100 text-lg mb-4">
-                  A complete profile gets 3x more views from companies
-                </p>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex-1">
-                    <div className="bg-white/20 rounded-full h-3">
-                      <div className="bg-white rounded-full h-3 w-4/5"></div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold">85%</div>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Boost your visibility</h3>
+                  <p className="text-slate-500 text-sm">A complete profile gets 3x more views from top companies.</p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-3">
+
+              <div className="flex items-center gap-6 w-full md:w-auto">
+                <div className="flex-1 md:w-48">
+                  <div className="flex justify-between items-center mb-1.5 text-xs font-bold text-slate-400">
+                    <span>COMPLETION</span>
+                    <span className="text-blue-600">85%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div className="bg-blue-600 h-full rounded-full w-[85%]" />
+                  </div>
+                </div>
                 <Link
                   to="/talent-profile"
-                  className="px-6 py-3 bg-white text-primary rounded-lg hover:bg-slate-50 transition-colors font-semibold"
+                  className="whitespace-nowrap px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-sm"
                 >
-                  Complete Profile
+                  Finish Now
                 </Link>
               </div>
             </div>

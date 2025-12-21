@@ -1,10 +1,17 @@
 # TalentBrains Matching API
 
-Fast backend built with FastAPI for matching talents to jobs based on:
+Fast real-time matching engine built with **FastAPI** for matching talents to jobs based on:
 - Skills (required & preferred)
 - Years of experience & experience level
 - Location & remote preferences
 - Salary expectations
+
+## 🚀 What's New
+
+- **Real-Time Matching**: Scores are calculated on-demand, always fresh and accurate
+- **Bidirectional Matching**: Match talents→jobs AND jobs→talents
+- **Weighted Algorithm**: Smart scoring with configurable weights
+- **Detailed Breakdowns**: See exactly why a match scored high or low
 
 ## Setup
 
@@ -34,6 +41,10 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ### Health Check
 - `GET /` - API status
 - `GET /health` - Health check
+
+### Listing Endpoints
+- `GET /api/matching/talents` - List all talents with IDs
+- `GET /api/matching/jobs` - List all jobs with IDs
 
 ### Matching Endpoints
 
@@ -65,10 +76,12 @@ Get matching system statistics.
 
 The matching score (0-100) is calculated using weighted factors:
 
-- **Skills (40%)**: Required skills match + preferred skills match
-- **Experience (30%)**: Years of experience + experience level match
-- **Location (20%)**: City match + remote work compatibility
-- **Salary (10%)**: Salary range overlap
+| Factor | Weight | Description |
+|--------|--------|-------------|
+| **Skills** | 40% | Required skills (70%) + preferred skills (30%) |
+| **Experience** | 30% | Years + level match |
+| **Location** | 20% | City match + remote compatibility |
+| **Salary** | 10% | Salary range overlap |
 
 ### Skill Matching
 - Required skills: 70% weight
@@ -104,15 +117,17 @@ The matching score (0-100) is calculated using weighted factors:
   "salary_match_score": 75.0,
   "matched_skills": ["Python", "FastAPI", "PostgreSQL"],
   "missing_skills": ["Docker"],
-  "reason": "Strong skill match (3 skills) • Experience level matches well • Location compatible"
+  "reason": "Strong skill match (3 skills) • Experience level matches well"
 }
 ```
 
 ## Testing
 
-Test the API using curl:
-
 ```bash
+# List available talents and jobs
+curl "http://localhost:8000/api/matching/talents"
+curl "http://localhost:8000/api/matching/jobs"
+
 # Match talent to jobs
 curl -X POST "http://localhost:8000/api/matching/talent/{talent_id}/jobs?limit=5"
 
@@ -121,9 +136,6 @@ curl -X POST "http://localhost:8000/api/matching/job/{job_id}/talents?limit=5"
 
 # Get specific match
 curl "http://localhost:8000/api/matching/talent/{talent_id}/job/{job_id}"
-
-# Get stats
-curl "http://localhost:8000/api/matching/stats"
 ```
 
 ## Interactive API Docs
@@ -132,10 +144,22 @@ Once running, visit:
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
+## Architecture Note
+
+**Real-Time vs Stored Matching:**
+This API uses **real-time matching** - scores are calculated on each request rather than stored in the database. This approach ensures:
+- ✅ Always fresh, up-to-date scores
+- ✅ No stale data when profiles/jobs change
+- ✅ Simpler architecture
+- ✅ No sync issues
+
+For high-traffic production, consider caching matches with a TTL.
+
 ## Future Enhancements
 
-- CV/Resume OCR extraction
-- Advanced ML-based matching
-- Semantic skill matching
-- Historical match success tracking
-- Candidate preferences learning
+- [ ] CV/Resume OCR extraction
+- [ ] Advanced ML-based matching (embeddings)
+- [ ] Semantic skill matching
+- [ ] Match caching with Redis
+- [ ] Historical match success tracking
+- [ ] Candidate preferences learning

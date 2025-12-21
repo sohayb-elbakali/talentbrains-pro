@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Users, TrendingUp, BrainCircuit } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useMatchJobToTalents } from '../../hooks/useMatching';
@@ -75,25 +75,25 @@ export const JobMatchingResultsPage = () => {
     fetchTalentsInfo();
   }, [matches]);
 
-  if (isLoading) {
+  if (isLoading || loadingTalents) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
-        <LoadingSpinner />
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <LoadingSpinner size="lg" text="Analyzing matches and profiles..." />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
+      <div className="min-h-screen bg-slate-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-8 text-center">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
             <p className="text-red-800 text-lg font-semibold">
               Error loading matches: {error.message}
             </p>
             <button
               onClick={() => navigate(-1)}
-              className="mt-4 px-6 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
+              className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               Go Back
             </button>
@@ -103,98 +103,89 @@ export const JobMatchingResultsPage = () => {
     );
   }
 
+  const excellentMatches = matches?.filter(m => m.match_score >= 80).length || 0;
+  const goodMatches = matches?.filter(m => m.match_score >= 60 && m.match_score < 80).length || 0;
+  const avgScore = matches && matches.length > 0
+    ? Math.round(matches.reduce((sum, m) => sum + m.match_score, 0) / matches.length)
+    : 0;
+  const maxSkills = matches && matches.length > 0
+    ? Math.max(...matches.map(m => m.matched_skills?.length || 0))
+    : 0;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
+    <div className="min-h-screen bg-slate-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button
           onClick={() => navigate(`/company/jobs/${jobId}`)}
-          className="mb-6 flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors group"
+          className="mb-6 flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors"
         >
-          <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+          <ArrowLeft className="h-5 w-5" />
           <span className="font-medium">Back to Job Details</span>
         </button>
 
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8 mb-8"
-        >
+        <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Matching Talents
-              </h1>
-              <p className="text-gray-600">
-                AI-powered matching based on skills, experience, location, and salary
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <BrainCircuit className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">Matching Talents</h1>
+                <p className="text-slate-500">AI-powered matching based on skills, experience, location, and salary</p>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-3xl font-bold text-purple-600">{matches?.length || 0}</p>
-                <p className="text-sm text-gray-600">Matches Found</p>
+                <p className="text-3xl font-bold text-blue-600">{matches?.length || 0}</p>
+                <p className="text-sm text-slate-500">Matches Found</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl">
-                <Users className="h-8 w-8 text-purple-600" />
+              <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                <Users className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Stats Bar */}
         {matches && matches.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl shadow-xl p-6 mb-8 text-white"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-blue-600 rounded-xl p-5 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <p className="text-3xl font-bold">
-                  {matches.filter(m => m.match_score >= 80).length}
-                </p>
-                <p className="text-purple-100 text-sm font-medium">Excellent Matches (80%+)</p>
+                <p className="text-3xl font-bold text-white">{excellentMatches}</p>
+                <p className="text-blue-100 text-sm">Excellent Matches (80%+)</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold">
-                  {matches.filter(m => m.match_score >= 60 && m.match_score < 80).length}
-                </p>
-                <p className="text-purple-100 text-sm font-medium">Good Matches (60-79%)</p>
+                <p className="text-3xl font-bold text-white">{goodMatches}</p>
+                <p className="text-blue-100 text-sm">Good Matches (60-79%)</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold">
-                  {Math.round(matches.reduce((sum, m) => sum + m.match_score, 0) / matches.length)}%
-                </p>
-                <p className="text-purple-100 text-sm font-medium">Average Match Score</p>
+                <p className="text-3xl font-bold text-white">{avgScore}%</p>
+                <p className="text-blue-100 text-sm">Average Match Score</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold">
-                  {Math.max(...matches.map(m => m.matched_skills.length))}
-                </p>
-                <p className="text-purple-100 text-sm font-medium">Max Skills Matched</p>
+                <p className="text-3xl font-bold text-white">{maxSkills}</p>
+                <p className="text-blue-100 text-sm">Max Skills Matched</p>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Results Grid */}
         {matches && matches.length > 0 ? (
           <div>
-            <div className="mb-6 flex items-center justify-between">
-              <p className="text-gray-600">
-                <TrendingUp className="inline h-5 w-5 mr-2" />
-                Sorted by match score (highest first)
-              </p>
+            <div className="mb-4 flex items-center gap-2 text-slate-500">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-sm">Sorted by match score (highest first)</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {matches.map((match, idx) => (
                 <motion.div
                   key={match.talent_id || idx}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
+                  transition={{ delay: idx * 0.03 }}
                 >
                   <MatchScoreCard
                     match={match}
@@ -212,25 +203,21 @@ export const JobMatchingResultsPage = () => {
             </div>
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-12 text-center"
-          >
-            <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Users className="h-10 w-10 text-gray-400" />
+          <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="h-8 w-8 text-slate-400" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">No Matches Found</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">No Matches Found</h3>
+            <p className="text-slate-500 mb-6">
               No talents match the requirements for this job yet. Try adjusting the job requirements or check back later.
             </p>
             <button
               onClick={() => navigate(`/company/jobs/${jobId}/edit`)}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
+              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
               Edit Job Requirements
             </button>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>

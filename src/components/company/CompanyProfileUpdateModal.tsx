@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Building, Globe, MapPin, Users, Calendar, Link2, Linkedin, Twitter, Facebook, User } from "lucide-react";
 import { notify } from "../../utils/notify";
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
@@ -17,12 +18,17 @@ interface CompanyProfileUpdateModalProps {
   onUpdate?: (company: Company) => void;
 }
 
+// Required field label component
+const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
+  <span>{children} <span className="text-red-500">*</span></span>
+);
+
 export default function CompanyProfileUpdateModal({
   isOpen,
   onClose,
   onUpdate,
 }: CompanyProfileUpdateModalProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { data, refetch } = useUserData(user?.id);
   const queryClient = useQueryClient();
   const company = data?.company;
@@ -30,6 +36,11 @@ export default function CompanyProfileUpdateModal({
   const [initialLoading, setInitialLoading] = useState(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [companyId, setCompanyId] = useState<string | null>(null);
+
+  // Profile name (stored in profiles table - account holder's name)
+  const [fullName, setFullName] = useState("");
+
+  // Company data (stored in companies table)
   const [formData, setFormData] = useState<CompanyUpdateData>({
     name: "",
     description: "",
@@ -77,74 +88,65 @@ export default function CompanyProfileUpdateModal({
   ];
 
   const cultureValueOptions = [
-    "Innovation",
-    "Collaboration",
-    "Integrity",
-    "Excellence",
-    "Diversity",
-    "Work-life balance",
-    "Growth mindset",
-    "Customer focus",
-    "Transparency",
-    "Sustainability",
-    "Agility",
-    "Respect",
+    "Innovation", "Collaboration", "Integrity", "Excellence",
+    "Diversity", "Work-life balance", "Growth mindset",
+    "Customer focus", "Transparency", "Sustainability",
+    "Agility", "Respect",
   ];
 
   const benefitOptions = [
-    "Health insurance",
-    "Dental insurance",
-    "Vision insurance",
-    "401(k)",
-    "Paid time off",
-    "Remote work",
-    "Flexible hours",
-    "Professional development",
-    "Stock options",
-    "Gym membership",
-    "Free meals",
-    "Commuter benefits",
-    "Parental leave",
-    "Mental health support",
+    "Health insurance", "Dental insurance", "Vision insurance",
+    "401(k)", "Paid time off", "Remote work", "Flexible hours",
+    "Professional development", "Stock options", "Gym membership",
+    "Free meals", "Commuter benefits", "Parental leave", "Mental health support",
   ];
 
   // Load existing company data
   useEffect(() => {
-    if (isOpen && company) {
-      setCompanyId(company.id);
-      setFormData({
-        name: company.name || "",
-        description: company.description || "",
-        website: company.website || "",
-        industry: company.industry || "",
-        company_size: company.company_size || "",
-        location: company.location || "",
-        founded_year: company.founded_year || undefined,
-        culture_values: company.culture_values || [],
-        benefits: company.benefits || [],
-        social_links: {
-          linkedin: company.social_links?.linkedin || "",
-          twitter: company.social_links?.twitter || "",
-          facebook: company.social_links?.facebook || "",
-          website: company.social_links?.website || "",
-        },
-      });
+    if (isOpen) {
+      // Load profile name
+      setFullName(profile?.full_name || "");
+
+      if (company) {
+        setCompanyId(company.id);
+        setFormData({
+          name: company.name || "",
+          description: company.description || "",
+          website: company.website || "",
+          industry: company.industry || "",
+          company_size: company.company_size || "",
+          location: company.location || "",
+          founded_year: company.founded_year || undefined,
+          culture_values: company.culture_values || [],
+          benefits: company.benefits || [],
+          social_links: {
+            linkedin: company.social_links?.linkedin || "",
+            twitter: company.social_links?.twitter || "",
+            facebook: company.social_links?.facebook || "",
+            website: company.social_links?.website || "",
+          },
+        });
+      }
       setInitialLoading(false);
     }
-  }, [isOpen, company]);
-
-
+  }, [isOpen, company, profile]);
 
   const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!fullName.trim()) {
+      newErrors.full_name = "Your name is required";
+    }
+
     const validation = validateCompanyProfile(formData);
-    setErrors(validation.errors);
-    return validation.isValid;
+    Object.assign(newErrors, validation.errors);
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
 
@@ -153,18 +155,14 @@ export default function CompanyProfileUpdateModal({
       setFormData((prev) => ({
         ...prev,
         [parent]: {
-          ...(prev[parent as keyof CompanyUpdateData] as Record<
-            string,
-            string
-          >),
+          ...(prev[parent as keyof CompanyUpdateData] as Record<string, string>),
           [child]: value,
         },
       }));
     } else {
       setFormData((prev) => ({
         ...prev,
-        [name]:
-          name === "founded_year" ? (value ? Number(value) : undefined) : value,
+        [name]: name === "founded_year" ? (value ? Number(value) : undefined) : value,
       }));
     }
 
@@ -174,10 +172,7 @@ export default function CompanyProfileUpdateModal({
     }
   };
 
-  const handleArrayChange = (
-    field: "culture_values" | "benefits",
-    values: string[]
-  ) => {
+  const handleArrayChange = (field: "culture_values" | "benefits", values: string[]) => {
     setFormData((prev) => ({ ...prev, [field]: values }));
     setHasUnsavedChanges(true);
   };
@@ -185,19 +180,16 @@ export default function CompanyProfileUpdateModal({
   const sanitizeData = (data: any) => {
     const sanitized: any = {};
     Object.keys(data).forEach((key) => {
-      if (data[key] === undefined) {
+      const value = data[key];
+      if (value === undefined || value === "") {
+        // Convert empty strings and undefined to null (important for URL fields with constraints)
         sanitized[key] = null;
-      } else if (
-        typeof data[key] === "object" &&
-        data[key] !== null &&
-        !Array.isArray(data[key])
-      ) {
-        sanitized[key] = sanitizeData(data[key]);
+      } else if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+        sanitized[key] = sanitizeData(value);
       } else {
-        sanitized[key] = data[key];
+        sanitized[key] = value;
       }
     });
-    // Remove id if present
     delete sanitized.id;
     return sanitized;
   };
@@ -207,48 +199,65 @@ export default function CompanyProfileUpdateModal({
 
     setLoading(true);
     try {
+      // 1. Update profile name first (account holder's name)
+      const profileResult = await db.updateProfile(user.id, { full_name: fullName.trim() });
+      if (profileResult.error) {
+        console.error("Profile update error:", profileResult.error);
+        // Don't block - continue with company update
+      }
+
+      // 2. Update or create company
       let result;
       const sanitizedData = sanitizeData(formData);
+
       if (companyId) {
-        // Update by id
         result = await db.updateCompanyById(companyId, sanitizedData);
       } else {
-        // Create new company
+        // Generate slug for new company
+        const baseSlug = formData.name
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "");
+        const uniqueSlug = `${baseSlug}-${Date.now().toString(36)}`;
+
         result = await db.createCompany({
           profile_id: user.id,
+          slug: uniqueSlug,
           ...sanitizedData,
         });
       }
 
-      const { data, error } = result;
+      const { data: resultData, error } = result;
       if (error) {
-        throw error;
+        let errorMessage = "Failed to save company profile";
+        if (error.code === "23505") {
+          errorMessage = "A company with this name already exists.";
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        throw new Error(errorMessage);
       }
 
-      // Invalidate all related queries to refresh data everywhere
+      // 3. Refresh all related queries
       await Promise.all([
         refetch(),
         queryClient.invalidateQueries({ queryKey: ['user-data'] }),
         queryClient.invalidateQueries({ queryKey: ['company'] }),
         queryClient.invalidateQueries({ queryKey: ['company-jobs'] }),
-        queryClient.invalidateQueries({ queryKey: ['company-applications'] }),
         queryClient.invalidateQueries({ queryKey: ['welcome-dashboard'] }),
       ]);
 
       notify.showSuccess("Company profile updated successfully!");
       setHasUnsavedChanges(false);
 
-      if (onUpdate && data) {
-        onUpdate(data);
-      } else {
-        // Call onUpdate without data to trigger parent refetch
-        onUpdate?.(data);
+      if (onUpdate && resultData) {
+        onUpdate(resultData);
       }
 
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating company profile:", error);
-      notify.showError("Failed to update company profile. Please try again.");
+      notify.showError(error?.message || "Failed to update company profile. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -267,7 +276,7 @@ export default function CompanyProfileUpdateModal({
         title="Update Company Profile"
       >
         <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <span className="ml-2 text-gray-600">Loading company data...</span>
         </div>
       </ProfileUpdateModal>
@@ -284,67 +293,92 @@ export default function CompanyProfileUpdateModal({
       onCancel={handleCancel}
       hasUnsavedChanges={hasUnsavedChanges}
     >
-      <div className="p-6 space-y-6">
-        {/* Basic Information */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-            Basic Information
-          </h3>
+      <div className="p-6 space-y-8">
+        {/* Account Holder Information */}
+        <div className="space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-slate-200">
+            <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+              <User size={18} className="text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900">Account Holder</h3>
+          </div>
 
           <Input
-            label="Company Name"
+            label={<RequiredLabel>Your Name</RequiredLabel>}
+            name="full_name"
+            value={fullName}
+            onChange={(e) => {
+              setFullName(e.target.value);
+              setHasUnsavedChanges(true);
+              if (errors.full_name) setErrors(prev => ({ ...prev, full_name: "" }));
+            }}
+            placeholder="Your full name (account holder)"
+            error={errors.full_name}
+            leftIcon={<User size={18} className="text-slate-400" />}
+            helperText="This is your personal name as the account manager"
+          />
+        </div>
+
+        {/* Company Information */}
+        <div className="space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-slate-200">
+            <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Building size={18} className="text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900">Company Information</h3>
+          </div>
+
+          <Input
+            label={<RequiredLabel>Company Name</RequiredLabel>}
             name="name"
             value={formData.name}
             onChange={handleInputChange}
             placeholder="Enter your company name"
             error={errors.name}
-            required
+            leftIcon={<Building size={18} className="text-slate-400" />}
           />
 
           <Textarea
-            label="Description"
+            label={<RequiredLabel>Description</RequiredLabel>}
             name="description"
             value={formData.description}
             onChange={handleInputChange}
-            rows={4}
+            rows={3}
             placeholder="Describe what your company does"
             error={errors.description}
-            required
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Select
-              label="Industry"
+              label={<RequiredLabel>Industry</RequiredLabel>}
               name="industry"
               value={formData.industry}
               onChange={handleInputChange}
               options={industryOptions}
               placeholder="Select an industry"
               error={errors.industry}
-              required
             />
 
             <Select
-              label="Company Size"
+              label={<RequiredLabel>Company Size</RequiredLabel>}
               name="company_size"
               value={formData.company_size}
               onChange={handleInputChange}
               options={companySizeOptions}
               placeholder="Select company size"
               error={errors.company_size}
-              required
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Input
-              label="Location"
+              label={<RequiredLabel>Location</RequiredLabel>}
               name="location"
               value={formData.location}
               onChange={handleInputChange}
               placeholder="e.g., San Francisco, CA"
               error={errors.location}
-              required
+              leftIcon={<MapPin size={18} className="text-slate-400" />}
             />
 
             <Input
@@ -357,6 +391,7 @@ export default function CompanyProfileUpdateModal({
               max={new Date().getFullYear()}
               placeholder="e.g., 2015"
               error={errors.founded_year ? String(errors.founded_year) : undefined}
+              leftIcon={<Calendar size={18} className="text-slate-400" />}
             />
           </div>
 
@@ -368,31 +403,41 @@ export default function CompanyProfileUpdateModal({
             onChange={handleInputChange}
             placeholder="https://yourcompany.com"
             error={errors.website}
+            leftIcon={<Globe size={18} className="text-slate-400" />}
           />
         </div>
 
         {/* Culture & Values */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-            Culture & Values
-          </h3>
+        <div className="space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-slate-200">
+            <div className="w-9 h-9 bg-violet-100 rounded-lg flex items-center justify-center">
+              <Users size={18} className="text-violet-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900">Culture & Values</h3>
+          </div>
 
-          <CheckboxGroup
-            label="Culture Values"
-            helperText="Select up to 5 values that represent your company culture"
-            options={cultureValueOptions}
-            selectedValues={formData.culture_values || []}
-            onChange={(values) => handleArrayChange("culture_values", values)}
-            maxSelections={5}
-            columns={2}
-          />
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Company Values
+            </label>
+            <p className="text-sm text-slate-500 mb-3">Select up to 5 values that represent your company culture</p>
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 max-h-48 overflow-y-auto">
+              <CheckboxGroup
+                options={cultureValueOptions}
+                selectedValues={formData.culture_values || []}
+                onChange={(values) => handleArrayChange("culture_values", values)}
+                maxSelections={5}
+                columns={2}
+              />
+            </div>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Benefits Offered
             </label>
-            <p className="text-sm text-slate-500 mb-2">Select all benefits that your company offers</p>
-            <div className="max-h-40 overflow-y-auto border border-slate-200 rounded-lg p-2">
+            <p className="text-sm text-slate-500 mb-3">Select all benefits that your company offers</p>
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 max-h-48 overflow-y-auto">
               <CheckboxGroup
                 options={benefitOptions}
                 selectedValues={formData.benefits || []}
@@ -403,38 +448,44 @@ export default function CompanyProfileUpdateModal({
           </div>
         </div>
 
-        {/* Social Media Links */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-            Social Media Links
-          </h3>
+        {/* Social Links */}
+        <div className="space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-slate-200">
+            <div className="w-9 h-9 bg-sky-100 rounded-lg flex items-center justify-center">
+              <Link2 size={18} className="text-sky-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900">Social Links</h3>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Input
-              label="LinkedIn URL"
+              label="LinkedIn"
               type="url"
               name="social_links.linkedin"
               value={formData.social_links?.linkedin || ""}
               onChange={handleInputChange}
-              placeholder="https://linkedin.com/company/yourcompany"
+              placeholder="https://linkedin.com/company/..."
+              leftIcon={<Linkedin size={18} className="text-blue-600" />}
             />
 
             <Input
-              label="Twitter URL"
+              label="Twitter / X"
               type="url"
               name="social_links.twitter"
               value={formData.social_links?.twitter || ""}
               onChange={handleInputChange}
-              placeholder="https://twitter.com/yourcompany"
+              placeholder="https://twitter.com/..."
+              leftIcon={<Twitter size={18} className="text-sky-500" />}
             />
 
             <Input
-              label="Facebook URL"
+              label="Facebook"
               type="url"
               name="social_links.facebook"
               value={formData.social_links?.facebook || ""}
               onChange={handleInputChange}
-              placeholder="https://facebook.com/yourcompany"
+              placeholder="https://facebook.com/..."
+              leftIcon={<Facebook size={18} className="text-blue-700" />}
             />
 
             <Input
@@ -444,6 +495,7 @@ export default function CompanyProfileUpdateModal({
               value={formData.social_links?.website || ""}
               onChange={handleInputChange}
               placeholder="https://additional-site.com"
+              leftIcon={<Globe size={18} className="text-slate-400" />}
             />
           </div>
         </div>
