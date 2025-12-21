@@ -34,6 +34,7 @@ import {
   TalentApplicationsPage,
   TalentProfilePage,
   TalentsPage,
+  TalentMatchesPage,
   AdminDashboard,
   AdminProfilePage,
   JobsPage,
@@ -174,6 +175,14 @@ function AppContent() {
             }
           />
           <Route
+            path="/talent/matches"
+            element={
+              <ProtectedRoute allowedRoles={["talent"]}>
+                <TalentMatchesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/company/*"
             element={
               <ProtectedRoute allowedRoles={["company"]}>
@@ -215,6 +224,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <JobDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/talents/:talentId"
+            element={
+              <ProtectedRoute>
+                <TalentPublicProfilePage />
               </ProtectedRoute>
             }
           />

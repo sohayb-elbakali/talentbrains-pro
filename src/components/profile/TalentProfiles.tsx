@@ -330,7 +330,7 @@ export default function TalentProfiles() {
                         {/* Actions */}
                         <div className="flex gap-2">
                           <Button
-                            onClick={() => handleViewProfile(talent.profile_id)}
+                            onClick={() => handleViewProfile(talent.id)}
                             fullWidth
                             className="bg-primary hover:bg-blue-700"
                           >
