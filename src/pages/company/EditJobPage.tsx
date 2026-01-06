@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import { db } from "../../lib/supabase/index";
 import JobForm from "../../components/company/JobForm";
 import { notify } from "../../utils/notify";
@@ -35,7 +34,6 @@ export default function EditJobPage() {
             // Load job skills
             const { data: skillsData } = await db.getJobSkills(jobId!);
             if (skillsData) {
-                // Transform skills to match the expected format
                 const transformedSkills = skillsData.map((item: any) => ({
                     skill_id: item.skill?.id || item.skill_id,
                     skill_name: item.skill?.name || item.skill_name,
@@ -62,10 +60,8 @@ export default function EditJobPage() {
 
             // Update skills
             if (data.skills) {
-                // Remove existing skills
                 await db.removeJobSkills(jobId!);
 
-                // Add new skills
                 for (const skill of data.skills) {
                     try {
                         await db.addJobSkill(
@@ -89,10 +85,10 @@ export default function EditJobPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600 font-medium">Loading job details...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-primary mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading job details...</p>
                 </div>
             </div>
         );
@@ -100,13 +96,13 @@ export default function EditJobPage() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
                 <div className="max-w-md mx-auto p-6">
-                    <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6 shadow-lg">
-                        <p className="text-red-800 font-semibold">{error}</p>
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                        <p className="text-red-800 font-medium">{error}</p>
                         <button
                             onClick={() => navigate("/company/jobs")}
-                            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all"
+                            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                         >
                             Back to Jobs
                         </button>
@@ -117,52 +113,41 @@ export default function EditJobPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-slate-50 py-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Back Button */}
                 <button
                     onClick={() => navigate(`/company/jobs/${jobId}`)}
-                    className="mb-6 flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors group"
+                    className="mb-6 flex items-center gap-2 text-gray-600 hover:text-primary transition-colors"
                 >
-                    <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-                    <span className="font-medium">Back to Job Details</span>
+                    <ArrowLeft className="h-4 w-4" />
+                    <span className="text-sm font-medium">Back to Job Details</span>
                 </button>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8"
-                >
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-blue-400 rounded-2xl blur opacity-30"></div>
-                            <div className="relative w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl flex items-center justify-center border-2 border-white shadow-lg">
-                                <Briefcase className="h-8 w-8 text-purple-600" />
-                            </div>
+                {/* Page Header */}
+                <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6 shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center border border-blue-100">
+                            <Briefcase className="h-6 w-6 text-primary" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                                Edit Job Posting
-                            </h1>
-                            <p className="text-gray-600 text-lg mt-1">
+                            <h1 className="text-2xl font-bold text-gray-900">Edit Job Posting</h1>
+                            <p className="text-gray-500 text-sm mt-0.5">
                                 Update the details for {job?.title}
                             </p>
                         </div>
                     </div>
-                </motion.div>
+                </div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                >
-                    <JobForm
-                        initialValues={job}
-                        initialSkills={jobSkills}
-                        onSubmit={handleSubmit}
-                        isEditing={true}
-                    />
-                </motion.div>
+                {/* Job Form */}
+                <JobForm
+                    initialValues={job}
+                    initialSkills={jobSkills}
+                    onSubmit={handleSubmit}
+                    isEditing={true}
+                />
             </div>
         </div>
     );
 }
+

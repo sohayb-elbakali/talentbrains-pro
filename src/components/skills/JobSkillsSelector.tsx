@@ -186,67 +186,73 @@ export default function JobSkillsSelector({
                 </div>
 
                 {selectedSkills.length > 0 ? (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         {selectedSkills.map((skill) => {
                             const profInfo = getProficiencyInfo(skill.proficiency_level);
 
                             return (
                                 <div
                                     key={skill.skill_name}
-                                    className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-primary-light transition-all"
+                                    className={`rounded-xl p-4 border-2 transition-all ${skill.is_required
+                                        ? "bg-red-50 border-red-200"
+                                        : "bg-white border-gray-200 hover:border-primary-light"
+                                        }`}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        {/* Skill Name */}
-                                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                                            <span className="text-sm font-semibold text-gray-900 truncate">{skill.skill_name}</span>
-                                            <span className="text-xs text-gray-500">({profInfo.label})</span>
-                                        </div>
-
-                                        {/* Controls */}
-                                        <div className="flex items-center gap-2 flex-shrink-0">
-                                            {/* Proficiency Dropdown */}
-                                            <select
-                                                value={skill.proficiency_level}
-                                                onChange={(e) =>
-                                                    handleUpdateSkill(skill.skill_name, {
-                                                        proficiency_level: parseInt(e.target.value),
-                                                    })
-                                                }
-                                                className="px-2 py-1 border border-gray-300 rounded text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary bg-white"
-                                            >
-                                                {PROFICIENCY_LEVELS.map((level) => (
-                                                    <option key={level.value} value={level.value}>
-                                                        {level.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-
-                                            {/* Required Toggle */}
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    handleUpdateSkill(skill.skill_name, {
-                                                        is_required: !skill.is_required,
-                                                    })
-                                                }
-                                                className={`px-2 py-1 rounded text-xs font-bold transition-all ${skill.is_required
-                                                    ? "bg-red-100 text-red-700 hover:bg-red-200"
-                                                    : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-                                                    }`}
-                                                title={skill.is_required ? "Required - click to make optional" : "Optional - click to make required"}
-                                            >
-                                                {skill.is_required ? "Required" : "Optional"}
-                                            </button>
-
-                                            {/* Remove Button */}
+                                    <div className="flex flex-col gap-3">
+                                        {/* Skill Name & Actions */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="text-base font-bold text-gray-900">{skill.skill_name}</h4>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleUpdateSkill(skill.skill_name, {
+                                                            is_required: !skill.is_required,
+                                                        })
+                                                    }
+                                                    className={`px-2 py-0.5 rounded text-xs font-bold transition-all ${skill.is_required
+                                                        ? "bg-red-500 text-white"
+                                                        : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                                                        }`}
+                                                >
+                                                    {skill.is_required ? "Required" : "Optional"}
+                                                </button>
+                                            </div>
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveSkill(skill.skill_name)}
-                                                className="flex items-center justify-center w-7 h-7 rounded bg-red-500 hover:bg-red-600 text-white transition-all"
+                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
                                                 title="Remove skill"
                                             >
-                                                <X className="h-3.5 w-3.5" />
+                                                <X className="w-4 h-4" />
                                             </button>
+                                        </div>
+
+                                        {/* Star Rating for Min Skill Level */}
+                                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-sm font-medium text-gray-600">Minimum Level Required</span>
+                                                <span className="text-xs font-medium text-primary">{profInfo.label}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <button
+                                                        key={star}
+                                                        type="button"
+                                                        onClick={() => handleUpdateSkill(skill.skill_name, { proficiency_level: star })}
+                                                        className="p-1 transition-transform hover:scale-110"
+                                                    >
+                                                        <Star
+                                                            className={`w-6 h-6 transition-colors ${star <= skill.proficiency_level
+                                                                ? "text-yellow-400 fill-yellow-400"
+                                                                : "text-gray-300"
+                                                                }`}
+                                                            fill={star <= skill.proficiency_level ? "currentColor" : "none"}
+                                                        />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1">{profInfo.description}</p>
                                         </div>
                                     </div>
                                 </div>

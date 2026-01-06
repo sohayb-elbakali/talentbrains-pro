@@ -106,14 +106,21 @@ const CompanyJobsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading jobs..." />
+      <div className="min-h-[70vh] flex flex-col items-center justify-center bg-white">
+        <LoadingSpinner size="lg" text="Loading your job postings..." />
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-center p-8 text-red-600">Error: {(error as any)?.message || 'An error occurred'}</div>;
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center bg-white">
+        <div className="text-center p-8 text-red-600 bg-red-50 rounded-2xl border border-red-100 max-w-md">
+          <h2 className="text-xl font-bold mb-2">Error Loading Jobs</h2>
+          <p>{(error as any)?.message || 'An error occurred while fetching your jobs'}</p>
+        </div>
+      </div>
+    );
   }
 
   return (

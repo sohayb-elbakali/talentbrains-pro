@@ -25,7 +25,7 @@ const ApplicationStatusActions: React.FC<ApplicationStatusActionsProps> = ({
 
     setLoading(true);
     try {
-      const updateData = {
+      const updateData: any = {
         status: newStatus,
         updated_at: new Date().toISOString(),
       };
@@ -41,12 +41,12 @@ const ApplicationStatusActions: React.FC<ApplicationStatusActionsProps> = ({
         throw new Error(error.message || "Failed to update application status");
       }
 
-      toast.success(`Application status updated to ${newStatus}`);
+      notify.showSuccess(`Application status updated to ${newStatus}`);
       onStatusUpdate();
       setShowDropdown(false);
     } catch (err: any) {
       console.error("Error updating application status:", err);
-      toast.error("Failed to update application status");
+      notify.showError("Failed to update application status");
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ const ApplicationStatusActions: React.FC<ApplicationStatusActionsProps> = ({
     const colors = {
       pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
       reviewed: "bg-blue-100 text-blue-800 border-blue-200",
-      interview: "bg-purple-100 text-purple-800 border-purple-200",
+      interview: "bg-indigo-100 text-indigo-800 border-indigo-200",
       offer: "bg-green-100 text-green-800 border-green-200",
       accepted: "bg-green-100 text-green-800 border-green-200",
       rejected: "bg-red-100 text-red-800 border-red-200",
@@ -66,8 +66,6 @@ const ApplicationStatusActions: React.FC<ApplicationStatusActionsProps> = ({
   };
 
   const getAvailableStatuses = () => {
-    const allStatuses = Object.values(APPLICATION_STATUSES);
-
     // Define allowed transitions
     const allowedTransitions: Record<string, string[]> = {
       [APPLICATION_STATUSES.PENDING]: [

@@ -49,6 +49,8 @@ export default function CompanyLogo({
     <img
       src={avatarUrl}
       alt={`${companyName} logo`}
+      loading="eager"
+      decoding="async"
       className={`${sizeClasses[size]} ${className} rounded-2xl object-cover bg-white border border-slate-200`}
       onError={() => setImageError(true)}
     />

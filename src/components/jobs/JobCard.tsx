@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import {
   Briefcase, Buildings, CurrencyDollar, MapPin, Clock, CheckCircle,
-  XCircle, Eye, ArrowRight, Star
+  XCircle, Eye, ArrowRight
 } from "@phosphor-icons/react";
 import React from "react";
 import { Link } from "react-router-dom";
@@ -44,160 +44,140 @@ export const JobCard: React.FC<JobCardProps> = ({
     if (!job.salary_min && !job.salary_max) return null;
     if (job.salary_min && job.salary_max) {
       if (job.salary_min === job.salary_max)
-        return `${job.salary_min.toLocaleString()}`;
-      return `${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}`;
+        return `$${job.salary_min.toLocaleString()}`;
+      return `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`;
     }
-    return `${(job.salary_min || job.salary_max)?.toLocaleString()}`;
+    return `$${(job.salary_min || job.salary_max)?.toLocaleString()}`;
   };
 
   const getStatusConfig = (status: string) => {
     const configs: any = {
-      pending: { icon: Clock, color: "bg-slate-100 text-slate-700", label: "Pending", progress: 25 },
-      reviewed: { icon: Eye, color: "bg-blue-100 text-blue-700", label: "Reviewed", progress: 50 },
-      interview: { icon: Star, color: "bg-blue-100 text-blue-700", label: "Interview", progress: 75 },
-      offer: { icon: CheckCircle, color: "bg-green-100 text-green-700", label: "Offer", progress: 90 },
-      accepted: { icon: CheckCircle, color: "bg-green-100 text-green-700", label: "Accepted", progress: 100 },
-      rejected: { icon: XCircle, color: "bg-red-100 text-red-700", label: "Not Selected", progress: 100 },
-      withdrawn: { icon: XCircle, color: "bg-slate-100 text-slate-600", label: "Withdrawn", progress: 100 },
+      pending: { icon: Clock, color: "from-slate-400 to-slate-500", label: "Pending" },
+      reviewed: { icon: Eye, color: "from-blue-500 to-cyan-500", label: "Reviewed" },
+      interview: { icon: CheckCircle, color: "from-purple-500 to-pink-500", label: "Interview" },
+      offer: { icon: CheckCircle, color: "from-green-500 to-emerald-500", label: "Offer" },
+      accepted: { icon: CheckCircle, color: "from-green-500 to-emerald-500", label: "Accepted" },
+      rejected: { icon: XCircle, color: "from-red-500 to-pink-500", label: "Not Selected" },
+      withdrawn: { icon: XCircle, color: "from-gray-500 to-gray-600", label: "Withdrawn" },
     };
     return configs[status] || configs.pending;
   };
 
   const statusConfig = application ? getStatusConfig(application.status) : null;
-  const StatusIcon = statusConfig?.icon;
 
   return (
-    <Link to={linkTo || `/jobs/${job.id}`} className="block h-full">
+    <Link to={linkTo || `/jobs/${job.id}`} className="block h-full group/card">
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -4 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="group bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col hover:shadow-md hover:border-primary transition-all duration-200"
+        className="relative bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden h-full flex flex-col hover:shadow-lg hover:border-primary transition-all duration-300"
       >
-        {/* Status badge */}
-        {application && statusConfig && StatusIcon && (
-          <div className={`absolute top-4 right-4 px-3 py-1.5 ${statusConfig.color} text-xs font-medium rounded-full flex items-center gap-1.5 z-10`}>
-            <StatusIcon size={16} weight="regular" />
+        {/* Top colored bar */}
+        <div className="h-1 bg-primary"></div>
+
+        {/* Status Badge */}
+        {application && statusConfig && (
+          <div className={`absolute top-5 right-4 px-2.5 py-1 bg-gradient-to-r ${statusConfig.color} text-white text-xs font-semibold rounded-full shadow-sm z-10 flex items-center gap-1`}>
+            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
             {statusConfig.label}
           </div>
         )}
 
-        <div className="p-6 flex-1 flex flex-col">
-          {/* Header with logo and company */}
-          <div className="flex items-start gap-4 mb-4">
-            <div className="flex-shrink-0">
-              <CompanyLogo
-                avatarUrl={job.avatar_url}
-                companyName={job.company_name}
-                size="lg"
-              />
+        <div className="p-5 flex-1 flex flex-col">
+          {/* Header with Logo and Title */}
+          <div className="flex items-start gap-3 mb-4">
+            <div className="relative flex-shrink-0">
+              <div className="w-12 h-12 rounded-lg border border-gray-100 shadow-sm overflow-hidden bg-white group-hover/card:border-primary transition-colors">
+                <CompanyLogo
+                  avatarUrl={job.avatar_url}
+                  companyName={job.company_name}
+                  size="md"
+                />
+              </div>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-primary flex items-center mb-1 uppercase tracking-wide">
-                <Buildings size={16} weight="regular" className="mr-1.5" />
-                {job.company_name}
-              </p>
-              <h3 className="text-lg font-semibold text-slate-900 group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+              <h3 className="text-base font-bold text-gray-900 line-clamp-2 mb-1 leading-snug group-hover/card:text-primary transition-colors">
                 {job.title}
               </h3>
+              <p className="text-xs text-gray-500 font-medium flex items-center gap-1">
+                <Buildings size={12} weight="regular" />
+                {job.company_name}
+              </p>
             </div>
           </div>
 
-          {/* Job details */}
-          <div className="space-y-3 mb-4 flex-1">
+          {/* Job Details - Compact */}
+          <div className="space-y-2 mb-4 flex-1">
             {job.location && (
-              <div className="flex items-center gap-3 text-sm text-slate-600">
-                <div className="p-2 bg-slate-50 rounded-lg">
-                  <MapPin size={16} weight="regular" className="text-primary" />
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <MapPin size={14} weight="regular" className="text-primary" />
                 </div>
-                <span className="font-medium">{job.location}</span>
+                <span className="font-medium truncate">{job.location}</span>
               </div>
             )}
             {(job.job_type || job.employment_type) && (
-              <div className="flex items-center gap-3 text-sm text-slate-600">
-                <div className="p-2 bg-slate-50 rounded-lg">
-                  <Briefcase size={16} weight="regular" className="text-primary" />
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Briefcase size={14} weight="regular" className="text-blue-600" />
                 </div>
                 <span className="font-medium capitalize">{(job.job_type || job.employment_type)?.replace(/_/g, ' ')}</span>
               </div>
             )}
             {formatSalary() && (
-              <div className="flex items-center gap-3 text-sm">
-                <div className="p-2 bg-slate-50 rounded-lg">
-                  <CurrencyDollar size={16} weight="regular" className="text-green-600" />
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-7 h-7 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <CurrencyDollar size={14} weight="regular" className="text-green-600" />
                 </div>
-                <span className="font-semibold text-green-700">${formatSalary()}</span>
+                <span className="font-bold text-green-700">{formatSalary()}</span>
               </div>
             )}
           </div>
 
-          {/* Skills Section */}
+          {/* Skills - Compact */}
           {job.required_skills && job.required_skills.length > 0 && (
-            <div className="pt-4 border-t border-slate-200">
-              <div className="flex items-center gap-2 mb-3">
-                <Star size={16} weight="regular" className="text-primary" />
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                  Required Skills
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {job.required_skills.slice(0, 5).map((skill, index) => (
+            <div className="mb-4 pb-4 border-b border-gray-100">
+              <div className="flex flex-wrap gap-1.5">
+                {job.required_skills.slice(0, 3).map((skill, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-700 rounded-lg text-xs font-medium border border-slate-200"
+                    className="inline-flex items-center px-2 py-1 bg-blue-50 text-primary rounded-md text-xs font-medium border border-blue-100"
                   >
-                    <span className="w-1 h-1 rounded-full bg-primary"></span>
                     {skill}
                   </span>
                 ))}
-                {job.required_skills.length > 5 && (
-                  <span className="inline-flex items-center px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-xs font-medium">
-                    +{job.required_skills.length - 5} more
+                {job.required_skills.length > 3 && (
+                  <span className="inline-flex items-center px-2 py-1 bg-gray-50 text-gray-500 rounded-md text-xs font-medium">
+                    +{job.required_skills.length - 3}
                   </span>
                 )}
               </div>
             </div>
           )}
 
-          {/* Application progress or action button */}
-          {application && statusConfig ? (
-            <div className="space-y-3 pt-4 border-t border-slate-200 mt-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                  Application Progress
-                </span>
-                <span className="text-sm font-semibold text-primary">{statusConfig.progress}%</span>
-              </div>
-              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${statusConfig.progress}%` }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  className="h-2 bg-primary rounded-full"
-                />
-              </div>
-              {(application.status === "pending" || application.status === "reviewed" || application.status === "interview") && onCancel && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onCancel(application.id);
-                  }}
-                  disabled={actionLoading}
-                  className="w-full text-xs text-red-600 hover:text-white font-medium disabled:opacity-50 px-4 py-2 hover:bg-red-600 rounded-lg transition-colors border border-red-200 hover:border-red-600"
-                >
-                  {actionLoading ? "Processing..." : "Withdraw Application"}
-                </button>
-              )}
-            </div>
-          ) : (
-            <button className="w-full btn btn-primary mt-4 flex items-center justify-center gap-2">
-              <Eye size={20} weight="regular" />
-              <span>View Details</span>
-              <ArrowRight size={16} weight="regular" className="group-hover:translate-x-1 transition-transform duration-200" />
-            </button>
-          )}
+          {/* Footer */}
+          <div className="mt-auto">
+            {application && (application.status === "pending" || application.status === "reviewed" || application.status === "interview") && onCancel ? (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onCancel(application.id);
+                }}
+                disabled={actionLoading}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-red-600 border border-red-200 rounded-lg font-medium text-sm hover:bg-red-50 transition-all disabled:opacity-50"
+              >
+                {actionLoading ? "Processing..." : "Withdraw Application"}
+              </button>
+            ) : !application && (
+              <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg font-semibold text-sm shadow-sm hover:shadow-md hover:bg-blue-700 transition-all group-hover/card:gap-3">
+                <span>View Details</span>
+                <ArrowRight size={16} weight="bold" className="transition-transform" />
+              </button>
+            )}
+          </div>
         </div>
       </motion.div>
     </Link>

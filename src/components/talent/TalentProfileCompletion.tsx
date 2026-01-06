@@ -1,16 +1,18 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Briefcase, DollarSign, MapPin, User, FileText, Award, Link2, Linkedin, Github, Globe, ChevronRight, ChevronLeft, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { Brain, User, Briefcase, MapPin, Globe, Calendar, DollarSign, Linkedin, Github, Link2, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { notify } from "../../utils/notify";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { db } from '../../lib/supabase/index';
+import Input from '../ui/Input';
+import Textarea from '../ui/Textarea';
+import Button from '../ui/Button';
+import Select from '../ui/Select';
 import SkillsSelector from '../skills/SkillsSelector';
-import { Notyf } from 'notyf';
-
-const notyf = new Notyf({ duration: 3000, position: { x: 'right', y: 'top' } });
 
 interface FormData {
+  full_name: string;
   title: string;
   bio: string;
   location: string;
@@ -20,34 +22,56 @@ interface FormData {
   remote_preference: boolean;
   timezone: string;
   languages: string;
-  hourly_rate_min?: number;
-  hourly_rate_max?: number;
-  salary_expectation_min?: number;
-  salary_expectation_max?: number;
-  portfolio_url?: string;
-  linkedin_url?: string;
-  github_url?: string;
+  hourly_rate_min: number | undefined;
+  hourly_rate_max: number | undefined;
+  portfolio_url: string;
+  linkedin_url: string;
+  github_url: string;
 }
 
 const STEPS = [
-  { id: 1, title: 'Basic Info', icon: User, description: 'Tell us about yourself' },
-  { id: 2, title: 'Experience', icon: Award, description: 'Your professional background' },
-  { id: 3, title: 'Skills', icon: Briefcase, description: 'What you excel at' },
-  { id: 4, title: 'Compensation', icon: DollarSign, description: 'Your rate expectations' },
-  { id: 5, title: 'Links', icon: Link2, description: 'Portfolio & social profiles' },
+  { id: 1, title: 'Identity', icon: User },
+  { id: 2, title: 'Experience', icon: Briefcase },
+  { id: 3, title: 'Links', icon: Link2 },
 ];
 
+const experienceLevelOptions = [
+  { value: 'entry', label: 'Entry Level (0-2 years)' },
+  { value: 'mid', label: 'Mid Level (2-5 years)' },
+  { value: 'senior', label: 'Senior (5-10 years)' },
+  { value: 'lead', label: 'Expert / Lead (10+ years)' },
+];
+
+const availabilityOptions = [
+  { value: 'available', label: 'Available for work' },
+  { value: 'open_to_offers', label: 'Open to offers' },
+  { value: 'not_looking', label: 'Not looking' },
+];
+
+const timezoneOptions = [
+  'UTC', 'America/New_York', 'America/Los_Angeles', 'Europe/London',
+  'Europe/Paris', 'Asia/Tokyo', 'Asia/Dubai', 'Australia/Sydney'
+].map(tz => ({ value: tz, label: tz.replace('_', ' ') }));
+
+// Required field label component
+const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
+  <span>{children} <span className="text-red-500">*</span></span>
+);
+
 export default function TalentProfileCompletion() {
-  const { user, checkProfileCompletion } = useAuth();
+  const { user, profile, loadUserProfile, setProfileCompletionStatus } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
   const [skills, setSkills] = useState<any[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [formData, setFormData] = useState<FormData>({
+    full_name: '',
     title: '',
     bio: '',
     location: '',
-    experience_level: 'intermediate',
+    experience_level: 'mid',
     years_of_experience: 0,
     availability_status: 'available',
     remote_preference: true,
@@ -55,33 +79,89 @@ export default function TalentProfileCompletion() {
     languages: 'English',
     hourly_rate_min: undefined,
     hourly_rate_max: undefined,
-    salary_expectation_min: undefined,
-    salary_expectation_max: undefined,
     portfolio_url: '',
     linkedin_url: '',
     github_url: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+  // Handle unsaved changes warning
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      try {
+        const { data: talentData } = await db.getTalent(user.id);
+
+        if (talentData) {
+          setFormData({
+            full_name: profile?.full_name || '',
+            title: talentData.title || '',
+            bio: talentData.bio || '',
+            location: talentData.location || '',
+            experience_level: talentData.experience_level || 'mid',
+            years_of_experience: talentData.years_of_experience || 0,
+            availability_status: talentData.availability_status || 'available',
+            remote_preference: talentData.remote_preference ?? true,
+            timezone: talentData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+            languages: (talentData.languages || ['English']).join(', '),
+            hourly_rate_min: talentData.hourly_rate_min || undefined,
+            hourly_rate_max: talentData.hourly_rate_max || undefined,
+            portfolio_url: talentData.portfolio_url || '',
+            linkedin_url: talentData.linkedin_url || '',
+            github_url: talentData.github_url || '',
+          });
+
+          const { data: talentSkills } = await db.getTalentSkills(talentData.id);
+          if (talentSkills) setSkills(talentSkills);
+        } else {
+          setFormData(prev => ({ ...prev, full_name: profile?.full_name || '' }));
+        }
+      } catch (err) {
+        console.error("Error fetching talent data:", err);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+    fetchData();
+  }, [user, profile]);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const checkbox = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
+
     setFormData(prev => ({
       ...prev,
-      [name]: name.includes('rate') || name.includes('salary') || name === 'years_of_experience'
-        ? value === '' ? undefined : Number(value)
-        : value
+      [name]: type === 'checkbox'
+        ? checkbox
+        : (name.includes('rate') || name.includes('years_of_experience'))
+          ? (value === '' ? undefined : Number(value))
+          : value
     }));
-  };
+    setHasUnsavedChanges(true);
+  }, []);
 
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        return !!(formData.title && formData.bio && formData.location && formData.timezone && formData.languages);
+        if (!formData.full_name.trim()) { notify.showError('Full name is required'); return false; }
+        if (!formData.title.trim()) { notify.showError('Professional title is required'); return false; }
+        if (!formData.location.trim()) { notify.showError('Location is required'); return false; }
+        return true;
       case 2:
-        return !!(formData.experience_level && formData.years_of_experience >= 0);
+        if (skills.length === 0) { notify.showError('Please add at least one skill'); return false; }
+        return true;
       case 3:
-        return skills.length > 0;
-      case 4:
-      case 5:
         return true;
       default:
         return false;
@@ -91,8 +171,6 @@ export default function TalentProfileCompletion() {
   const nextStep = () => {
     if (validateStep(currentStep)) {
       setCurrentStep(prev => Math.min(prev + 1, STEPS.length));
-    } else {
-      notyf.error('Please fill in all required fields');
     }
   };
 
@@ -102,59 +180,52 @@ export default function TalentProfileCompletion() {
 
   const handleSubmit = async () => {
     if (!user) {
-      notyf.error('User not found. Please log in again.');
+      notify.showError('User not found. Please log in again.');
       return;
     }
 
-    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
-      notyf.error('Please complete all required steps');
-      return;
-    }
+    if (!validateStep(1) || !validateStep(2)) return;
 
     setLoading(true);
     try {
-      console.log('Starting profile submission...', { userId: user.id, formData, skills });
+      // 1. Update profile full_name
+      const profileResult = await db.updateProfile(user.id, { full_name: formData.full_name.trim() });
+      if (profileResult.error) {
+        throw new Error(profileResult.error.message || 'Failed to update profile name');
+      }
 
       const { data: existingTalent } = await db.getTalent(user.id);
-      console.log('Existing talent:', existingTalent);
 
       const talentData = {
-        ...formData,
+        title: formData.title.trim(),
+        bio: formData.bio.trim() || null,
+        location: formData.location.trim(),
+        experience_level: formData.experience_level,
+        years_of_experience: formData.years_of_experience,
+        availability_status: formData.availability_status,
+        remote_preference: formData.remote_preference,
+        timezone: formData.timezone,
+        languages: formData.languages.split(',').map(l => l.trim()).filter(Boolean),
         hourly_rate_min: formData.hourly_rate_min || null,
         hourly_rate_max: formData.hourly_rate_max || null,
-        salary_expectation_min: formData.salary_expectation_min || null,
-        salary_expectation_max: formData.salary_expectation_max || null,
-        portfolio_url: formData.portfolio_url || null,
-        linkedin_url: formData.linkedin_url || null,
-        github_url: formData.github_url || null,
-        // Convert languages string to array
-        languages: formData.languages.split(',').map(lang => lang.trim()).filter(Boolean),
-        // Required fields with empty defaults
+        portfolio_url: formData.portfolio_url.trim() || null,
+        linkedin_url: formData.linkedin_url.trim() || null,
+        github_url: formData.github_url.trim() || null,
         education: [],
         certifications: [],
       };
 
       let result;
       if (existingTalent) {
-        console.log('Updating existing talent...');
         result = await db.updateTalent(existingTalent.id, talentData);
       } else {
-        console.log('Creating new talent...');
-        result = await db.createTalent({
-          profile_id: user.id,
-          ...talentData,
-        });
+        result = await db.createTalent({ profile_id: user.id, ...talentData });
       }
 
-      console.log('Talent save result:', result);
+      if (result.error) throw new Error(result.error.message || 'Failed to save profile');
 
-      if (result.error) {
-        console.error('Talent save error:', result.error);
-        throw new Error(result.error.message || 'Failed to save talent profile');
-      }
-
-      if (skills.length > 0 && result.data) {
-        console.log('Saving skills...');
+      // Save skills
+      if (result.data && skills.length > 0) {
         await db.removeTalentSkills(result.data.id);
         for (const skill of skills) {
           await db.addTalentSkill(
@@ -165,610 +236,374 @@ export default function TalentProfileCompletion() {
             skill.is_primary || false
           );
         }
-        console.log('Skills saved successfully');
       }
 
-      await checkProfileCompletion(true);
-      notify.showProfileCompletionSuccess();
-      navigate('/talent');
+      setHasUnsavedChanges(false);
+      await loadUserProfile(user.id);
+      notify.showSuccess('Profile completed successfully!');
+      setProfileCompletionStatus({ needsCompletion: false, type: 'talent' });
+
+      setTimeout(() => navigate('/talent', { replace: true }), 300);
     } catch (error: any) {
       console.error('Profile completion error:', error);
-      const errorMessage = error?.message || 'Failed to save profile. Please try again.';
-      notyf.error(errorMessage);
+      notify.showError(error?.message || 'Failed to save profile.');
     } finally {
       setLoading(false);
     }
   };
 
-  const experienceLevels = [
-    { value: 'entry', label: 'Entry Level', subtitle: '0-2 years' },
-    { value: 'intermediate', label: 'Intermediate', subtitle: '2-5 years' },
-    { value: 'senior', label: 'Senior', subtitle: '5-10 years' },
-    { value: 'expert', label: 'Expert', subtitle: '10+ years' },
-  ];
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-blue-50">
+        <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-100 text-center max-w-md">
+          <h2 className="text-xl font-bold mb-2 text-slate-900">User not found</h2>
+          <p className="text-slate-500 mb-4">You must be logged in to complete your profile.</p>
+          <Button onClick={() => navigate('/')}>Go to Home</Button>
+        </div>
+      </div>
+    );
+  }
 
-  const availabilityStatuses = [
-    { value: 'available', label: 'Available Now', color: 'green' },
-    { value: 'open_to_offers', label: 'Open to Opportunities', color: 'blue' },
-    { value: 'not_looking', label: 'Not Looking', color: 'gray' },
-  ];
-
-  const timezones = [
-    'America/New_York',
-    'America/Chicago',
-    'America/Denver',
-    'America/Los_Angeles',
-    'America/Phoenix',
-    'Europe/London',
-    'Europe/Paris',
-    'Europe/Berlin',
-    'Asia/Tokyo',
-    'Asia/Shanghai',
-    'Asia/Dubai',
-    'Australia/Sydney',
-    'UTC',
-  ];
-
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <motion.div
-            key="step1"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            <div>
-              <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
-                Professional Title <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Briefcase className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="title"
-                  name="title"
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900"
-                  placeholder="e.g., Full Stack Developer"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="bio" className="block text-sm font-semibold text-gray-700 mb-2">
-                Bio <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <FileText className="absolute left-4 top-4 h-5 w-5 text-gray-400" />
-                <textarea
-                  id="bio"
-                  name="bio"
-                  required
-                  value={formData.bio}
-                  onChange={handleChange}
-                  rows={5}
-                  className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900 resize-none"
-                  placeholder="Tell us about your experience, skills, and what you're looking for..."
-                />
-              </div>
-              <p className="mt-2 text-sm text-gray-500">Share your story and what makes you unique</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="location" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Location <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    id="location"
-                    name="location"
-                    type="text"
-                    required
-                    value={formData.location}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900"
-                    placeholder="e.g., San Francisco, CA"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="timezone" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Timezone <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="timezone"
-                  name="timezone"
-                  required
-                  value={formData.timezone}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900 bg-white"
-                >
-                  {timezones.map(tz => (
-                    <option key={tz} value={tz}>
-                      {tz}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="availability_status" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Availability <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="availability_status"
-                  name="availability_status"
-                  required
-                  value={formData.availability_status}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900 bg-white"
-                >
-                  {availabilityStatuses.map(status => (
-                    <option key={status.value} value={status.value}>
-                      {status.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="languages" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Languages <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="languages"
-                  name="languages"
-                  type="text"
-                  required
-                  value={formData.languages}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900"
-                  placeholder="e.g., English, Spanish, French"
-                />
-                <p className="mt-1 text-xs text-gray-500">Separate multiple languages with commas</p>
-              </div>
-            </div>
-
-            <div>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="remote_preference"
-                  checked={formData.remote_preference}
-                  onChange={(e) => setFormData(prev => ({ ...prev, remote_preference: e.target.checked }))}
-                  className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  Open to remote work opportunities
-                </span>
-              </label>
-            </div>
-          </motion.div>
-        );
-
-      case 2:
-        return (
-          <motion.div
-            key="step2"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Experience Level <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {experienceLevels.map(level => (
-                  <button
-                    key={level.value}
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, experience_level: level.value }))}
-                    className={`p-4 rounded-xl border-2 transition-all text-left ${formData.experience_level === level.value
-                      ? 'border-blue-500 bg-blue-50 shadow-md'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
-                      }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold text-gray-900">{level.label}</div>
-                        <div className="text-sm text-gray-500">{level.subtitle}</div>
-                      </div>
-                      {formData.experience_level === level.value && (
-                        <Check className="h-5 w-5 text-blue-600" />
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="years_of_experience" className="block text-sm font-semibold text-gray-700 mb-2">
-                Years of Experience <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="years_of_experience"
-                name="years_of_experience"
-                type="number"
-                required
-                min="0"
-                max="50"
-                value={formData.years_of_experience}
-                onChange={handleChange}
-                className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900"
-                placeholder="5"
-              />
-              <p className="mt-2 text-sm text-gray-500">Total years of professional experience</p>
-            </div>
-          </motion.div>
-        );
-
-      case 3:
-        return (
-          <motion.div
-            key="step3"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-4"
-          >
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Your Skills <span className="text-red-500">*</span>
-              </h3>
-              <p className="text-sm text-gray-600">Add at least one skill to continue</p>
-            </div>
-            <SkillsSelector
-              selectedSkills={skills}
-              onChange={setSkills}
-            />
-          </motion.div>
-        );
-
-      case 4:
-        return (
-          <motion.div
-            key="step4"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-              <p className="text-sm text-blue-800">
-                💡 This information is optional but helps match you with better opportunities
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-base font-semibold text-gray-900 mb-4">Hourly Rate Range</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="hourly_rate_min" className="block text-sm font-medium text-gray-700 mb-2">
-                    Minimum ($/hr)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
-                    <input
-                      id="hourly_rate_min"
-                      name="hourly_rate_min"
-                      type="number"
-                      min="0"
-                      value={formData.hourly_rate_min || ''}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900"
-                      placeholder="50"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="hourly_rate_max" className="block text-sm font-medium text-gray-700 mb-2">
-                    Maximum ($/hr)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
-                    <input
-                      id="hourly_rate_max"
-                      name="hourly_rate_max"
-                      type="number"
-                      min="0"
-                      value={formData.hourly_rate_max || ''}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900"
-                      placeholder="100"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-base font-semibold text-gray-900 mb-4">Annual Salary Range</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="salary_expectation_min" className="block text-sm font-medium text-gray-700 mb-2">
-                    Minimum ($/year)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
-                    <input
-                      id="salary_expectation_min"
-                      name="salary_expectation_min"
-                      type="number"
-                      min="0"
-                      value={formData.salary_expectation_min || ''}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900"
-                      placeholder="80000"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="salary_expectation_max" className="block text-sm font-medium text-gray-700 mb-2">
-                    Maximum ($/year)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
-                    <input
-                      id="salary_expectation_max"
-                      name="salary_expectation_max"
-                      type="number"
-                      min="0"
-                      value={formData.salary_expectation_max || ''}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900"
-                      placeholder="120000"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        );
-
-      case 5:
-        return (
-          <motion.div
-            key="step5"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6">
-              <p className="text-sm text-purple-800">
-                🔗 Add your online presence to showcase your work and connect with employers
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="portfolio_url" className="block text-sm font-semibold text-gray-700 mb-2">
-                Portfolio Website
-              </label>
-              <div className="relative">
-                <Globe className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="portfolio_url"
-                  name="portfolio_url"
-                  type="url"
-                  value={formData.portfolio_url || ''}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900"
-                  placeholder="https://yourportfolio.com"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="linkedin_url" className="block text-sm font-semibold text-gray-700 mb-2">
-                LinkedIn Profile
-              </label>
-              <div className="relative">
-                <Linkedin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="linkedin_url"
-                  name="linkedin_url"
-                  type="url"
-                  value={formData.linkedin_url || ''}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900"
-                  placeholder="https://linkedin.com/in/yourprofile"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="github_url" className="block text-sm font-semibold text-gray-700 mb-2">
-                GitHub Profile
-              </label>
-              <div className="relative">
-                <Github className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="github_url"
-                  name="github_url"
-                  type="url"
-                  value={formData.github_url || ''}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-gray-900"
-                  placeholder="https://github.com/yourusername"
-                />
-              </div>
-            </div>
-          </motion.div>
-        );
-
-      default:
-        return null;
-    }
-  };
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-10 w-full max-w-xl border border-slate-100 animate-pulse">
+          <div className="h-8 bg-blue-100 rounded-lg w-48 mx-auto mb-4"></div>
+          <div className="h-4 bg-slate-100 rounded w-32 mx-auto mb-8"></div>
+          <div className="space-y-4">
+            <div className="h-12 bg-slate-50 rounded-xl"></div>
+            <div className="h-12 bg-slate-50 rounded-xl"></div>
+            <div className="h-24 bg-slate-50 rounded-xl"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            Complete Your Profile
-          </h1>
-          <p className="text-base md:text-lg text-gray-600">
-            Let's set up your talent profile to get started
-          </p>
-        </motion.div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-8 px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="max-w-xl mx-auto"
+      >
+        {/* Header with TalentBrains Logo */}
+        <div className="text-center mb-8">
+          <motion.div
+            className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200"
+            animate={{
+              scale: [1, 1.05, 1],
+              opacity: [1, 0.9, 1]
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
+            <Brain size={32} className="text-white" />
+          </motion.div>
+          <h1 className="text-2xl font-bold text-slate-900">Complete Your Profile</h1>
+          <p className="text-slate-500 mt-1">Stand out to top companies</p>
+        </div>
 
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between max-w-3xl mx-auto">
-            {STEPS.map((step, index) => (
-              <div key={step.id} className="flex items-center flex-1">
-                <div className="flex flex-col items-center flex-1">
+        {/* Step Indicator */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          {STEPS.map((step, idx) => (
+            <div key={step.id} className="flex items-center">
+              <motion.div
+                animate={{
+                  backgroundColor: currentStep >= step.id ? '#2563eb' : '#fff',
+                  color: currentStep >= step.id ? '#fff' : '#94a3b8',
+                  scale: currentStep === step.id ? 1.1 : 1,
+                }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 transition-all cursor-pointer ${currentStep >= step.id ? 'border-blue-600 shadow-lg shadow-blue-200' : 'border-slate-200'
+                  }`}
+                onClick={() => currentStep > step.id && setCurrentStep(step.id)}
+              >
+                {currentStep > step.id ? <Check size={18} /> : <step.icon size={18} />}
+              </motion.div>
+              {idx < STEPS.length - 1 && (
+                <div className="w-12 h-1 mx-2 rounded bg-slate-200 overflow-hidden">
                   <motion.div
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-semibold transition-all ${currentStep > step.id
-                      ? 'bg-green-500 text-white'
-                      : currentStep === step.id
-                        ? 'bg-blue-600 text-white shadow-lg scale-110'
-                        : 'bg-gray-200 text-gray-500'
-                      }`}
-                  >
-                    {currentStep > step.id ? (
-                      <Check className="h-5 w-5 md:h-6 md:w-6" />
-                    ) : (
-                      <step.icon className="h-5 w-5 md:h-6 md:w-6" />
-                    )}
-                  </motion.div>
-                  <span className={`text-xs md:text-sm font-medium mt-2 text-center hidden md:block ${currentStep === step.id ? 'text-blue-600' : 'text-gray-500'
-                    }`}>
-                    {step.title}
-                  </span>
+                    className="h-full bg-blue-600"
+                    initial={{ width: '0%' }}
+                    animate={{ width: currentStep > step.id ? '100%' : '0%' }}
+                  />
                 </div>
-                {index < STEPS.length - 1 && (
-                  <div className={`h-1 flex-1 mx-2 rounded transition-all ${currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'
-                    }`} />
-                )}
-              </div>
-            ))}
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+          <AnimatePresence mode="wait">
+            {/* Step 1: Identity */}
+            {currentStep === 1 && (
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="p-6 space-y-5"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <User size={20} className="text-blue-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-900">Basic Information</h2>
+                </div>
+
+                <Input
+                  label={<RequiredLabel>Full Name</RequiredLabel>}
+                  name="full_name"
+                  value={formData.full_name}
+                  onChange={handleChange}
+                  placeholder="Your full name"
+                  leftIcon={<User size={18} className="text-slate-400" />}
+                />
+
+                <Input
+                  label={<RequiredLabel>Professional Title</RequiredLabel>}
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="e.g. Full Stack Developer"
+                  leftIcon={<Briefcase size={18} className="text-slate-400" />}
+                />
+
+                <Input
+                  label={<RequiredLabel>Location</RequiredLabel>}
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  placeholder="City, Country"
+                  leftIcon={<MapPin size={18} className="text-slate-400" />}
+                />
+
+                <Select
+                  label="Timezone"
+                  name="timezone"
+                  value={formData.timezone}
+                  onChange={handleChange}
+                  options={timezoneOptions}
+                />
+
+                <Textarea
+                  label="Bio"
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  placeholder="Tell companies about yourself..."
+                  rows={3}
+                />
+
+                {/* Remote Toggle */}
+                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-900">Open to Remote Work</p>
+                    <p className="text-sm text-slate-500">Available for remote positions</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="remote_preference"
+                      checked={formData.remote_preference}
+                      onChange={handleChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                  </label>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 2: Experience & Skills */}
+            {currentStep === 2 && (
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="p-6 space-y-5"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <Briefcase size={20} className="text-blue-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-900">Experience & Skills</h2>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Select
+                    label="Experience Level"
+                    name="experience_level"
+                    value={formData.experience_level}
+                    onChange={handleChange}
+                    options={experienceLevelOptions}
+                  />
+                  <Input
+                    label="Years of Experience"
+                    type="number"
+                    name="years_of_experience"
+                    value={formData.years_of_experience}
+                    onChange={handleChange}
+                    min={0}
+                    max={50}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Select
+                    label="Availability"
+                    name="availability_status"
+                    value={formData.availability_status}
+                    onChange={handleChange}
+                    options={availabilityOptions}
+                  />
+                  <Input
+                    label="Languages"
+                    name="languages"
+                    value={formData.languages}
+                    onChange={handleChange}
+                    placeholder="e.g. English, French"
+                    helperText="Comma separated"
+                  />
+                </div>
+
+                {/* Skills */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Skills <span className="text-red-500">*</span>
+                  </label>
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <SkillsSelector selectedSkills={skills} onChange={(newSkills) => {
+                      setSkills(newSkills);
+                      setHasUnsavedChanges(true);
+                    }} />
+                  </div>
+                </div>
+
+                {/* Compensation */}
+                <div className="pt-4 border-t border-slate-100">
+                  <p className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+                    <DollarSign size={16} className="text-blue-600" />
+                    Compensation (Optional)
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      label="Min Hourly Rate ($)"
+                      type="number"
+                      name="hourly_rate_min"
+                      value={formData.hourly_rate_min || ''}
+                      onChange={handleChange}
+                      placeholder="50"
+                      min={0}
+                    />
+                    <Input
+                      label="Max Hourly Rate ($)"
+                      type="number"
+                      name="hourly_rate_max"
+                      value={formData.hourly_rate_max || ''}
+                      onChange={handleChange}
+                      placeholder="150"
+                      min={0}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 3: Links */}
+            {currentStep === 3 && (
+              <motion.div
+                key="step3"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="p-6 space-y-5"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <Link2 size={20} className="text-blue-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-900">Online Presence (Optional)</h2>
+                </div>
+
+                <Input
+                  label="Portfolio URL"
+                  type="url"
+                  name="portfolio_url"
+                  value={formData.portfolio_url}
+                  onChange={handleChange}
+                  placeholder="https://yourportfolio.com"
+                  leftIcon={<Globe size={18} className="text-slate-400" />}
+                />
+
+                <Input
+                  label="LinkedIn"
+                  type="url"
+                  name="linkedin_url"
+                  value={formData.linkedin_url}
+                  onChange={handleChange}
+                  placeholder="https://linkedin.com/in/..."
+                  leftIcon={<Linkedin size={18} className="text-blue-600" />}
+                />
+
+                <Input
+                  label="GitHub"
+                  type="url"
+                  name="github_url"
+                  value={formData.github_url}
+                  onChange={handleChange}
+                  placeholder="https://github.com/..."
+                  leftIcon={<Github size={18} className="text-slate-700" />}
+                />
+
+                {/* Ready Message */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center">
+                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Check size={24} className="text-white" />
+                  </div>
+                  <h3 className="font-semibold text-slate-900">You're all set!</h3>
+                  <p className="text-sm text-slate-600 mt-1">Your profile is ready to shine.</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Navigation */}
+          <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-between">
+            {currentStep > 1 ? (
+              <Button variant="outline" onClick={prevStep}>
+                <ChevronLeft size={18} className="mr-1" /> Back
+              </Button>
+            ) : (
+              <div />
+            )}
+
+            {currentStep < STEPS.length ? (
+              <Button onClick={nextStep}>
+                Next <ChevronRight size={18} className="ml-1" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                loading={loading}
+                disabled={!formData.full_name || !formData.title || !formData.location || skills.length === 0}
+              >
+                Complete Profile <Check size={18} className="ml-1" />
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* Main Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
-        >
-          {/* Step Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 md:px-8 py-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                {(() => {
-                  const StepIcon = STEPS[currentStep - 1].icon;
-                  return <StepIcon className="h-6 w-6 md:h-7 md:w-7 text-white" />;
-                })()}
-              </div>
-              <div>
-                <h2 className="text-xl md:text-2xl font-bold text-white">
-                  {STEPS[currentStep - 1].title}
-                </h2>
-                <p className="text-sm md:text-base text-blue-100">
-                  {STEPS[currentStep - 1].description}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Step Content */}
-          <div className="px-6 md:px-8 py-8">
-            <AnimatePresence mode="wait">
-              {renderStepContent()}
-            </AnimatePresence>
-          </div>
-
-          {/* Navigation */}
-          <div className="px-6 md:px-8 py-6 bg-gray-50 border-t border-gray-100">
-            <div className="flex items-center justify-between gap-4">
-              <button
-                type="button"
-                onClick={prevStep}
-                disabled={currentStep === 1}
-                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all ${currentStep === 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-md'
-                  }`}
-              >
-                <ChevronLeft className="h-5 w-5" />
-                <span className="hidden md:inline">Previous</span>
-              </button>
-
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span className="font-semibold text-blue-600">{currentStep}</span>
-                <span>/</span>
-                <span>{STEPS.length}</span>
-              </div>
-
-              {currentStep < STEPS.length ? (
-                <button
-                  type="button"
-                  onClick={nextStep}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all shadow-md hover:shadow-lg"
-                >
-                  <span>Next</span>
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="h-5 w-5" />
-                      <span>Complete Profile</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Help Text */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-center mt-6 text-sm text-gray-500"
-        >
-          <p>
-            Need help? <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">Contact support</a>
-          </p>
-        </motion.div>
-      </div>
+        <p className="text-center text-xs text-slate-400 mt-6">
+          You can update your profile anytime from settings
+        </p>
+      </motion.div>
     </div>
   );
 }

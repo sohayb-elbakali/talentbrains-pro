@@ -232,58 +232,50 @@ export default function SkillsSelector({
                       }`}
                   >
                     <div className="flex flex-col gap-3">
-                      {/* Skill Name */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1">
-                          <h4 className="text-base font-bold text-gray-900">{skill.skill_name}</h4>
-                          <p className="text-xs text-gray-500">{profInfo.label} - {profInfo.description}</p>
-                        </div>
-                      </div>
-
-                      {/* Controls */}
-                      <div className="space-y-3">
-                        {/* Level Slider */}
-                        <div className="bg-gray-50 border-2 border-blue-200 rounded-lg p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-bold text-gray-700">Skill Level</span>
-                            <span className="text-lg font-bold text-primary">{skill.proficiency_level}/5</span>
-                          </div>
-
-                          {/* Slider */}
-                          <input
-                            type="range"
-                            min="1"
-                            max="5"
-                            value={skill.proficiency_level}
-                            onChange={(e) =>
-                              handleUpdateSkill(skill.skill_name, {
-                                proficiency_level: parseInt(e.target.value),
-                              })
-                            }
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
-                            style={{
-                              background: `linear-gradient(to right, rgb(10 102 194) 0%, rgb(10 102 194) ${((skill.proficiency_level - 1) / 4) * 100}%, rgb(229 231 235) ${((skill.proficiency_level - 1) / 4) * 100}%, rgb(229 231 235) 100%)`
-                            }}
-                          />
-
-                          {/* Level Labels */}
-                          <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Beginner</span>
-                            <span>Intermediate</span>
-                            <span>Advanced</span>
-                            <span>Expert</span>
-                            <span>Master</span>
-                          </div>
-                        </div>
-
-                        {/* Remove Button */}
+                      {/* Skill Name & Remove */}
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-base font-bold text-gray-900">{skill.skill_name}</h4>
                         <button
                           type="button"
                           onClick={() => handleRemoveSkill(skill.skill_name)}
-                          className="w-full py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-all"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+                          title="Remove skill"
                         >
-                          Remove Skill
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
                         </button>
+                      </div>
+
+                      {/* Star Rating for Skill Level */}
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-600">Skill Level</span>
+                          <span className="text-xs font-medium text-primary">{profInfo.label}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => handleUpdateSkill(skill.skill_name, { proficiency_level: star })}
+                              className="p-1 transition-transform hover:scale-110"
+                            >
+                              <svg
+                                className={`w-7 h-7 transition-colors ${star <= skill.proficiency_level
+                                  ? "text-yellow-400 fill-yellow-400"
+                                  : "text-gray-300"
+                                  }`}
+                                fill={star <= skill.proficiency_level ? "currentColor" : "none"}
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                              </svg>
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{profInfo.description}</p>
                       </div>
                     </div>
                   </div>

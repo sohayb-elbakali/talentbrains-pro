@@ -2,7 +2,7 @@ import { ReactNode, ButtonHTMLAttributes } from 'react';
 import { CircleNotch } from '@phosphor-icons/react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    children: ReactNode;
+    children?: ReactNode;
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
     size?: 'sm' | 'md' | 'lg';
     loading?: boolean;

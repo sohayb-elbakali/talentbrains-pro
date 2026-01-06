@@ -1,8 +1,26 @@
-from typing import List, Tuple
-from models import TalentProfile, JobPosting, MatchResult, ExperienceLevel
+"""
+Matching Service
 
-class MatchingEngine:
-    """Simple matching engine based on skills, experience, location, and salary"""
+Business logic for talent-job matching operations.
+"""
+from typing import List, Tuple
+
+from app.models.talent import TalentProfile
+from app.models.job import JobPosting
+from app.models.matching import MatchResult
+from app.models.base import ExperienceLevel
+
+
+class MatchingService:
+    """
+    Service for matching talents with jobs.
+    
+    Implements matching algorithms based on:
+    - Skills (required and preferred)
+    - Experience level and years
+    - Location compatibility
+    - Salary/rate expectations
+    """
     
     EXPERIENCE_LEVELS = {
         "entry": 1,
@@ -11,16 +29,31 @@ class MatchingEngine:
         "lead": 4
     }
     
+    WEIGHTS = {
+        "skills": 0.40,
+        "experience": 0.30,
+        "location": 0.20,
+        "salary": 0.10
+    }
+    
     def calculate_skill_match(
         self, 
         talent_skills: List[str], 
         required_skills: List[str], 
         preferred_skills: List[str]
     ) -> Tuple[float, List[str], List[str]]:
-        """Calculate skill match score (0-100)"""
+        """
+        Calculate skill match score (0-100).
+        
+        Args:
+            talent_skills: List of talent's skills
+            required_skills: List of required skills for the job
+            preferred_skills: List of preferred skills for the job
+            
+        Returns:
+            Tuple of (score, matched_skills, missing_skills)
+        """
         talent_skills_lower = [s.lower() for s in talent_skills]
-        required_skills_lower = [s.lower() for s in required_skills]
-        preferred_skills_lower = [s.lower() for s in preferred_skills]
         
         # Match required skills (70% weight)
         matched_required = [s for s in required_skills if s.lower() in talent_skills_lower]
@@ -52,7 +85,19 @@ class MatchingEngine:
         job_max_years: int,
         job_level: ExperienceLevel
     ) -> float:
-        """Calculate experience match score (0-100)"""
+        """
+        Calculate experience match score (0-100).
+        
+        Args:
+            talent_years: Talent's years of experience
+            talent_level: Talent's experience level
+            job_min_years: Minimum years required for job
+            job_max_years: Maximum years for job
+            job_level: Job's required experience level
+            
+        Returns:
+            Experience match score
+        """
         # Level match (60% weight)
         talent_level_num = self.EXPERIENCE_LEVELS.get(talent_level, 2)
         job_level_num = self.EXPERIENCE_LEVELS.get(job_level, 2)
@@ -87,7 +132,18 @@ class MatchingEngine:
         job_location: str,
         job_remote: bool
     ) -> float:
-        """Calculate location match score (0-100)"""
+        """
+        Calculate location match score (0-100).
+        
+        Args:
+            talent_location: Talent's location
+            talent_remote: Whether talent prefers remote
+            job_location: Job's location
+            job_remote: Whether job allows remote
+            
+        Returns:
+            Location match score
+        """
         # Remote work compatibility
         if job_remote and talent_remote:
             return 100
@@ -118,7 +174,18 @@ class MatchingEngine:
         job_salary_min: float,
         job_salary_max: float
     ) -> float:
-        """Calculate salary match score (0-100)"""
+        """
+        Calculate salary match score (0-100).
+        
+        Args:
+            talent_rate_min: Talent's minimum rate expectation
+            talent_rate_max: Talent's maximum rate expectation
+            job_salary_min: Job's minimum salary
+            job_salary_max: Job's maximum salary
+            
+        Returns:
+            Salary match score
+        """
         if not talent_rate_min or not job_salary_min:
             return 50  # Neutral if no salary info
         
@@ -149,7 +216,16 @@ class MatchingEngine:
         talent: TalentProfile,
         jobs: List[JobPosting]
     ) -> List[MatchResult]:
-        """Match a talent to multiple jobs"""
+        """
+        Match a talent to multiple jobs.
+        
+        Args:
+            talent: The talent profile to match
+            jobs: List of job postings to match against
+            
+        Returns:
+            List of match results sorted by score
+        """
         results = []
         
         for job in jobs:
@@ -184,19 +260,12 @@ class MatchingEngine:
                     job.salary_max or job.salary_min * 1.5
                 )
             
-            # Calculate overall match score (weighted average)
-            weights = {
-                "skills": 0.40,
-                "experience": 0.30,
-                "location": 0.20,
-                "salary": 0.10
-            }
-            
+            # Calculate overall match score
             overall_score = (
-                skill_score * weights["skills"] +
-                experience_score * weights["experience"] +
-                location_score * weights["location"] +
-                (salary_score or 50) * weights["salary"]
+                skill_score * self.WEIGHTS["skills"] +
+                experience_score * self.WEIGHTS["experience"] +
+                location_score * self.WEIGHTS["location"] +
+                (salary_score or 50) * self.WEIGHTS["salary"]
             )
             
             # Generate reason
@@ -226,7 +295,16 @@ class MatchingEngine:
         job: JobPosting,
         talents: List[TalentProfile]
     ) -> List[MatchResult]:
-        """Match a job to multiple talents"""
+        """
+        Match a job to multiple talents.
+        
+        Args:
+            job: The job posting to match
+            talents: List of talent profiles to match against
+            
+        Returns:
+            List of match results sorted by score
+        """
         results = []
         
         for talent in talents:
@@ -262,18 +340,11 @@ class MatchingEngine:
                 )
             
             # Calculate overall match score
-            weights = {
-                "skills": 0.40,
-                "experience": 0.30,
-                "location": 0.20,
-                "salary": 0.10
-            }
-            
             overall_score = (
-                skill_score * weights["skills"] +
-                experience_score * weights["experience"] +
-                location_score * weights["location"] +
-                (salary_score or 50) * weights["salary"]
+                skill_score * self.WEIGHTS["skills"] +
+                experience_score * self.WEIGHTS["experience"] +
+                location_score * self.WEIGHTS["location"] +
+                (salary_score or 50) * self.WEIGHTS["salary"]
             )
             
             # Generate reason
@@ -306,7 +377,7 @@ class MatchingEngine:
         matched_skills: List[str],
         missing_skills: List[str]
     ) -> str:
-        """Generate human-readable match reason"""
+        """Generate human-readable match reason."""
         reasons = []
         
         if skill_score >= 80:
@@ -328,4 +399,6 @@ class MatchingEngine:
         
         return " • ".join(reasons) if reasons else "Partial match"
 
-matching_engine = MatchingEngine()
+
+# Singleton instance for convenience
+matching_service = MatchingService()

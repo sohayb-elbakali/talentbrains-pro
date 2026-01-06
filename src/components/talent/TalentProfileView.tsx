@@ -137,52 +137,42 @@ export default function TalentProfileView({ onEdit, onAvatarEdit }: TalentProfil
 
       {/* Basic Information */}
       <ProfileViewCard title="Professional Information">
-        <div className="flex justify-between items-start mb-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <ProfileField label="Job Title" value={talent.title} />
-              <ProfileField
-                label="Experience Level"
-                value={formatExperienceLevel(talent.experience_level)}
-              />
-              <ProfileField
-                label="Years of Experience"
-                value={talent.years_of_experience}
-              />
-            </div>
-            <div>
-              <ProfileField label="Location">
-                <div className="flex items-center text-sm text-gray-900">
-                  <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                  {talent.location || "Not specified"}
-                </div>
-              </ProfileField>
-              <ProfileField
-                label="Remote Work"
-                value={talent.remote_preference}
-              />
-              <ProfileField label="Availability Status">
-                <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${talent.availability_status === "available"
-                    ? "bg-green-100 text-green-800"
-                    : talent.availability_status === "open_to_offers"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
-                    }`}
-                >
-                  {formatAvailabilityStatus(talent.availability_status)}
-                </span>
-              </ProfileField>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <ProfileField label="Job Title" value={talent.title} />
+            <ProfileField
+              label="Experience Level"
+              value={formatExperienceLevel(talent.experience_level)}
+            />
+            <ProfileField
+              label="Years of Experience"
+              value={talent.years_of_experience}
+            />
           </div>
-          {onEdit && (
-            <button
-              onClick={onEdit}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ml-4"
-            >
-              Update Profile
-            </button>
-          )}
+          <div>
+            <ProfileField label="Location">
+              <div className="flex items-center text-sm text-gray-900">
+                <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                {talent.location || "Not specified"}
+              </div>
+            </ProfileField>
+            <ProfileField
+              label="Remote Work"
+              value={talent.remote_preference}
+            />
+            <ProfileField label="Availability Status">
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${talent.availability_status === "available"
+                  ? "bg-green-100 text-green-800"
+                  : talent.availability_status === "open_to_offers"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-red-100 text-red-800"
+                  }`}
+              >
+                {formatAvailabilityStatus(talent.availability_status)}
+              </span>
+            </ProfileField>
+          </div>
         </div>
         <div className="mt-6">
           <ProfileField label="Professional Bio" value={talent.bio} />
@@ -202,58 +192,46 @@ export default function TalentProfileView({ onEdit, onAvatarEdit }: TalentProfil
               <Star className="h-8 w-8 text-purple-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No Skills Added Yet</h3>
-            <p className="text-gray-500 mb-4">
-              Showcase your expertise by adding your skills
+            <p className="text-gray-500">
+              Add your skills by editing your profile
             </p>
-            {onEdit && (
-              <button
-                onClick={onEdit}
-                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105"
-              >
-                Add Skills
-              </button>
-            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {talentSkills.map((skill: any, index: number) => {
               const level = skill.proficiency_level ?? 3;
-              const levelMap: Record<number, { label: string; color: string }> = {
-                1: { label: "Beginner", color: "from-gray-400 to-gray-500" },
-                2: { label: "Intermediate", color: "from-green-400 to-emerald-500" },
-                3: { label: "Advanced", color: "from-blue-400 to-cyan-500" },
-                4: { label: "Expert", color: "from-orange-400 to-red-500" },
-                5: { label: "Master", color: "from-purple-500 to-pink-500" },
+              const levelMap: Record<number, { label: string; color: string; bgColor: string }> = {
+                1: { label: "Beginner", color: "text-gray-600", bgColor: "bg-gray-100" },
+                2: { label: "Intermediate", color: "text-green-600", bgColor: "bg-green-50" },
+                3: { label: "Advanced", color: "text-blue-600", bgColor: "bg-blue-50" },
+                4: { label: "Expert", color: "text-orange-600", bgColor: "bg-orange-50" },
+                5: { label: "Master", color: "text-purple-600", bgColor: "bg-purple-50" },
               };
-              const levelInfo = levelMap[level] || { label: "Advanced", color: "from-blue-400 to-cyan-500" };
+              const levelInfo = levelMap[level] || levelMap[3];
 
               return (
-                <div key={index} className="bg-white rounded-xl border-2 border-gray-200 p-4 hover:shadow-lg transition-all">
-                  {/* Skill Name */}
-                  <h4 className="text-lg font-bold text-gray-900 mb-3">{skill.name || skill.skill_name}</h4>
-
-                  {/* Level Badge */}
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-gray-600">Skill Level</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r ${levelInfo.color}`}>
+                <div key={index} className={`rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all ${levelInfo.bgColor}`}>
+                  {/* Skill Name & Badge */}
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <h4 className="text-base font-bold text-gray-900">{skill.name || skill.skill_name}</h4>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${levelInfo.color} ${levelInfo.bgColor} border border-current`}>
                       {levelInfo.label}
                     </span>
                   </div>
 
-                  {/* Progress Bar */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 flex gap-1">
-                      {[1, 2, 3, 4, 5].map((dot) => (
-                        <div
-                          key={dot}
-                          className={`flex-1 h-2 rounded-full transition-all ${dot <= level
-                              ? `bg-gradient-to-r ${levelInfo.color}`
-                              : "bg-gray-200"
-                            }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm font-bold text-gray-700">{level}/5</span>
+                  {/* Star Rating Display */}
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <svg
+                        key={star}
+                        className={`w-5 h-5 ${star <= level ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
+                        fill={star <= level ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                    ))}
                   </div>
                 </div>
               );

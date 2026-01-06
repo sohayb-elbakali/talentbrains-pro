@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
-import { CardSkeleton, StatsSkeleton } from "../../components/ui/SkeletonLoader";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { useFilterStore } from "../../stores/filterStore";
 
 interface Application {
@@ -329,12 +329,9 @@ const CompanyApplicantsPage = () => {
         </div>
 
         {loading ? (
-          <>
-            <StatsSkeleton count={4} />
-            <div className="mt-8">
-              <CardSkeleton count={6} />
-            </div>
-          </>
+          <div className="min-h-[400px] flex flex-col items-center justify-center">
+            <LoadingSpinner size="lg" text="Fetching applicants..." />
+          </div>
         ) : error ? (
           <div className="bg-white rounded-2xl shadow-sm border border-red-200 p-12 text-center">
             <XCircle size={64} weight="regular" className="text-red-400 mx-auto mb-4" />

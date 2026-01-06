@@ -1,11 +1,21 @@
-from fastapi import APIRouter, HTTPException
+"""
+Admin Endpoints
+
+API endpoints for admin operations and testing.
+"""
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
-import database_simple as db
+from supabase import Client
+
+from app.api.deps import get_db_client
+
 
 router = APIRouter()
 
+
 class CreateTalentRequest(BaseModel):
+    """Request schema for creating a talent profile."""
     profile_id: str  # Must be an existing profile ID from auth
     title: str
     bio: Optional[str] = None
@@ -17,15 +27,18 @@ class CreateTalentRequest(BaseModel):
     hourly_rate_max: Optional[int] = None
     skills: List[str] = []  # Skill names
 
+
 @router.post("/create-talent")
-async def create_talent(request: CreateTalentRequest):
+async def create_talent(
+    request: CreateTalentRequest,
+    client: Client = Depends(get_db_client)
+):
     """
-    Create a talent profile (for testing/admin purposes)
-    Note: profile_id must exist in profiles table
+    Create a talent profile (for testing/admin purposes).
+    
+    Note: profile_id must exist in profiles table.
     """
     try:
-        client = db.get_supabase_client()
-        
         # Create talent record
         talent_data = {
             "profile_id": request.profile_id,
@@ -42,7 +55,10 @@ async def create_talent(request: CreateTalentRequest):
         talent_response = client.table("talents").insert(talent_data).execute()
         
         if not talent_response.data:
-            raise HTTPException(status_code=500, detail="Failed to create talent")
+            raise HTTPException(
+                status_code=500, 
+                detail="Failed to create talent"
+            )
         
         talent_id = talent_response.data[0]["id"]
         
@@ -75,16 +91,23 @@ async def create_talent(request: CreateTalentRequest):
             "message": "Talent profile created successfully"
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating talent: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error creating talent: {str(e)}"
+        )
+
 
 @router.get("/profiles")
-async def list_profiles():
+async def list_profiles(
+    client: Client = Depends(get_db_client)
+):
     """
-    List all profiles to get profile_ids for creating talents
+    List all profiles to get profile_ids for creating talents.
     """
     try:
-        client = db.get_supabase_client()
         response = client.table("profiles").select("id, email, full_name, role").execute()
         
         return {
@@ -92,16 +115,22 @@ async def list_profiles():
             "profiles": response.data
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching profiles: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error fetching profiles: {str(e)}"
+        )
+
 
 @router.get("/check-data")
-async def check_database_data():
+async def check_database_data(
+    client: Client = Depends(get_db_client)
+):
     """
-    Check what data exists in the database
+    Check what data exists in the database.
+    
+    Useful for debugging and diagnosing data issues.
     """
     try:
-        client = db.get_supabase_client()
-        
         # Try different queries to diagnose the issue
         profiles = client.table("profiles").select("id, role").execute()
         
@@ -109,7 +138,9 @@ async def check_database_data():
         talents_simple = client.table("talents").select("id").execute()
         
         # Try with profile join
-        talents_with_profile = client.table("talents").select("id, profile:profiles(full_name)").execute()
+        talents_with_profile = client.table("talents").select(
+            "id, profile:profiles(full_name)"
+        ).execute()
         
         # Try full query like frontend
         talents_full = client.table("talents").select(
@@ -146,3 +177,14 @@ async def check_database_data():
             "error": str(e),
             "traceback": traceback.format_exc()
         }
+
+
+@router.get("/health")
+async def admin_health():
+    """
+    Admin health check endpoint.
+    """
+    return {
+        "status": "healthy",
+        "service": "admin"
+    }
