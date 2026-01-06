@@ -61,7 +61,7 @@ export default function TalentDashboard() {
       let allMatches: any[] = [];
 
       try {
-        const matchResponse = await fetch(`http://localhost:8000/api/matching/talent/${talent.id}/jobs?limit=10`, {
+        const matchResponse = await fetch(`http://localhost:8000/api/v1/matching/talent/${talent.id}/jobs?limit=10`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });

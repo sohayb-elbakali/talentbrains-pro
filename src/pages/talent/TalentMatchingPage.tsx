@@ -54,7 +54,7 @@ export const TalentMatchingPage = () => {
         setLoading(true);
 
         // Call backend matching API for real-time matching
-        const response = await fetch(`http://localhost:8000/api/matching/talent/${talent.id}/jobs?limit=20`, {
+        const response = await fetch(`http://localhost:8000/api/v1/matching/talent/${talent.id}/jobs?limit=20`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });

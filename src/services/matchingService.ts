@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const MATCHING_API_URL = import.meta.env.VITE_MATCHING_API_URL || 'http://localhost:8000/api/matching';
+const MATCHING_API_URL = import.meta.env.VITE_MATCHING_API_URL || 'http://localhost:8000/api/v1/matching';
 
 export interface MatchResult {
   talent_id?: string;

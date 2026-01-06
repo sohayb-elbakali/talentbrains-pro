@@ -1,165 +1,191 @@
-# TalentBrains Matching API
+# TalentBrains Backend API
 
-Fast real-time matching engine built with **FastAPI** for matching talents to jobs based on:
-- Skills (required & preferred)
-- Years of experience & experience level
-- Location & remote preferences
-- Salary expectations
+AI-Powered Talent Matching Platform - FastAPI Backend
 
-## 🚀 What's New
+## 📁 Project Structure
 
-- **Real-Time Matching**: Scores are calculated on-demand, always fresh and accurate
-- **Bidirectional Matching**: Match talents→jobs AND jobs→talents
-- **Weighted Algorithm**: Smart scoring with configurable weights
-- **Detailed Breakdowns**: See exactly why a match scored high or low
+```
+backend/
+├── main.py                    # Application entry point
+├── requirements.txt           # Production dependencies
+├── requirements-dev.txt       # Development/testing dependencies
+├── .env                       # Environment variables (not in git)
+├── .env.example              # Example environment file
+│
+├── app/                       # Main application package
+│   ├── __init__.py
+│   ├── main.py               # FastAPI app creation & configuration
+│   │
+│   ├── core/                 # Core configuration & utilities
+│   │   ├── __init__.py
+│   │   ├── config.py         # Settings & environment variables
+│   │   ├── database.py       # Database connection (Supabase)
+│   │   └── security.py       # Authentication & security utilities
+│   │
+│   ├── api/                  # API layer
+│   │   ├── __init__.py
+│   │   ├── deps.py           # Dependency injection
+│   │   └── v1/               # API version 1
+│   │       ├── __init__.py
+│   │       ├── router.py     # Central API router
+│   │       └── endpoints/    # API endpoints
+│   │           ├── __init__.py
+│   │           ├── matching.py
+│   │           └── admin.py
+│   │
+│   ├── models/               # Pydantic models (schemas)
+│   │   ├── __init__.py
+│   │   ├── base.py           # Base models & enums
+│   │   ├── talent.py         # Talent-related models
+│   │   ├── job.py            # Job-related models
+│   │   └── matching.py       # Matching-related models
+│   │
+│   ├── repositories/         # Data access layer
+│   │   ├── __init__.py
+│   │   ├── base.py           # Abstract base repository
+│   │   ├── talent_repo.py    # Talent database operations
+│   │   └── job_repo.py       # Job database operations
+│   │
+│   └── services/             # Business logic layer
+│       ├── __init__.py
+│       └── matching_service.py  # Matching algorithms
+│
+└── tests/                    # Test suite
+    ├── __init__.py
+    ├── conftest.py           # Pytest configuration & fixtures
+    └── test_matching.py      # Matching service tests
+```
 
-## Setup
+## 🏗️ Architecture
 
-1. **Install dependencies:**
+This project follows a **clean architecture** pattern with clear separation of concerns:
+
+| Layer | Purpose |
+|-------|---------|
+| **API (Endpoints)** | HTTP request/response handling, routing |
+| **Services** | Business logic, algorithms |
+| **Repositories** | Data access, database queries |
+| **Models** | Data validation, schemas |
+| **Core** | Configuration, database, security |
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+
 ```bash
+# Production dependencies
 pip install -r requirements.txt
+
+# Development dependencies (for testing)
+pip install -r requirements-dev.txt
 ```
 
-2. **Configure environment:**
-```bash
-cp .env.example .env
-# Edit .env with your Supabase credentials
+### 2. Configure Environment
+
+Create a `.env` file based on `.env.example`:
+
+```env
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
 ```
 
-3. **Run the server:**
+### 3. Run the Server
+
 ```bash
+# Development with auto-reload
+uvicorn main:app --reload
+
+# Or using Python directly
 python main.py
 ```
 
-Or with uvicorn directly:
-```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
+### 4. Access the API
 
-## API Endpoints
+- **API Docs (Swagger)**: http://localhost:8000/docs
+- **API Docs (ReDoc)**: http://localhost:8000/redoc
+- **Health Check**: http://localhost:8000/health
 
-### Health Check
-- `GET /` - API status
-- `GET /health` - Health check
+## 📡 API Endpoints
 
-### Listing Endpoints
-- `GET /api/matching/talents` - List all talents with IDs
-- `GET /api/matching/jobs` - List all jobs with IDs
+### Base URL: `/api/v1`
 
-### Matching Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/matching/talents` | List all talents |
+| GET | `/matching/jobs` | List all jobs |
+| POST | `/matching/talent/{id}/jobs` | Match talent to jobs |
+| POST | `/matching/job/{id}/talents` | Match job to talents |
+| GET | `/matching/talent/{id}/job/{id}` | Get specific match score |
+| GET | `/matching/stats` | Get matching statistics |
+| POST | `/admin/create-talent` | Create talent (admin) |
+| GET | `/admin/profiles` | List profiles (admin) |
+| GET | `/admin/check-data` | Check database data |
 
-#### Match Talent to Jobs
-```
-POST /api/matching/talent/{talent_id}/jobs?limit=10
-```
-Returns top matching jobs for a talent profile.
-
-#### Match Job to Talents
-```
-POST /api/matching/job/{job_id}/talents?limit=10
-```
-Returns top matching talents for a job posting.
-
-#### Specific Match Score
-```
-GET /api/matching/talent/{talent_id}/job/{job_id}
-```
-Calculate match score between specific talent and job.
-
-#### Statistics
-```
-GET /api/matching/stats
-```
-Get matching system statistics.
-
-## Matching Algorithm
-
-The matching score (0-100) is calculated using weighted factors:
-
-| Factor | Weight | Description |
-|--------|--------|-------------|
-| **Skills** | 40% | Required skills (70%) + preferred skills (30%) |
-| **Experience** | 30% | Years + level match |
-| **Location** | 20% | City match + remote compatibility |
-| **Salary** | 10% | Salary range overlap |
-
-### Skill Matching
-- Required skills: 70% weight
-- Preferred skills: 30% weight
-- Case-insensitive matching
-
-### Experience Matching
-- Level match (entry/mid/senior/lead): 60% weight
-- Years of experience: 40% weight
-- Penalties for over/under qualification
-
-### Location Matching
-- Remote + Remote: 100%
-- Same city: 100%
-- Similar city: 80%
-- Different locations: 30%
-
-### Salary Matching
-- Overlap in ranges: Higher score
-- No overlap: Lower score based on gap
-- Missing data: Neutral (50%)
-
-## Response Format
-
-```json
-{
-  "talent_id": "uuid",
-  "job_id": "uuid",
-  "match_score": 85.5,
-  "skill_match_score": 90.0,
-  "experience_match_score": 85.0,
-  "location_match_score": 80.0,
-  "salary_match_score": 75.0,
-  "matched_skills": ["Python", "FastAPI", "PostgreSQL"],
-  "missing_skills": ["Docker"],
-  "reason": "Strong skill match (3 skills) • Experience level matches well"
-}
-```
-
-## Testing
+## 🧪 Testing
 
 ```bash
-# List available talents and jobs
-curl "http://localhost:8000/api/matching/talents"
-curl "http://localhost:8000/api/matching/jobs"
+# Run all tests
+pytest
 
-# Match talent to jobs
-curl -X POST "http://localhost:8000/api/matching/talent/{talent_id}/jobs?limit=5"
+# Run with coverage
+pytest --cov=app
 
-# Match job to talents
-curl -X POST "http://localhost:8000/api/matching/job/{job_id}/talents?limit=5"
-
-# Get specific match
-curl "http://localhost:8000/api/matching/talent/{talent_id}/job/{job_id}"
+# Run specific test file
+pytest tests/test_matching.py -v
 ```
 
-## Interactive API Docs
+## 🔧 Adding New Features
 
-Once running, visit:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+### Adding a New Endpoint
 
-## Architecture Note
+1. Create model in `app/models/`
+2. Create repository in `app/repositories/`
+3. Create service in `app/services/` (if business logic needed)
+4. Create endpoint in `app/api/v1/endpoints/`
+5. Register route in `app/api/v1/router.py`
 
-**Real-Time vs Stored Matching:**
-This API uses **real-time matching** - scores are calculated on each request rather than stored in the database. This approach ensures:
-- ✅ Always fresh, up-to-date scores
-- ✅ No stale data when profiles/jobs change
-- ✅ Simpler architecture
-- ✅ No sync issues
+### Example: Adding Users Module
 
-For high-traffic production, consider caching matches with a TTL.
+```python
+# 1. app/models/user.py
+class UserCreate(BaseModel):
+    email: str
+    password: str
 
-## Future Enhancements
+# 2. app/repositories/user_repo.py
+class UserRepository(BaseRepository[User]):
+    ...
 
-- [ ] CV/Resume OCR extraction
-- [ ] Advanced ML-based matching (embeddings)
-- [ ] Semantic skill matching
-- [ ] Match caching with Redis
-- [ ] Historical match success tracking
-- [ ] Candidate preferences learning
+# 3. app/services/user_service.py
+class UserService:
+    ...
+
+# 4. app/api/v1/endpoints/users.py
+router = APIRouter()
+
+@router.post("/")
+async def create_user(...):
+    ...
+
+# 5. app/api/v1/router.py
+api_router.include_router(users.router, prefix="/users", tags=["users"])
+```
+
+## 📝 Best Practices
+
+1. **Dependency Injection**: Use `Depends()` for repositories and services
+2. **Type Hints**: Always use type hints for function parameters and returns
+3. **Validation**: Use Pydantic models for request/response validation
+4. **Error Handling**: Use HTTPException for API errors
+5. **Documentation**: Add docstrings to all functions and classes
+6. **Testing**: Write tests for services and endpoints
+
+## 🔐 Security Notes
+
+- Store secrets in `.env` file (never commit to git)
+- Use Supabase RLS for row-level security
+- Implement authentication when needed using `app/core/security.py`
+
+---
+
+Built with ❤️ using FastAPI
