@@ -67,7 +67,7 @@ export const JobCard: React.FC<JobCardProps> = ({
 
   return (
     <Link to={linkTo || `/jobs/${job.id}`} className="block h-full">
-      <div className="relative bg-white rounded-lg border border-slate-200 overflow-hidden h-full flex flex-col hover:border-blue-200 transition-colors duration-200">
+      <div className="relative bg-white rounded-lg border border-slate-200 overflow-hidden h-full flex flex-col hover:shadow-md hover:shadow-slate-200/50 transition-all duration-300">
 
         {/* Match Score Badge - Top Right Circle */}
         {matchScore !== undefined && matchScore > 0 && !application && (
