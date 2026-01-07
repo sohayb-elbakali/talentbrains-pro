@@ -1,0 +1,48 @@
+# TalentBrains Platform - Docker Compose
+# Run: docker-compose up -d
+
+version: '3.8'
+
+services:
+  # Frontend - React + Vite + Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: talentbrains-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    networks:
+      - talentbrains-network
+    restart: unless-stopped
+
+  # Backend - Python + FastAPI
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: talentbrains-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    networks:
+      - talentbrains-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  talentbrains-network:
+    driver: bridge
+
+volumes:
+  backend-data:
