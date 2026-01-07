@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import {
     Briefcase,
     Building,
@@ -7,7 +6,6 @@ import {
     Eye,
     MapPin,
     Users,
-    ArrowRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import CompanyLogo from "../profile/CompanyLogo";
@@ -35,12 +33,12 @@ export default function ModernJobCard({
 
     const getStatusColor = (status: string) => {
         const colors: any = {
-            active: "from-green-500 to-emerald-600",
-            draft: "from-yellow-500 to-orange-500",
-            closed: "from-gray-500 to-gray-600",
-            archived: "from-red-500 to-pink-600",
+            active: "bg-green-500",
+            draft: "bg-amber-500",
+            closed: "bg-slate-500",
+            archived: "bg-red-500",
         };
-        return colors[status] || "from-blue-500 to-cyan-600";
+        return colors[status] || "bg-blue-500";
     };
 
     const getStatusLabel = (status: string) => {
@@ -54,44 +52,35 @@ export default function ModernJobCard({
     };
 
     return (
-        <Link to={`/company/jobs/${job.id}`} className="block h-full group/card">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ y: -4 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="relative bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden h-full flex flex-col hover:shadow-lg hover:border-primary transition-all duration-300"
-            >
-                {/* Top colored bar */}
-                <div className="h-1 bg-primary"></div>
+        <Link to={`/company/jobs/${job.id}`} className="block h-full">
+            <div className="relative bg-white rounded-lg border border-slate-200 overflow-hidden h-full flex flex-col hover:border-blue-200 transition-colors">
 
                 {/* Status Badge */}
-                <div className={`absolute top-6 right-4 px-3 py-1.5 bg-gradient-to-r ${getStatusColor(job.status)} text-white text-xs font-bold rounded-full shadow-md z-10 flex items-center gap-1.5`}>
-                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                <div className={`absolute top-3 right-3 px-2 py-0.5 ${getStatusColor(job.status)} text-white text-[10px] font-bold rounded z-10`}>
                     {getStatusLabel(job.status)}
                 </div>
 
-                <div className="p-6 flex-1 flex flex-col">
+                <div className="p-5 flex-1 flex flex-col">
                     {/* Header with Logo and Title */}
-                    <div className="flex items-start gap-4 mb-5">
+                    <div className="flex items-start gap-3 mb-4 pr-12">
                         {showCompany && job.company_name && (
                             <div className="relative flex-shrink-0">
-                                <div className="w-16 h-16 rounded-xl border-2 border-gray-100 shadow-sm overflow-hidden bg-white group-hover/card:border-primary-light transition-colors">
+                                <div className="w-11 h-11 rounded-lg border border-slate-200 overflow-hidden bg-slate-50">
                                     <CompanyLogo
                                         avatarUrl={job.avatar_url}
                                         companyName={job.company_name}
-                                        size="lg"
+                                        size="md"
                                     />
                                 </div>
                             </div>
                         )}
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-gray-900 line-clamp-2 mb-2 leading-snug group-hover/card:text-primary transition-colors">
+                            <h3 className="font-bold text-slate-900 line-clamp-2 leading-tight mb-1">
                                 {job.title}
                             </h3>
                             {showCompany && job.company_name && (
-                                <p className="text-sm text-gray-600 font-medium flex items-center gap-1.5">
-                                    <Building className="h-3.5 w-3.5 text-gray-400" />
+                                <p className="text-sm text-slate-500 flex items-center gap-1 truncate">
+                                    <Building className="h-3 w-3 text-slate-400 flex-shrink-0" />
                                     {job.company_name}
                                 </p>
                             )}
@@ -99,49 +88,43 @@ export default function ModernJobCard({
                     </div>
 
                     {/* Job Details */}
-                    <div className="space-y-3 mb-5 flex-1">
+                    <div className="space-y-2 mb-4 flex-1">
                         {job.location && (
-                            <div className="flex items-center gap-3 text-sm text-gray-700">
-                                <div className="flex-shrink-0 w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                                    <MapPin className="h-4 w-4 text-primary" />
-                                </div>
-                                <span className="font-medium">{job.location}</span>
+                            <div className="flex items-center gap-2 text-sm text-slate-600">
+                                <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                <span className="truncate">{job.location}</span>
                             </div>
                         )}
                         {job.employment_type && (
-                            <div className="flex items-center gap-3 text-sm text-gray-700">
-                                <div className="flex-shrink-0 w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                                    <Briefcase className="h-4 w-4 text-blue-600" />
-                                </div>
-                                <span className="font-medium capitalize">
+                            <div className="flex items-center gap-2 text-sm text-slate-600">
+                                <Briefcase className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                <span className="capitalize">
                                     {job.employment_type.replace("_", " ")}
                                 </span>
                             </div>
                         )}
                         {formatSalary() && (
-                            <div className="flex items-center gap-3 text-sm">
-                                <div className="flex-shrink-0 w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
-                                    <DollarSign className="h-4 w-4 text-green-600" />
-                                </div>
-                                <span className="font-bold text-green-700">{formatSalary()}</span>
+                            <div className="flex items-center gap-2 text-sm font-semibold text-green-700">
+                                <DollarSign className="h-4 w-4 text-green-600 flex-shrink-0" />
+                                <span>{formatSalary()}</span>
                             </div>
                         )}
                     </div>
 
                     {/* Skills */}
                     {job.required_skills && job.required_skills.length > 0 && (
-                        <div className="mb-5 pb-5 border-b border-gray-100">
-                            <div className="flex flex-wrap gap-2">
+                        <div className="mb-4 pb-4 border-b border-slate-100">
+                            <div className="flex flex-wrap gap-1.5">
                                 {job.required_skills.slice(0, 3).map((skill: string, index: number) => (
                                     <span
                                         key={index}
-                                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-primary rounded-md text-xs font-semibold border border-blue-100"
+                                        className="inline-flex items-center px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium"
                                     >
                                         {skill}
                                     </span>
                                 ))}
                                 {job.required_skills.length > 3 && (
-                                    <span className="inline-flex items-center px-2.5 py-1 bg-gray-50 text-gray-600 rounded-md text-xs font-semibold border border-gray-200">
+                                    <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs font-medium">
                                         +{job.required_skills.length - 3}
                                     </span>
                                 )}
@@ -152,19 +135,19 @@ export default function ModernJobCard({
                     {/* Footer */}
                     <div className="mt-auto">
                         {showStats ? (
-                            <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-1.5">
+                            <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-1">
                                         <Eye className="h-3.5 w-3.5" />
                                         <span className="font-medium">{job.views_count || 0}</span>
                                     </div>
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex items-center gap-1">
                                         <Users className="h-3.5 w-3.5" />
                                         <span className="font-medium">{job.applications_count || 0}</span>
                                     </div>
                                 </div>
                                 {job.created_at && (
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex items-center gap-1">
                                         <Calendar className="h-3.5 w-3.5" />
                                         <span>{new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                                     </div>
@@ -172,7 +155,7 @@ export default function ModernJobCard({
                             </div>
                         ) : (
                             job.created_at && (
-                                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
+                                <div className="flex items-center gap-1 text-xs text-slate-500 mb-3">
                                     <Calendar className="h-3.5 w-3.5" />
                                     <span>Posted {new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                                 </div>
@@ -180,13 +163,12 @@ export default function ModernJobCard({
                         )}
 
                         {/* View Button */}
-                        <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:bg-primary-hover transition-all group-hover/card:gap-3">
-                            <span>View Details</span>
-                            <ArrowRight className="h-4 w-4 transition-transform" />
+                        <button className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors">
+                            View Details
                         </button>
                     </div>
                 </div>
-            </motion.div>
+            </div>
         </Link>
     );
 }
