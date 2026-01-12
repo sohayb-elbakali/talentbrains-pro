@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
-import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import { CardSkeleton, ListSkeleton } from "../../components/ui/Skeleton";
 
 // Simple score bar with blue theme
 const ScoreBar = ({ label, score }: { label: string; score: number }) => (
@@ -200,8 +200,21 @@ const CompanyMatchesPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading your jobs..." />
+      <div className="min-h-screen bg-slate-50 p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header Skeleton */}
+          <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-slate-200 rounded-xl animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-6 w-48 bg-slate-200 rounded animate-pulse" />
+                <div className="h-4 w-64 bg-slate-100 rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+          {/* List Skeleton */}
+          <ListSkeleton items={5} />
+        </div>
       </div>
     );
   }
@@ -298,8 +311,10 @@ const CompanyMatchesPage = () => {
 
             {/* Matches */}
             {matchesLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <LoadingSpinner text="Finding matches..." />
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <CardSkeleton key={i} />
+                ))}
               </div>
             ) : matches.length > 0 ? (
               <div className="space-y-4">

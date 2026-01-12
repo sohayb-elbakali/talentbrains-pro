@@ -30,6 +30,7 @@ export const CompanyApplicantsPage = lazyWithPrefetch(() => import('../pages/com
 export const ApplicationDetailPage = lazyWithPrefetch(() => import('../pages/company/ApplicationDetailPage'));
 export const CompanyMatchesPage = lazyWithPrefetch(() => import('../pages/company/CompanyMatchesPage'));
 export const CompanyProfilePage = lazyWithPrefetch(() => import('../pages/company/CompanyProfilePage'));
+export const CompanyAnalyticsPage = lazyWithPrefetch(() => import('../pages/company/CompanyAnalyticsPage'));
 export const JobMatchingResultsPage = lazyWithPrefetch(() => import('../pages/company/JobMatchingResultsPage').then(m => ({ default: m.JobMatchingResultsPage })));
 
 // Talent Pages

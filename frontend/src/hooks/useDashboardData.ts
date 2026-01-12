@@ -1,24 +1,36 @@
 import { useQuery } from '@tanstack/react-query';
 import { db } from '../lib/supabase/index';
+import { useDataStore, useCachedJobs, useCachedApplications } from '../stores/dataStore';
+import { useEffect } from 'react';
 
 /**
  * Optimized hook for loading dashboard data with proper caching
- * This prevents unnecessary refetches and improves performance
+ * 
+ * Features:
+ * - Uses Zustand store for instant placeholder data
+ * - Updates store when fresh data arrives
+ * - Long staleTime to reduce API calls
+ * - Persisted across sessions via React Query persister
  */
 export function useTalentDashboardData(userId: string | undefined, talentId: string | undefined) {
-  // Applications query
+  const { setApplications, setJobs } = useDataStore();
+  const { applications: cachedApplications } = useCachedApplications();
+  const { jobs: cachedJobs } = useCachedJobs();
+
+  // Applications query with placeholder data
   const applicationsQuery = useQuery({
     queryKey: ['talent-applications', talentId],
     queryFn: async () => {
       if (!talentId) return [];
       const { data, error } = await db.getApplications({ talent_id: talentId });
       if (error) throw error;
-      return (data || []).slice(0, 4); // Only get 4 most recent
+      return (data || []).slice(0, 4);
     },
     enabled: !!talentId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
     refetchOnWindowFocus: false,
+    placeholderData: cachedApplications.slice(0, 4),
   });
 
   // Matches query
@@ -28,11 +40,11 @@ export function useTalentDashboardData(userId: string | undefined, talentId: str
       if (!userId) return [];
       const { data, error } = await db.getMatches({ talent_id: userId });
       if (error) throw error;
-      return (data || []).slice(0, 5); // Only get 5 top matches
+      return (data || []).slice(0, 5);
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
@@ -54,12 +66,12 @@ export function useTalentDashboardData(userId: string | undefined, talentId: str
       return null;
     },
     enabled: !!userId,
-    staleTime: 10 * 60 * 1000, // 10 minutes - analytics don't change often
-    gcTime: 30 * 60 * 1000,
+    staleTime: 15 * 60 * 1000, // 15 minutes - analytics don't change often
+    gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
-  // Jobs query
+  // Jobs query with placeholder data
   const jobsQuery = useQuery({
     queryKey: ['all-jobs'],
     queryFn: async () => {
@@ -67,13 +79,27 @@ export function useTalentDashboardData(userId: string | undefined, talentId: str
       if (error) throw error;
       return data || [];
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    placeholderData: cachedJobs,
   });
 
+  // Sync to Zustand store when data updates
+  useEffect(() => {
+    if (applicationsQuery.data && applicationsQuery.data.length > 0) {
+      setApplications(applicationsQuery.data as any);
+    }
+  }, [applicationsQuery.data, setApplications]);
+
+  useEffect(() => {
+    if (jobsQuery.data && jobsQuery.data.length > 0) {
+      setJobs(jobsQuery.data as any);
+    }
+  }, [jobsQuery.data, setJobs]);
+
   return {
-    applications: applicationsQuery.data || [],
+    applications: applicationsQuery.data || cachedApplications.slice(0, 4) || [],
     matches: matchesQuery.data || [],
     analytics: analyticsQuery.data || {
       profileViews: 0,
@@ -81,12 +107,16 @@ export function useTalentDashboardData(userId: string | undefined, talentId: str
       matches: 0,
       messages: 0,
     },
-    jobs: jobsQuery.data || [],
+    jobs: jobsQuery.data || cachedJobs || [],
     isLoading:
       applicationsQuery.isLoading ||
       matchesQuery.isLoading ||
       analyticsQuery.isLoading ||
       jobsQuery.isLoading,
+    // Don't show loading if we have placeholder data
+    isInitialLoading:
+      (applicationsQuery.isLoading && !applicationsQuery.data && cachedApplications.length === 0) ||
+      (jobsQuery.isLoading && !jobsQuery.data && cachedJobs.length === 0),
     error:
       applicationsQuery.error ||
       matchesQuery.error ||
@@ -95,11 +125,16 @@ export function useTalentDashboardData(userId: string | undefined, talentId: str
   };
 }
 
+
 /**
  * Optimized hook for company dashboard data
+ * Uses longer cache times and syncs to Zustand store
  */
 export function useCompanyDashboardData(companyId: string | undefined) {
-  // Jobs query
+  const { setJobs, setApplications } = useDataStore();
+  const { jobs: cachedJobs } = useCachedJobs();
+
+  // Jobs query with placeholder data
   const jobsQuery = useQuery({
     queryKey: ['company-jobs', companyId],
     queryFn: async () => {
@@ -109,9 +144,10 @@ export function useCompanyDashboardData(companyId: string | undefined) {
       return data || [];
     },
     enabled: !!companyId,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
     refetchOnWindowFocus: false,
+    placeholderData: cachedJobs.filter(j => j.company_id === companyId),
   });
 
   // Applications query
@@ -124,10 +160,23 @@ export function useCompanyDashboardData(companyId: string | undefined) {
       return data || [];
     },
     enabled: !!companyId,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+
+  // Sync to Zustand store
+  useEffect(() => {
+    if (jobsQuery.data && jobsQuery.data.length > 0) {
+      setJobs(jobsQuery.data as any);
+    }
+  }, [jobsQuery.data, setJobs]);
+
+  useEffect(() => {
+    if (applicationsQuery.data && applicationsQuery.data.length > 0) {
+      setApplications(applicationsQuery.data as any);
+    }
+  }, [applicationsQuery.data, setApplications]);
 
   const activeJobs = jobsQuery.data?.filter((job: any) => job.status === 'active') || [];
   const recentJobs = activeJobs.slice(0, 5);
@@ -139,12 +188,14 @@ export function useCompanyDashboardData(companyId: string | undefined) {
     applications: applicationsQuery.data || [],
     totalApplicants: applicationsQuery.data?.length || 0,
     isLoading: jobsQuery.isLoading || applicationsQuery.isLoading,
+    isInitialLoading: jobsQuery.isLoading && !jobsQuery.data && cachedJobs.length === 0,
     error: jobsQuery.error || applicationsQuery.error,
   };
 }
 
 /**
  * Optimized hook for admin dashboard data
+ * Admin stats can have longer cache since they're less time-sensitive
  */
 export function useAdminDashboardData() {
   const statsQuery = useQuery({
@@ -181,8 +232,8 @@ export function useAdminDashboardData() {
         systemHealth,
       };
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 15 * 60 * 1000, // 15 minutes - admin stats don't need to be super fresh
+    gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
@@ -198,8 +249,8 @@ export function useAdminDashboardData() {
       if (error) throw error;
       return data || [];
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 

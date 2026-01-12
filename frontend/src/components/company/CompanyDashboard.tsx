@@ -1,15 +1,17 @@
-import { Briefcase, Plus, Users, TrendingUp, Eye, Clock, Target } from "lucide-react";
+import { Briefcase, Plus, Users, TrendingUp, Eye, Clock, Target, WifiOff, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth, useUserData } from "../../hooks/useAuth";
+import { useNetworkStatus } from "../../hooks/useNetworkResilience";
 import { db } from "../../lib/supabase/index";
 import ModernJobCard from "./ModernJobCard";
-import LoadingSpinner from "../ui/LoadingSpinner";
+import { DashboardSkeleton } from "../ui/Skeleton";
 
 const CompanyDashboard = () => {
   const { profile, user } = useAuth();
   const { data: userData } = useUserData(user?.id);
+  const { isOnline } = useNetworkStatus();
   const [companyId, setCompanyId] = useState<string | null>(null);
 
   const companyName = userData?.company?.name || 'Company';
@@ -27,7 +29,7 @@ const CompanyDashboard = () => {
     getCompanyId();
   }, [profile?.id]);
 
-  const { data: jobsData, isLoading: jobsLoading } = useQuery({
+  const { data: jobsData, isLoading: jobsLoading, error: jobsError } = useQuery({
     queryKey: ['company-jobs', companyId],
     queryFn: async () => {
       if (!companyId) return [];
@@ -40,7 +42,7 @@ const CompanyDashboard = () => {
     refetchOnWindowFocus: false,
   });
 
-  const { data: applicationsData, isLoading: appsLoading } = useQuery({
+  const { data: applicationsData, isLoading: appsLoading, error: appsError } = useQuery({
     queryKey: ['company-applications', companyId],
     queryFn: async () => {
       if (!companyId) return [];
@@ -54,15 +56,57 @@ const CompanyDashboard = () => {
   });
 
   const loading = jobsLoading || appsLoading || !companyId;
+  const hasError = jobsError || appsError;
   const activeJobs = loading ? undefined : (jobsData?.filter((job: any) => job.status === "active").length || 0);
   const totalApplicants = loading ? undefined : (applicationsData?.length || 0);
   const pendingApplicants = loading ? undefined : (applicationsData?.filter((app: any) => app.status === "pending").length || 0);
   const recentJobs = jobsData?.filter((job: any) => job.status === "active").slice(0, 6) || [];
 
+  // Show skeleton loading
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading dashboard..." />
+      <div className="min-h-screen bg-[#F8FAFC] pb-20">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <DashboardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state with retry option
+  if (hasError) {
+    const isNetworkError = !isOnline ||
+      (jobsError as any)?.message?.includes('fetch') ||
+      (appsError as any)?.message?.includes('fetch');
+
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-8">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center max-w-md">
+          <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <WifiOff size={32} className="text-amber-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+            {!isOnline ? "You're Offline" : 'Unable to Load Dashboard'}
+          </h3>
+          <p className="text-slate-500 text-sm mb-6">
+            {isNetworkError
+              ? 'Please check your internet connection and try again.'
+              : 'Something went wrong. Please try again.'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            disabled={!isOnline}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium text-sm transition-colors"
+          >
+            <RefreshCw size={18} />
+            Try Again
+          </button>
+          {!isOnline && (
+            <p className="text-xs text-slate-400 mt-4">
+              We'll automatically retry when you're back online
+            </p>
+          )}
+        </div>
       </div>
     );
   }

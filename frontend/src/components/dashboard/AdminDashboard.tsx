@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabase/client";
+import { DashboardSkeleton, TableSkeleton } from "../ui/Skeleton";
 
 export default function AdminDashboard() {
   // Use React Query for all data fetching with proper caching
@@ -69,8 +70,8 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="p-6 max-w-7xl mx-auto">
+        <DashboardSkeleton />
       </div>
     );
   }
@@ -225,9 +226,7 @@ export default function AdminDashboard() {
         </div>
         <div className="p-6">
           {usersLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-            </div>
+            <TableSkeleton rows={5} columns={4} />
           ) : users.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">No users found</p>
@@ -257,18 +256,18 @@ export default function AdminDashboard() {
                   <div className="flex items-center space-x-4">
                     <span
                       className={`px-2 py-1 text-xs font-medium rounded-full ${user.role === "admin"
-                          ? "bg-red-100 text-red-800"
-                          : user.role === "company"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-green-100 text-green-800"
+                        ? "bg-red-100 text-red-800"
+                        : user.role === "company"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-green-100 text-green-800"
                         }`}
                     >
                       {user.role}
                     </span>
                     <span
                       className={`px-2 py-1 text-xs font-medium rounded-full ${user.is_active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
                         }`}
                     >
                       {user.is_active ? "Active" : "Inactive"}

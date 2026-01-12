@@ -1,14 +1,15 @@
 import {
   Briefcase,
-  Eye,
-  ChartBar,
   CheckCircle,
   CalendarBlank,
+  WifiX,
+  ArrowClockwise,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
 import { notify } from "../../utils/notify";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth, useUserData } from "../../hooks/useAuth";
+import { useNetworkStatus } from "../../hooks/useNetworkResilience";
 import { db } from "../../lib/supabase/index";
 import {
   JobApplication,
@@ -16,29 +17,43 @@ import {
 } from "../../types/talent-dashboard";
 import JobList from "../jobs/JobList";
 import { JobCard } from "../jobs/JobCard";
-import LoadingSpinner from "../ui/LoadingSpinner";
+import { DashboardSkeleton } from "../ui/Skeleton";
 
 export default function TalentDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data, isLoading, error } = useUserData(user?.id);
+  const { isOnline, networkStatus } = useNetworkStatus();
   const [matches, setMatches] = useState<any[]>([]);
   const [excellentMatchCount, setExcellentMatchCount] = useState(0);
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [analytics, setAnalytics] = useState<TalentAnalytics | null>(null);
   const [allJobs, setAllJobs] = useState<any[]>([]);
   const [isDashboardLoading, setIsDashboardLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const talent = data?.talent;
   const profile = data?.profile;
 
-  const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = useCallback(async (isRetry = false) => {
     if (!user || !talent) {
       setIsDashboardLoading(true);
       return;
     }
 
+    // Don't attempt to load if offline
+    if (!navigator.onLine) {
+      setLoadError('You are currently offline. Data will refresh when you reconnect.');
+      setIsDashboardLoading(false);
+      return;
+    }
+
     setIsDashboardLoading(true);
+    setLoadError(null);
+    if (isRetry) {
+      setRetryCount(prev => prev + 1);
+    }
 
     try {
       const [applicationsResult, matchesResult, analyticsResult, jobsResult] = await Promise.all([
@@ -114,13 +129,28 @@ export default function TalentDashboard() {
         setAllJobs(jobsResult.data);
       }
     } catch (error: any) {
-      if (!error?.message?.includes('fetch') && !error?.message?.includes('network')) {
+      const isNetworkError = error?.message?.includes('fetch') || error?.message?.includes('network') || !navigator.onLine;
+
+      if (isNetworkError) {
+        setLoadError('Connection issue. Please check your network and try again.');
+        // Don't show notification for network errors - the UI handles it
+      } else {
+        setLoadError('Failed to load dashboard data. Please try again.');
         notify.showError("Failed to load dashboard data");
       }
     } finally {
       setIsDashboardLoading(false);
+      setRetryCount(0);
     }
   }, [user, talent]);
+
+  // Retry when coming back online
+  useEffect(() => {
+    if (isOnline && loadError) {
+      console.log('Network restored, retrying dashboard load...');
+      loadDashboardData(true);
+    }
+  }, [isOnline, loadError, loadDashboardData]);
 
   useEffect(() => {
     loadDashboardData();
@@ -143,15 +173,48 @@ export default function TalentDashboard() {
     );
   };
 
+  // Show skeleton loading
   if (isLoading || isDashboardLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading dashboard..." />
+      <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans text-slate-900">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <DashboardSkeleton />
+        </div>
       </div>
     );
   }
 
-  if (error) return <div className="p-8 text-center text-red-500">Unable to load profile</div>;
+  // Show error state with retry option
+  if (error || loadError) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-8">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center max-w-md">
+          <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <WifiX size={32} className="text-amber-600" weight="duotone" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+            {!isOnline ? "You're Offline" : 'Unable to Load Dashboard'}
+          </h3>
+          <p className="text-slate-500 text-sm mb-6">
+            {loadError || (error as any)?.message || "Please check your connection and try again."}
+          </p>
+          <button
+            onClick={() => loadDashboardData(true)}
+            disabled={!isOnline || isDashboardLoading}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium text-sm transition-colors"
+          >
+            <ArrowClockwise size={18} className={retryCount > 0 ? 'animate-spin' : ''} />
+            {retryCount > 0 ? 'Retrying...' : 'Try Again'}
+          </button>
+          {!isOnline && (
+            <p className="text-xs text-slate-400 mt-4">
+              We'll automatically retry when you're back online
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans text-slate-900">
