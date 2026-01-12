@@ -47,7 +47,8 @@ const CompanyAnalyticsPage = () => {
     const { profile } = useAuth();
     const { data: userData } = useUserData(profile?.id);
     const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
 
     useEffect(() => {
@@ -55,7 +56,12 @@ const CompanyAnalyticsPage = () => {
             if (!profile?.id) return;
 
             try {
-                setLoading(true);
+                // Only show full skeleton on initial load
+                if (!analytics) {
+                    setInitialLoading(true);
+                } else {
+                    setIsRefreshing(true);
+                }
 
                 // Get company data
                 const { data: companyData } = await db.getCompany(profile.id);
@@ -89,24 +95,34 @@ const CompanyAnalyticsPage = () => {
                     }
                 });
 
-                // Applications by day (last 30 days)
-                const last30Days: { [key: string]: number } = {};
+                // Calculate days based on dateRange
+                const daysMap = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
+                const numDays = daysMap[dateRange];
+
+                // Applications by day
+                const applicationsByDayMap: { [key: string]: number } = {};
                 const today = new Date();
-                for (let i = 29; i >= 0; i--) {
+                for (let i = numDays - 1; i >= 0; i--) {
                     const date = new Date(today);
                     date.setDate(date.getDate() - i);
                     const key = date.toISOString().split('T')[0];
-                    last30Days[key] = 0;
+                    applicationsByDayMap[key] = 0;
                 }
 
                 allApplications.forEach((app: any) => {
                     const date = new Date(app.applied_at || app.created_at).toISOString().split('T')[0];
-                    if (last30Days.hasOwnProperty(date)) {
-                        last30Days[date]++;
+                    if (applicationsByDayMap.hasOwnProperty(date)) {
+                        applicationsByDayMap[date]++;
                     }
                 });
 
-                const applicationsByDay = Object.entries(last30Days).map(([date, count]) => ({
+                // Sample data for larger ranges to avoid too many data points
+                const entries = Object.entries(applicationsByDayMap);
+                const sampledEntries = numDays > 30
+                    ? entries.filter((_, i) => i % Math.ceil(numDays / 30) === 0)
+                    : entries;
+
+                const applicationsByDay = sampledEntries.map(([date, count]) => ({
                     date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                     count,
                 }));
@@ -165,11 +181,13 @@ const CompanyAnalyticsPage = () => {
             } catch (error) {
                 console.error('Error fetching analytics:', error);
             } finally {
-                setLoading(false);
+                setInitialLoading(false);
+                setIsRefreshing(false);
             }
         };
 
         fetchAnalytics();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [profile?.id, dateRange]);
 
     // Calculate trends
@@ -181,7 +199,8 @@ const CompanyAnalyticsPage = () => {
         };
     }, [analytics]);
 
-    if (loading) {
+    // Only show skeleton on initial load
+    if (initialLoading && !analytics) {
         return <DashboardSkeleton />;
     }
 
@@ -256,19 +275,28 @@ const CompanyAnalyticsPage = () => {
                         </div>
 
                         {/* Date Range Selector */}
-                        <div className="flex items-center gap-2 bg-white rounded-xl p-1 border border-slate-200 shadow-sm">
-                            {(['7d', '30d', '90d', '1y'] as const).map((range) => (
-                                <button
-                                    key={range}
-                                    onClick={() => setDateRange(range)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${dateRange === range
+                        <div className="flex items-center gap-3">
+                            {isRefreshing && (
+                                <div className="flex items-center gap-2 text-sm text-primary">
+                                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                    <span>Updating...</span>
+                                </div>
+                            )}
+                            <div className="flex items-center gap-2 bg-white rounded-xl p-1 border border-slate-200 shadow-sm">
+                                {(['7d', '30d', '90d', '1y'] as const).map((range) => (
+                                    <button
+                                        key={range}
+                                        onClick={() => setDateRange(range)}
+                                        disabled={isRefreshing}
+                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${dateRange === range
                                             ? 'bg-primary text-white shadow-md'
                                             : 'text-slate-600 hover:bg-slate-100'
-                                        }`}
-                                >
-                                    {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : range === '90d' ? '90 Days' : '1 Year'}
-                                </button>
-                            ))}
+                                            } ${isRefreshing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    >
+                                        {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : range === '90d' ? '90 Days' : '1 Year'}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </motion.div>
