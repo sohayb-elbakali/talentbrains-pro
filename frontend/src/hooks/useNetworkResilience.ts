@@ -431,9 +431,108 @@ export function useOfflineStorage<T>(key: string, initialData: T | null = null) 
     return { data, setData, clearData };
 }
 
+/**
+ * Get React Query options based on network status
+ * Use this to configure queries to be network-aware
+ */
+export function useNetworkAwareQueryOptions() {
+    const { isOnline, networkStatus } = useNetworkStatus();
+
+    return {
+        /**
+         * Return query options that pause when offline
+         */
+        getQueryOptions: <T>(options: {
+            staleTime?: number;
+            gcTime?: number;
+            refetchOnMount?: boolean;
+            refetchOnWindowFocus?: boolean;
+        } = {}) => ({
+            ...options,
+            staleTime: options.staleTime ?? 10 * 60 * 1000,
+            gcTime: options.gcTime ?? 60 * 60 * 1000,
+            refetchOnMount: options.refetchOnMount ?? false,
+            refetchOnWindowFocus: options.refetchOnWindowFocus ?? false,
+            refetchOnReconnect: true,
+            networkMode: 'offlineFirst' as const,
+            // Keep retrying when slow connection
+            retry: networkStatus === 'slow' ? 5 : 3,
+            retryDelay: (attempt: number) => {
+                const baseDelay = networkStatus === 'slow' ? 2000 : 1000;
+                return Math.min(baseDelay * Math.pow(2, attempt), 30000);
+            },
+        }),
+
+        /**
+         * Determine if queries should be paused
+         */
+        isPaused: !isOnline,
+
+        /**
+         * Current network status
+         */
+        isOnline,
+        networkStatus,
+    };
+}
+
+/**
+ * Hook to sync React Query with network status
+ * Returns configuration for optimal offline-first behavior
+ */
+export function useQueryNetworkConfig() {
+    const { isOnline, networkStatus, checkConnectionQuality } = useNetworkStatus();
+
+    return {
+        isOnline,
+        networkStatus,
+        checkConnectionQuality,
+
+        /**
+         * Default query options for offline-first behavior
+         */
+        defaultQueryOptions: {
+            staleTime: 10 * 60 * 1000,
+            gcTime: 60 * 60 * 1000,
+            refetchOnMount: false,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: true,
+            networkMode: 'offlineFirst' as const,
+            retry: 3,
+            retryDelay: (attempt: number) => Math.min(1000 * Math.pow(2, attempt), 30000),
+        },
+
+        /**
+         * Aggressive caching for data that changes rarely
+         */
+        longCacheOptions: {
+            staleTime: 30 * 60 * 1000, // 30 minutes
+            gcTime: 2 * 60 * 60 * 1000, // 2 hours
+            refetchOnMount: false,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: true,
+            networkMode: 'offlineFirst' as const,
+        },
+
+        /**
+         * Real-time data that needs frequent updates
+         */
+        realtimeOptions: {
+            staleTime: 30 * 1000, // 30 seconds
+            gcTime: 5 * 60 * 1000, // 5 minutes
+            refetchOnMount: true,
+            refetchOnWindowFocus: true,
+            refetchOnReconnect: true,
+            networkMode: 'offlineFirst' as const,
+        },
+    };
+}
+
 export default {
     useNetworkStatus,
     useResilientFetch,
     useResilientAction,
     useOfflineStorage,
+    useNetworkAwareQueryOptions,
+    useQueryNetworkConfig,
 };

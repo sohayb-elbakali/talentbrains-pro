@@ -16,11 +16,13 @@ import {
   MessageSquare,
   CheckCircle,
   Clock,
+  BarChart2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { sessionManager } from "../../utils/sessionManager";
+import { useHoverPrefetch, usePrefetch } from "../../hooks/usePrefetch";
 
 import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "../auth/AuthModal";
@@ -77,9 +79,22 @@ export default function Header() {
 
   const { isAuthenticated, profile, signOut, user, profileCompletionStatus } = useAuth();
   const { data: userData, isLoading: isUserDataLoading } = useUserData(user?.id);
+  const { onJobsLinkHover } = useHoverPrefetch();
+  const { prefetchAllJobs, prefetchDashboard } = usePrefetch();
 
   // Check if we're still loading user data
   const isLoadingUserInfo = isAuthenticated && (!profile || isUserDataLoading);
+
+  // Prefetch handler for navigation items
+  const handleNavHover = useCallback((path: string) => {
+    if (path === '/jobs' || path === '/talent/jobs') {
+      onJobsLinkHover();
+    } else if (path === '/talent' && user?.id) {
+      prefetchDashboard('talent', user.id);
+    } else if (path === '/company' && user?.id) {
+      prefetchDashboard('company', user.id);
+    }
+  }, [onJobsLinkHover, prefetchDashboard, user?.id]);
 
   // Get display name based on role - only return real data, no placeholders
   const getDisplayName = () => {
@@ -146,8 +161,8 @@ export default function Header() {
         return [
           { name: "Dashboard", path: "/company", icon: Home },
           { name: "My Jobs", path: "/company/jobs", icon: Briefcase },
-          { name: "Find Talent", path: "/talents", icon: Users },
           { name: "Applicants", path: "/company/applicants", icon: User },
+          { name: "Analytics", path: "/company/analytics", icon: BarChart2 },
         ];
       case "admin":
         return [
@@ -206,6 +221,7 @@ export default function Header() {
                       <Link
                         key={item.path}
                         to={item.path}
+                        onMouseEnter={() => handleNavHover(item.path)}
                         className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
                           ? "bg-primary-light text-primary shadow-sm"
                           : "text-gray-600 hover:text-primary hover:bg-gray-50"

@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Suspense, useEffect } from "react";
 import {
   Navigate,
@@ -15,6 +15,8 @@ import OfflineIndicator from "./components/notifications/OfflineIndicator";
 import Layout from "./components/layout/Layout";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 import { useAuth } from "./hooks/useAuth";
+import { queryClient } from "./lib/queryClient";
+import { persistOptions } from "./lib/queryPersister";
 
 // Lazy loaded components
 import {
@@ -29,6 +31,7 @@ import {
   ApplicationDetailPage,
   CompanyMatchesPage,
   CompanyProfilePage,
+  CompanyAnalyticsPage,
   JobMatchingResultsPage,
   TalentDashboard,
   TalentApplicationsPage,
@@ -45,22 +48,6 @@ import {
   CompanyProfileCompletion,
   TalentProfileCompletion,
 } from "./lib/lazyComponents";
-
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      refetchOnReconnect: true,
-      staleTime: 10 * 60 * 1000,
-      gcTime: 30 * 60 * 1000,
-      networkMode: 'offlineFirst',
-    },
-  },
-});
 
 // Make queryClient available globally for cleanup on logout
 if (typeof window !== 'undefined') {
@@ -196,6 +183,7 @@ function AppContent() {
                     element={<ApplicationDetailPage />}
                   />
                   <Route path="matches" element={<CompanyMatchesPage />} />
+                  <Route path="analytics" element={<CompanyAnalyticsPage />} />
                   <Route path="jobs/:jobId" element={<CompanyJobDetailPage />} />
                   <Route path="jobs/:jobId/edit" element={<EditJobPage />} />
                   <Route path="jobs/:jobId/matching" element={<JobMatchingResultsPage />} />
@@ -346,7 +334,14 @@ function App() {
   return (
     <ErrorBoundary>
       <NetworkErrorBoundary>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={persistOptions}
+          onSuccess={() => {
+            // Cache successfully restored from localStorage
+            console.log('Query cache restored from localStorage');
+          }}
+        >
           <OfflineIndicator />
           <Toaster
             position="top-right"
@@ -367,7 +362,7 @@ function App() {
           <Router>
             <AppContent />
           </Router>
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </NetworkErrorBoundary>
     </ErrorBoundary>
   );
