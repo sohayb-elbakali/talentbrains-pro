@@ -331,3 +331,27 @@
     padding: 3rem;
   }
 }
+
+/* ==============================================
+   Skeleton Loading Shimmer Animation
+   ============================================== */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+  background-size: 200% 100%;
+}
+
+/* Skeleton base styles */
+.skeleton-pulse {
+  @apply bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-shimmer;
+  background-size: 200% 100%;
+}

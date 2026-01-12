@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
-import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 import { useFilterStore } from "../../stores/filterStore";
 
 interface Application {
@@ -329,8 +329,10 @@ const CompanyApplicantsPage = () => {
         </div>
 
         {loading ? (
-          <div className="min-h-[400px] flex flex-col items-center justify-center">
-            <LoadingSpinner size="lg" text="Fetching applicants..." />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <CardSkeleton key={i} />
+            ))}
           </div>
         ) : error ? (
           <div className="bg-white rounded-2xl shadow-sm border border-red-200 p-12 text-center">

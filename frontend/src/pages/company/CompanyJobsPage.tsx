@@ -1,13 +1,14 @@
 import { motion } from 'framer-motion';
-import { PencilSimple, Plus, Trash, Briefcase, MapPin, Calendar, CurrencyDollar, Users } from '@phosphor-icons/react';
+import { PencilSimple, Plus, Trash, Briefcase, MapPin, Calendar, CurrencyDollar, Users, WifiX, ArrowClockwise } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { notify } from "../../utils/notify";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useNetworkStatus } from "../../hooks/useNetworkResilience";
 import { db } from "../../lib/supabase/index";
 import { useRealtimeQuery } from "../../hooks/useRealtimeQuery";
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
-import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import { JobCardSkeleton } from "../../components/ui/Skeleton";
 
 // Define the type for a job object
 interface Job {
@@ -25,6 +26,7 @@ interface Job {
 
 const CompanyJobsPage: React.FC = () => {
   const { user } = useAuth();
+  const { isOnline } = useNetworkStatus();
   const navigate = useNavigate();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<{ id: string; title: string } | null>(null);
@@ -104,20 +106,58 @@ const CompanyJobsPage: React.FC = () => {
     }
   };
 
+  // Skeleton loading state - shows beautiful skeleton cards
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center bg-white">
-        <LoadingSpinner size="lg" text="Loading your job postings..." />
+      <div className="min-h-screen bg-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header Skeleton */}
+          <div className="mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="space-y-3">
+                <div className="h-10 w-64 bg-slate-200 rounded-lg animate-pulse" />
+                <div className="h-5 w-80 bg-slate-100 rounded-lg animate-pulse" />
+              </div>
+              <div className="h-12 w-40 bg-slate-200 rounded-lg animate-pulse" />
+            </div>
+          </div>
+          {/* Job Cards Skeleton */}
+          <div className="grid grid-cols-1 gap-6">
+            {[1, 2, 3].map((i) => (
+              <JobCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Error state with offline handling
   if (error) {
+    const isNetworkError = !isOnline || (error as any)?.message?.includes('fetch');
+
     return (
       <div className="min-h-[70vh] flex items-center justify-center bg-white">
-        <div className="text-center p-8 text-red-600 bg-red-50 rounded-2xl border border-red-100 max-w-md">
-          <h2 className="text-xl font-bold mb-2">Error Loading Jobs</h2>
-          <p>{(error as any)?.message || 'An error occurred while fetching your jobs'}</p>
+        <div className="text-center p-8 max-w-md">
+          <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <WifiX size={32} className="text-amber-600" weight="duotone" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">
+            {!isOnline ? "You're Offline" : 'Error Loading Jobs'}
+          </h2>
+          <p className="text-slate-500 mb-6">
+            {isNetworkError
+              ? 'Please check your internet connection and try again.'
+              : (error as any)?.message || 'An error occurred while fetching your jobs'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            disabled={!isOnline}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium text-sm transition-colors"
+          >
+            <ArrowClockwise size={18} />
+            Try Again
+          </button>
         </div>
       </div>
     );
