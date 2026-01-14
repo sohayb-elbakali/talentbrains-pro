@@ -27,24 +27,71 @@ export function useTalentDashboardData(userId: string | undefined, talentId: str
       return (data || []).slice(0, 4);
     },
     enabled: !!talentId,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 60 * 60 * 1000, // 1 hour
+    staleTime: 30 * 60 * 1000, // 30 minutes - data stays fresh longer
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours - keep cached longer
     refetchOnWindowFocus: false,
     placeholderData: cachedApplications.slice(0, 4),
   });
 
-  // Matches query
+  // AI Matches query - fetches from matching API
   const matchesQuery = useQuery({
-    queryKey: ['talent-matches', userId],
+    queryKey: ['talent-ai-matches', talentId],
     queryFn: async () => {
-      if (!userId) return [];
-      const { data, error } = await db.getMatches({ talent_id: userId });
+      if (!talentId) return [];
+
+      // Try to fetch from the AI matching API first
+      try {
+        const matchResponse = await fetch(`http://localhost:8000/api/v1/matching/talent/${talentId}/jobs?limit=10`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (matchResponse.ok) {
+          const matchingResults = await matchResponse.json();
+
+          // Get all jobs to enrich match data
+          const { data: allJobs } = await db.getJobs({});
+          const jobsMap = new Map((allJobs || []).map((j: any) => [j.id, j]));
+
+          // Map and enrich match results with job data
+          return matchingResults.map((m: any) => {
+            const jobData: any = jobsMap.get(m.job_id) || {};
+            return {
+              id: `match-${m.job_id}`,
+              job_id: m.job_id,
+              match_score: m.match_score || 0,
+              matchScore: m.match_score || 0,
+              skill_match_score: m.skill_match_score || 0,
+              experience_match_score: m.experience_match_score || 0,
+              location_match_score: m.location_match_score || 0,
+              matched_skills: m.matched_skills || [],
+              job: {
+                id: m.job_id,
+                title: jobData.title || m.job_title || 'Position',
+                location: jobData.location || m.location,
+                employment_type: jobData.employment_type,
+                salary_min: jobData.salary_min,
+                salary_max: jobData.salary_max,
+                companies: jobData.companies || { name: m.company || 'Company' },
+              },
+            };
+          }).sort((a: any, b: any) => b.matchScore - a.matchScore);
+        }
+      } catch (err) {
+        console.log('AI matching API not available, falling back to DB matches');
+      }
+
+      // Fallback to database matches if API fails
+      const { data, error } = await db.getMatches({ talent_id: talentId });
       if (error) throw error;
-      return (data || []).slice(0, 5);
+      return (data || []).map((m: any) => ({
+        ...m,
+        matchScore: m.match_score || 0,
+      }));
     },
-    enabled: !!userId,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
+    enabled: !!talentId,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
     refetchOnWindowFocus: false,
   });
 
@@ -66,8 +113,8 @@ export function useTalentDashboardData(userId: string | undefined, talentId: str
       return null;
     },
     enabled: !!userId,
-    staleTime: 15 * 60 * 1000, // 15 minutes - analytics don't change often
-    gcTime: 60 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
     refetchOnWindowFocus: false,
   });
 
@@ -79,8 +126,8 @@ export function useTalentDashboardData(userId: string | undefined, talentId: str
       if (error) throw error;
       return data || [];
     },
-    staleTime: 15 * 60 * 1000, // 15 minutes
-    gcTime: 60 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
     refetchOnWindowFocus: false,
     placeholderData: cachedJobs,
   });
@@ -144,8 +191,8 @@ export function useCompanyDashboardData(companyId: string | undefined) {
       return data || [];
     },
     enabled: !!companyId,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 60 * 60 * 1000, // 1 hour
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
     refetchOnWindowFocus: false,
     placeholderData: cachedJobs.filter(j => j.company_id === companyId),
   });
@@ -160,8 +207,8 @@ export function useCompanyDashboardData(companyId: string | undefined) {
       return data || [];
     },
     enabled: !!companyId,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
     refetchOnWindowFocus: false,
   });
 

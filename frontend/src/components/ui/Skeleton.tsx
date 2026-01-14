@@ -6,6 +6,7 @@ interface SkeletonProps {
     width?: string | number;
     height?: string | number;
     animate?: boolean;
+    shimmer?: boolean;
 }
 
 export function Skeleton({
@@ -14,13 +15,15 @@ export function Skeleton({
     width,
     height,
     animate = true,
+    shimmer = true,
 }: SkeletonProps) {
     const baseClasses = cn(
-        'bg-slate-200',
-        animate && 'animate-pulse',
+        'relative overflow-hidden',
+        animate && !shimmer && 'animate-pulse',
         variant === 'circular' && 'rounded-full',
         variant === 'text' && 'rounded h-4',
         variant === 'rectangular' && 'rounded-lg',
+        shimmer ? 'bg-slate-100' : 'bg-slate-200',
         className
     );
 
@@ -31,7 +34,16 @@ export function Skeleton({
                 width: width,
                 height: height,
             }}
-        />
+        >
+            {shimmer && animate && (
+                <div
+                    className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite]"
+                    style={{
+                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)',
+                    }}
+                />
+            )}
+        </div>
     );
 }
 
@@ -143,7 +155,6 @@ export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; column
                                 <Skeleton
                                     key={colIndex}
                                     className="h-4 flex-1"
-                                    style={{ opacity: 1 - rowIndex * 0.1 }}
                                 />
                             ))}
                         </div>
@@ -156,29 +167,64 @@ export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; column
 
 export function DashboardSkeleton() {
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
+            {/* Header skeleton */}
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+                <div className="flex items-center gap-4">
+                    <Skeleton variant="circular" className="w-14 h-14" />
+                    <div className="flex-1 space-y-2">
+                        <Skeleton className="h-6 w-48" />
+                        <Skeleton className="h-4 w-32" />
+                    </div>
+                    <Skeleton className="h-11 w-32 rounded-xl" />
+                </div>
+            </div>
+
             {/* Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                 {Array.from({ length: 4 }).map((_, i) => (
                     <div key={i} className="bg-white rounded-xl border border-slate-200 p-6">
-                        <div className="flex items-center justify-between">
-                            <div className="space-y-2">
-                                <Skeleton className="h-4 w-24" />
-                                <Skeleton className="h-8 w-16" />
-                            </div>
-                            <Skeleton className="w-12 h-12 rounded-lg" />
+                        <div className="flex items-center justify-between mb-4">
+                            <Skeleton className="w-10 h-10 rounded-lg" />
+                            <Skeleton className="h-5 w-16 rounded-full" />
+                        </div>
+                        <div className="space-y-2">
+                            <Skeleton className="h-9 w-20" />
+                            <Skeleton className="h-4 w-24" />
                         </div>
                     </div>
                 ))}
             </div>
-            {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                    <TableSkeleton rows={5} columns={4} />
+
+            {/* Quick Actions */}
+            <div className="space-y-4">
+                <Skeleton className="h-4 w-32" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
+                            <Skeleton className="w-10 h-10 rounded-lg" />
+                            <div className="flex-1 space-y-1">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-3 w-20" />
+                            </div>
+                        </div>
+                    ))}
                 </div>
-                <div className="space-y-4">
-                    <CardSkeleton />
-                    <CardSkeleton />
+            </div>
+
+            {/* Job Cards Section */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                        <Skeleton className="h-6 w-48" />
+                        <Skeleton className="h-4 w-32" />
+                    </div>
+                    <Skeleton className="h-4 w-16" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <JobCardSkeleton key={i} />
+                    ))}
                 </div>
             </div>
         </div>

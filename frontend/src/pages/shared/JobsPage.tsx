@@ -1,71 +1,74 @@
 import { motion } from "framer-motion";
 import { MagnifyingGlass } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { JobCard, type Job } from "../../components/jobs/JobCard";
 import { db } from "../../lib/supabase/index";
 import { useAuth } from "../../hooks/useAuth";
+import { JobCardSkeleton } from "../../components/ui/Skeleton";
 
 const JobsPage: React.FC = () => {
   const { user } = useAuth();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [applications, setApplications] = useState<Map<string, any>>(new Map());
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await db.getJobs({ showAll: true });
+  // Use React Query for caching - data persists across tab switches
+  const { data: jobs = [], isLoading: jobsLoading, error: jobsError } = useQuery({
+    queryKey: ['all-jobs-page'],
+    queryFn: async () => {
+      const { data, error } = await db.getJobs({ showAll: true });
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
 
-        if (error) throw error;
+  // Fetch user's talent data and applications
+  const { data: talentData } = useQuery({
+    queryKey: ['user-talent', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await db.getTalent(user.id);
+      return data;
+    },
+    enabled: !!user?.id,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 2 * 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
 
-        setJobs(data || []);
-
-        if (user?.id) {
-          try {
-            const { data: talentData } = await db.getTalent(user.id);
-
-            if (talentData?.id) {
-              const { data: applicationsData } = await db.getApplications({
-                talent_id: talentData.id
-              });
-
-              if (applicationsData) {
-                const appMap = new Map();
-                applicationsData.forEach((app: any) => {
-                  appMap.set(app.job_id, app);
-                });
-                setApplications(appMap);
-              }
-            }
-          } catch (appErr) {
-            // Silently handle application fetch errors
-          }
-        }
-      } catch (err: any) {
-        if (
-          err.status === 304 ||
-          err.statusCode === 304 ||
-          (err.message && (err.message.includes("304") || err.message.includes("Not Modified")))
-        ) {
-          // 304 Not Modified - using cached data
-        } else {
-          setError(err.message);
-        }
-      } finally {
-        setLoading(false);
+  const { data: applicationsMap = new Map() } = useQuery({
+    queryKey: ['user-applications-map', talentData?.id],
+    queryFn: async () => {
+      if (!talentData?.id) return new Map();
+      const { data: applicationsData } = await db.getApplications({
+        talent_id: talentData.id
+      });
+      const appMap = new Map();
+      if (applicationsData) {
+        applicationsData.forEach((app: any) => {
+          appMap.set(app.job_id, app);
+        });
       }
-    };
+      return appMap;
+    },
+    enabled: !!talentData?.id,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 2 * 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
 
-    fetchData();
-  }, [user?.id]);
+  // Only show loading on initial load (no cached data)
+  const isInitialLoading = jobsLoading && jobs.length === 0;
 
   const filteredJobs = jobs.filter(
-    (job) =>
+    (job: Job) =>
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.company_name.toLowerCase().includes(searchTerm.toLowerCase())
+      job.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -110,42 +113,26 @@ const JobsPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Loading State */}
-        {loading && (
+        {/* Loading State - only on initial load */}
+        {isInitialLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-pulse">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 bg-slate-200 rounded-2xl"></div>
-                  <div className="flex-1">
-                    <div className="h-5 bg-slate-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-slate-200 rounded w-1/2"></div>
-                  </div>
-                </div>
-                <div className="space-y-3 mb-4">
-                  <div className="h-4 bg-slate-200 rounded w-full"></div>
-                  <div className="h-4 bg-slate-200 rounded w-2/3"></div>
-                </div>
-                <div className="flex gap-2">
-                  <div className="h-6 bg-slate-200 rounded w-16"></div>
-                  <div className="h-6 bg-slate-200 rounded w-20"></div>
-                </div>
-              </div>
+              <JobCardSkeleton key={i} />
             ))}
           </div>
         )}
 
         {/* Error State */}
-        {error && (
+        {jobsError && (
           <div className="max-w-md mx-auto">
             <div className="bg-white border border-red-200 rounded-2xl p-6 text-center">
-              <p className="text-red-600 font-semibold">Error: {error}</p>
+              <p className="text-red-600 font-semibold">Error: {(jobsError as any)?.message}</p>
             </div>
           </div>
         )}
 
         {/* Jobs Grid */}
-        {!loading && !error && (
+        {!isInitialLoading && !jobsError && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -153,8 +140,8 @@ const JobsPage: React.FC = () => {
           >
             {filteredJobs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredJobs.map((job, index) => {
-                  const application = applications.get(job.id);
+                {filteredJobs.map((job: Job, index: number) => {
+                  const application = applicationsMap.get(job.id);
                   return (
                     <motion.div
                       key={job.id}

@@ -5,16 +5,10 @@ import {
   WifiX,
   ArrowClockwise,
 } from "@phosphor-icons/react";
-import { useCallback, useEffect, useState } from "react";
-import { notify } from "../../utils/notify";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { useNetworkStatus } from "../../hooks/useNetworkResilience";
-import { db } from "../../lib/supabase/index";
-import {
-  JobApplication,
-  TalentAnalytics,
-} from "../../types/talent-dashboard";
+import { useTalentDashboardData } from "../../hooks/useDashboardData";
 import JobList from "../jobs/JobList";
 import { JobCard } from "../jobs/JobCard";
 import { DashboardSkeleton } from "../ui/Skeleton";
@@ -22,139 +16,21 @@ import { DashboardSkeleton } from "../ui/Skeleton";
 export default function TalentDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data, isLoading, error } = useUserData(user?.id);
-  const { isOnline, networkStatus } = useNetworkStatus();
-  const [matches, setMatches] = useState<any[]>([]);
-  const [excellentMatchCount, setExcellentMatchCount] = useState(0);
-  const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [analytics, setAnalytics] = useState<TalentAnalytics | null>(null);
-  const [allJobs, setAllJobs] = useState<any[]>([]);
-  const [isDashboardLoading, setIsDashboardLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const { data: userData, isLoading: userLoading } = useUserData(user?.id);
+  const { isOnline } = useNetworkStatus();
 
-  const talent = data?.talent;
-  const profile = data?.profile;
+  const talent = userData?.talent;
+  const profile = userData?.profile;
 
-  const loadDashboardData = useCallback(async (isRetry = false) => {
-    if (!user || !talent) {
-      setIsDashboardLoading(true);
-      return;
-    }
-
-    // Don't attempt to load if offline
-    if (!navigator.onLine) {
-      setLoadError('You are currently offline. Data will refresh when you reconnect.');
-      setIsDashboardLoading(false);
-      return;
-    }
-
-    setIsDashboardLoading(true);
-    setLoadError(null);
-    if (isRetry) {
-      setRetryCount(prev => prev + 1);
-    }
-
-    try {
-      const [applicationsResult, matchesResult, analyticsResult, jobsResult] = await Promise.all([
-        db.getApplications({ talent_id: talent.id }),
-        db.getMatches({ talent_id: user.id }),
-        db.getAnalytics(user.id, "talent").catch(() => null),
-        db.getJobs({})
-      ]);
-
-      if (applicationsResult.data) {
-        setApplications(applicationsResult.data.slice(0, 4));
-      }
-
-      // Fetch real matches
-      let allMatches: any[] = [];
-      try {
-        const matchResponse = await fetch(`http://localhost:8000/api/v1/matching/talent/${talent.id}/jobs?limit=10`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (matchResponse.ok) {
-          const matchingResults = await matchResponse.json();
-          const jobsMap = new Map((jobsResult.data || []).map((j: any) => [j.id, j]));
-
-          allMatches = matchingResults.map((m: any) => {
-            const jobData: any = jobsMap.get(m.job_id) || {};
-            return {
-              id: `match-${m.job_id}`,
-              job_id: m.job_id,
-              matchScore: m.match_score || 0,
-              skillScore: m.skill_match_score || 0,
-              experienceScore: m.experience_match_score || 0,
-              locationScore: m.location_match_score || 0,
-              matched_skills: m.matched_skills || [],
-              job: {
-                id: m.job_id,
-                title: jobData.title || m.job_title || 'Position',
-                location: jobData.location || m.location,
-                companies: jobData.companies || { name: m.company || 'Company' },
-              },
-            };
-          });
-        }
-      } catch (err) {
-        if (matchesResult.data && matchesResult.data.length > 0) {
-          allMatches = matchesResult.data.map((m: any) => ({
-            ...m,
-            matchScore: m.match_score || 0,
-          }));
-        }
-      }
-
-      allMatches.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
-      setMatches(allMatches.slice(0, 3));
-
-      const excellent = allMatches.filter(m => (m.matchScore || 0) >= 80).length;
-      setExcellentMatchCount(excellent);
-
-      if (analyticsResult && !analyticsResult.error) {
-        const analyticsData = "data" in analyticsResult ? analyticsResult.data : analyticsResult;
-        setAnalytics({
-          profileViews: analyticsData.profileViews || 0,
-          applications: analyticsData.applications || 0,
-          matches: allMatches.length,
-          messages: analyticsData.messages || 0,
-        });
-      } else {
-        setAnalytics({ profileViews: 0, applications: 0, matches: allMatches.length, messages: 0 });
-      }
-
-      if (jobsResult.data) {
-        setAllJobs(jobsResult.data);
-      }
-    } catch (error: any) {
-      const isNetworkError = error?.message?.includes('fetch') || error?.message?.includes('network') || !navigator.onLine;
-
-      if (isNetworkError) {
-        setLoadError('Connection issue. Please check your network and try again.');
-        // Don't show notification for network errors - the UI handles it
-      } else {
-        setLoadError('Failed to load dashboard data. Please try again.');
-        notify.showError("Failed to load dashboard data");
-      }
-    } finally {
-      setIsDashboardLoading(false);
-      setRetryCount(0);
-    }
-  }, [user, talent]);
-
-  // Retry when coming back online
-  useEffect(() => {
-    if (isOnline && loadError) {
-      console.log('Network restored, retrying dashboard load...');
-      loadDashboardData(true);
-    }
-  }, [isOnline, loadError, loadDashboardData]);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+  // Use React Query hook for cached data - this persists across tab switches!
+  const {
+    applications,
+    matches,
+    analytics,
+    jobs: allJobs,
+    isInitialLoading,
+    error: dashboardError,
+  } = useTalentDashboardData(user?.id, talent?.id);
 
   const getStatusBadge = (status: string) => {
     const styles = {
@@ -173,8 +49,8 @@ export default function TalentDashboard() {
     );
   };
 
-  // Show skeleton loading
-  if (isLoading || isDashboardLoading) {
+  // Show skeleton ONLY on initial load (no cached data)
+  if (userLoading || isInitialLoading) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans text-slate-900">
         <div className="max-w-7xl mx-auto px-6 py-8">
@@ -185,7 +61,7 @@ export default function TalentDashboard() {
   }
 
   // Show error state with retry option
-  if (error || loadError) {
+  if (dashboardError) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-8">
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center max-w-md">
@@ -196,25 +72,37 @@ export default function TalentDashboard() {
             {!isOnline ? "You're Offline" : 'Unable to Load Dashboard'}
           </h3>
           <p className="text-slate-500 text-sm mb-6">
-            {loadError || (error as any)?.message || "Please check your connection and try again."}
+            {!isOnline
+              ? 'Please check your internet connection.'
+              : 'Something went wrong. Please try again.'}
           </p>
           <button
-            onClick={() => loadDashboardData(true)}
-            disabled={!isOnline || isDashboardLoading}
+            onClick={() => window.location.reload()}
+            disabled={!isOnline}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium text-sm transition-colors"
           >
-            <ArrowClockwise size={18} className={retryCount > 0 ? 'animate-spin' : ''} />
-            {retryCount > 0 ? 'Retrying...' : 'Try Again'}
+            <ArrowClockwise size={18} />
+            Try Again
           </button>
-          {!isOnline && (
-            <p className="text-xs text-slate-400 mt-4">
-              We'll automatically retry when you're back online
-            </p>
-          )}
         </div>
       </div>
     );
   }
+
+  // Format matches for display (top 3 by score)
+  const topMatches = (matches || [])
+    .map((m: any) => ({
+      id: m.id || `match-${m.job_id}`,
+      matchScore: m.match_score || m.matchScore || 0,
+      job: m.job || {
+        id: m.job_id,
+        title: m.job_title || 'Position',
+        location: m.location,
+        companies: { name: m.company || 'Company' },
+      },
+    }))
+    .sort((a: any, b: any) => b.matchScore - a.matchScore)
+    .slice(0, 3);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans text-slate-900">
@@ -261,8 +149,8 @@ export default function TalentDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           {[
             { label: "Profile Views", value: analytics?.profileViews || 0, suffix: "this week" },
-            { label: "Applications", value: analytics?.applications || 0, suffix: "active" },
-            { label: "Job Matches", value: analytics?.matches || 0, suffix: "new" },
+            { label: "Applications", value: analytics?.applications || applications?.length || 0, suffix: "active" },
+            { label: "Job Matches", value: analytics?.matches || topMatches?.length || 0, suffix: "new" },
             { label: "Response Rate", value: "24%", suffix: "average" },
           ].map((stat) => (
             <div key={stat.label} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -290,9 +178,9 @@ export default function TalentDashboard() {
                 </h2>
               </div>
 
-              {/* Matches Grid - Adjusted Compact Width */}
+              {/* Matches Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
-                {matches.length > 0 ? matches.map((match) => (
+                {topMatches.length > 0 ? topMatches.map((match: any) => (
                   <div key={match.id} className="h-full">
                     <JobCard
                       job={match.job}
@@ -316,12 +204,12 @@ export default function TalentDashboard() {
                 </Link>
               </div>
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-1">
-                <JobList jobs={allJobs} showSearch={false} />
+                <JobList jobs={allJobs || []} showSearch={false} />
               </div>
             </section>
           </div>
 
-          {/* Right Sidebar - Clearly Separated */}
+          {/* Right Sidebar */}
           <div className="w-full lg:w-[350px] flex-shrink-0 space-y-8">
 
             {/* Recent Applications Widget */}
@@ -332,7 +220,7 @@ export default function TalentDashboard() {
               </div>
 
               <div className="p-2">
-                {applications.length > 0 ? applications.map((app) => (
+                {applications && applications.length > 0 ? applications.map((app: any) => (
                   <div
                     key={app.id}
                     className="p-3 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors group"
@@ -349,7 +237,7 @@ export default function TalentDashboard() {
                     </div>
                     <div className="flex justify-between items-center pl-12">
                       <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
-                        <CalendarBlank /> {new Date(app.appliedAt).toLocaleDateString()}
+                        <CalendarBlank /> {new Date(app.applied_at || app.appliedAt).toLocaleDateString()}
                       </span>
                       {getStatusBadge(app.status)}
                     </div>
@@ -365,7 +253,7 @@ export default function TalentDashboard() {
               </div>
             </div>
 
-            {/* Profile Completion - Blue Theme */}
+            {/* Profile Completion */}
             {profile && (
               <div className="bg-blue-600 rounded-xl p-6 text-white shadow-lg shadow-blue-200 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl" />

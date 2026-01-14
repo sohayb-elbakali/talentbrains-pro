@@ -106,8 +106,10 @@ const CompanyJobsPage: React.FC = () => {
     }
   };
 
-  // Skeleton loading state - shows beautiful skeleton cards
-  if (loading) {
+  // Only show skeleton on initial load (no cached data)
+  const isInitialLoading = loading && jobs.length === 0;
+
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

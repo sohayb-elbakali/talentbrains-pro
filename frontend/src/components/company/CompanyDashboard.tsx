@@ -1,9 +1,9 @@
 import { Briefcase, Plus, Users, TrendingUp, Eye, Clock, Target, WifiOff, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { useNetworkStatus } from "../../hooks/useNetworkResilience";
+import { useCompanyDashboardData } from "../../hooks/useDashboardData";
 import { db } from "../../lib/supabase/index";
 import ModernJobCard from "./ModernJobCard";
 import { DashboardSkeleton } from "../ui/Skeleton";
@@ -16,6 +16,7 @@ const CompanyDashboard = () => {
 
   const companyName = userData?.company?.name || 'Company';
 
+  // Get company ID (this is quick and cached)
   useEffect(() => {
     if (!profile?.id) return;
 
@@ -29,41 +30,21 @@ const CompanyDashboard = () => {
     getCompanyId();
   }, [profile?.id]);
 
-  const { data: jobsData, isLoading: jobsLoading, error: jobsError } = useQuery({
-    queryKey: ['company-jobs', companyId],
-    queryFn: async () => {
-      if (!companyId) return [];
-      const { data, error } = await db.getJobs({ company_id: companyId });
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!companyId,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+  // Use React Query hook for cached data - persists across tab switches!
+  const {
+    activeJobs,
+    recentJobs,
+    applications: applicationsData,
+    totalApplicants,
+    isInitialLoading,
+    error: dashboardError,
+  } = useCompanyDashboardData(companyId || undefined);
 
-  const { data: applicationsData, isLoading: appsLoading, error: appsError } = useQuery({
-    queryKey: ['company-applications', companyId],
-    queryFn: async () => {
-      if (!companyId) return [];
-      const { data, error } = await db.getApplications({ company_id: companyId });
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!companyId,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+  const pendingApplicants = applicationsData?.filter((app: any) => app.status === "pending").length || 0;
+  const displayJobs = recentJobs?.slice(0, 6) || [];
 
-  const loading = jobsLoading || appsLoading || !companyId;
-  const hasError = jobsError || appsError;
-  const activeJobs = loading ? undefined : (jobsData?.filter((job: any) => job.status === "active").length || 0);
-  const totalApplicants = loading ? undefined : (applicationsData?.length || 0);
-  const pendingApplicants = loading ? undefined : (applicationsData?.filter((app: any) => app.status === "pending").length || 0);
-  const recentJobs = jobsData?.filter((job: any) => job.status === "active").slice(0, 6) || [];
-
-  // Show skeleton loading
-  if (loading) {
+  // Show skeleton ONLY on initial load (no cached data)
+  if (isInitialLoading || !companyId) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] pb-20">
         <div className="max-w-7xl mx-auto px-6 py-8">
@@ -74,10 +55,9 @@ const CompanyDashboard = () => {
   }
 
   // Show error state with retry option
-  if (hasError) {
+  if (dashboardError) {
     const isNetworkError = !isOnline ||
-      (jobsError as any)?.message?.includes('fetch') ||
-      (appsError as any)?.message?.includes('fetch');
+      (dashboardError as any)?.message?.includes('fetch');
 
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-8">
@@ -280,9 +260,9 @@ const CompanyDashboard = () => {
             </Link>
           </div>
 
-          {recentJobs.length > 0 ? (
+          {displayJobs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {recentJobs.map((job: any) => (
+              {displayJobs.map((job: any) => (
                 <ModernJobCard
                   key={job.id}
                   job={job}
