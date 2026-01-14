@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { Briefcase, Calendar, CheckCircle, Clock, Eye, Funnel, MapPin, MagnifyingGlass, User, XCircle, Star, TrendUp, ChartBar } from '@phosphor-icons/react';
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
 import { CardSkeleton } from "../../components/ui/Skeleton";
@@ -36,68 +37,41 @@ const CompanyApplicantsPage = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [applications, setApplications] = useState<Application[]>([]);
   const [filteredApplications, setFilteredApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Use Zustand for filters
   const { applicationFilters, setApplicationFilters, resetApplicationFilters } = useFilterStore();
 
-  const fetchApplicants = useCallback(async () => {
-    if (!profile?.id) return;
+  const jobId = searchParams.get("job");
 
-    const cacheKey = `applicants-${profile.id}-${searchParams.get("job") || 'all'}`;
-    const cached = sessionStorage.getItem(cacheKey);
+  // Use React Query for caching - data persists across tab switches
+  const { data: applications = [], isLoading, error } = useQuery({
+    queryKey: ['company-applicants', profile?.id, jobId],
+    queryFn: async () => {
+      if (!profile?.id) return [];
 
-    if (cached) {
-      try {
-        const cachedData = JSON.parse(cached);
-        const age = Date.now() - cachedData.timestamp;
-        if (age < 3 * 60 * 1000) {
-          setApplications(cachedData.data);
-          setFilteredApplications(cachedData.data);
-          setLoading(false);
-          return;
-        }
-      } catch {
-        // Invalid cache, continue with fetch
-      }
-    }
-
-    try {
-      setLoading(true);
       const { data: companyData, error: companyError } = await db.getCompany(profile.id);
       if (companyError || !companyData) {
-        setError("Company profile not found. Please complete your company profile first.");
-        return;
+        throw new Error("Company profile not found. Please complete your company profile first.");
       }
 
-      const jobId = searchParams.get("job");
       const filters: any = { company_id: companyData.id };
       if (jobId) filters.job_id = jobId;
 
       const { data, error } = await db.getApplications(filters);
       if (error) throw error;
 
-      const applicationsData = data || [];
-      setApplications(applicationsData);
-      setFilteredApplications(applicationsData);
+      return data || [];
+    },
+    enabled: !!profile?.id,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
 
-      sessionStorage.setItem(cacheKey, JSON.stringify({
-        data: applicationsData,
-        timestamp: Date.now()
-      }));
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [profile, searchParams]);
-
-  useEffect(() => {
-    fetchApplicants();
-  }, [fetchApplicants]);
+  // Only show loading on initial load (no cached data)
+  const isInitialLoading = isLoading && applications.length === 0;
 
   // Filter applications based on Zustand filters
   useEffect(() => {
@@ -328,7 +302,7 @@ const CompanyApplicantsPage = () => {
           })}
         </div>
 
-        {loading ? (
+        {isInitialLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <CardSkeleton key={i} />
@@ -337,7 +311,7 @@ const CompanyApplicantsPage = () => {
         ) : error ? (
           <div className="bg-white rounded-2xl shadow-sm border border-red-200 p-12 text-center">
             <XCircle size={64} weight="regular" className="text-red-400 mx-auto mb-4" />
-            <p className="text-red-600 text-lg">{error}</p>
+            <p className="text-red-600 text-lg">{(error as any)?.message || 'An error occurred'}</p>
           </div>
         ) : filteredApplications.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">

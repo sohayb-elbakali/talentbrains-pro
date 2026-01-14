@@ -23,12 +23,18 @@ export function useRealtimeQuery<T>({
   const query = useQuery({
     queryKey,
     queryFn: async () => {
+      // Return cached data if available and fresh
       const cachedData = queryClient.getQueryData<T>(queryKey);
       if (cachedData) {
         return cachedData;
       }
       return queryFn();
     },
+    // Prevent unnecessary refetches
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30 * 60 * 1000, // 30 minutes default
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
     ...queryOptions,
   });
 

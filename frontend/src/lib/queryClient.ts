@@ -7,44 +7,42 @@ import { QueryClient } from '@tanstack/react-query';
  * Do NOT create additional QueryClient instances elsewhere.
  * 
  * Key features:
- * - offlineFirst mode: Returns cached data immediately, refetches in background
- * - Long staleTime: Reduces unnecessary API calls
- * - Smart retry: Exponential backoff with max 3 retries
- * - Optimized gcTime: Keeps inactive data longer for navigation
+ * - Data loads ONCE and stays cached for a long time
+ * - No refetch on tab switch or page navigation (smooth UX)
+ * - Only refetch when explicitly triggered or data is stale
+ * - Cached data is shown instantly when navigating back
  */
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            // How long data is considered "fresh" and won't trigger a refetch
-            staleTime: 10 * 60 * 1000, // 10 minutes
+            // Data stays fresh for 30 minutes - no unnecessary refetches
+            staleTime: 30 * 60 * 1000, // 30 minutes
 
-            // How long inactive data stays in cache before garbage collection
-            gcTime: 60 * 60 * 1000, // 1 hour (increased for better offline support)
+            // Keep cached data for 2 hours
+            gcTime: 2 * 60 * 60 * 1000, // 2 hours
 
             // Retry configuration
-            retry: 3,
-            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+            retry: 2,
+            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
 
-            // Don't refetch on window focus (reduces unnecessary calls)
+            // DON'T refetch on window focus - data stays stable
             refetchOnWindowFocus: false,
 
-            // Don't refetch on mount if data is fresh
+            // DON'T refetch on mount if we have cached data
             refetchOnMount: false,
 
-            // Refetch when network reconnects
-            refetchOnReconnect: true,
+            // Only refetch on reconnect if data is stale
+            refetchOnReconnect: 'always',
 
-            // Use cached data first, then fetch in background
+            // Use cached data first, fetch in background if needed
             networkMode: 'offlineFirst',
 
             // Don't throw errors, handle them in components
             throwOnError: false,
         },
         mutations: {
-            // Retry mutations once on failure
             retry: 1,
             retryDelay: 1000,
-            // Use offline-first for mutations too
             networkMode: 'offlineFirst',
         },
     },
@@ -52,12 +50,11 @@ export const queryClient = new QueryClient({
 
 /**
  * Prefetch data on hover for instant navigation
- * Use this when user hovers over navigation elements
  */
 export const prefetchQuery = async (
     queryKey: unknown[],
     queryFn: () => Promise<unknown>,
-    staleTime = 5 * 60 * 1000
+    staleTime = 30 * 60 * 1000
 ) => {
     await queryClient.prefetchQuery({
         queryKey,
@@ -68,7 +65,6 @@ export const prefetchQuery = async (
 
 /**
  * Invalidate queries - forces refetch on next access
- * Use after mutations that affect the data
  */
 export const invalidateQueries = (queryKey: unknown[]) => {
     queryClient.invalidateQueries({ queryKey });
@@ -89,7 +85,7 @@ export const getQueryData = <T>(queryKey: unknown[]): T | undefined => {
 };
 
 /**
- * Cancel ongoing query - useful when component unmounts
+ * Cancel ongoing query
  */
 export const cancelQueries = (queryKey: unknown[]) => {
     queryClient.cancelQueries({ queryKey });
@@ -109,5 +105,4 @@ export const clearAllQueries = () => {
     queryClient.clear();
 };
 
-// Export type for external use
 export type { QueryClient };

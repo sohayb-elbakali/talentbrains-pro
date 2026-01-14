@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
 import { BrainCircuit, MapPin, Building2, DollarSign, Clock, ExternalLink, TrendingUp } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth, useUserData } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
-import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import { DashboardSkeleton } from "../../components/ui/Skeleton";
 
 // Simple score bar
 const ScoreBar = ({ label, score }: { label: string; score: number }) => (
@@ -40,19 +40,18 @@ interface JobMatch {
 export const TalentMatchingPage = () => {
   const { user } = useAuth();
   const { data: userData } = useUserData(user?.id);
-  const [matches, setMatches] = useState<JobMatch[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, excellent: 0, good: 0, avgScore: 0 });
 
   const talent = userData?.talent;
 
-  useEffect(() => {
-    if (!user?.id || !talent?.id) return;
+  // Use React Query for caching - data persists across tab switches
+  const { data: matchData, isLoading } = useQuery({
+    queryKey: ['talent-full-matches', talent?.id],
+    queryFn: async () => {
+      if (!talent?.id) return { matches: [], stats: { total: 0, excellent: 0, good: 0, avgScore: 0 } };
 
-    const fetchRealMatches = async () => {
+      let allMatches: JobMatch[] = [];
+
       try {
-        setLoading(true);
-
         // Call backend matching API for real-time matching
         const response = await fetch(`http://localhost:8000/api/v1/matching/talent/${talent.id}/jobs?limit=20`, {
           method: 'POST',
@@ -67,7 +66,7 @@ export const TalentMatchingPage = () => {
           const jobsMap = new Map(jobs?.map((j: any) => [j.id, j]) || []);
 
           // Transform backend results to our format
-          const allMatches: JobMatch[] = matchingResults.map((m: any) => {
+          allMatches = matchingResults.map((m: any) => {
             const jobData: any = jobsMap.get(m.job_id) || {};
             return {
               id: `match-${m.job_id}`,
@@ -91,57 +90,52 @@ export const TalentMatchingPage = () => {
           });
 
           allMatches.sort((a, b) => b.match_score - a.match_score);
-          setMatches(allMatches);
-
-          // Calculate real stats
-          const excellent = allMatches.filter(m => m.match_score >= 80).length;
-          const good = allMatches.filter(m => m.match_score >= 60 && m.match_score < 80).length;
-          const avg = allMatches.length > 0
-            ? Math.round(allMatches.reduce((s, m) => s + m.match_score, 0) / allMatches.length)
-            : 0;
-          setStats({ total: allMatches.length, excellent, good, avgScore: avg });
-        } else {
-          // Fallback: if backend is not available, check for stored matches
-          const { data: storedMatches } = await db.getMatches({ talent_id: user.id });
-          if (storedMatches && storedMatches.length > 0) {
-            const allMatches = storedMatches.map((m: any) => ({
-              ...m,
-              match_score: m.match_score || 0,
-              skill_match_score: m.skill_match_score || 0,
-              experience_match_score: m.experience_match_score || 0,
-              location_match_score: m.location_match_score || 0,
-              matched_skills: m.matched_skills || [],
-              missing_skills: m.missing_skills || [],
-            }));
-            allMatches.sort((a: JobMatch, b: JobMatch) => b.match_score - a.match_score);
-            setMatches(allMatches);
-
-            const excellent = allMatches.filter((m: JobMatch) => m.match_score >= 80).length;
-            const good = allMatches.filter((m: JobMatch) => m.match_score >= 60 && m.match_score < 80).length;
-            const avg = allMatches.length > 0
-              ? Math.round(allMatches.reduce((s: number, m: JobMatch) => s + m.match_score, 0) / allMatches.length)
-              : 0;
-            setStats({ total: allMatches.length, excellent, good, avgScore: avg });
-          }
         }
       } catch (err) {
-        console.error('Matching error:', err);
-        // Try stored matches as fallback
-        try {
-          const { data: storedMatches } = await db.getMatches({ talent_id: user.id });
-          if (storedMatches && storedMatches.length > 0) {
-            setMatches(storedMatches);
-          }
-        } catch (e) {
-          console.error('Fallback error:', e);
-        }
-      } finally {
-        setLoading(false);
+        console.log('AI matching API not available, falling back to DB matches');
       }
-    };
 
-    fetchRealMatches();
-  }, [user?.id, talent?.id]);
+      // Fallback to stored matches if API fails
+      if (allMatches.length === 0 && user?.id) {
+        const { data: storedMatches } = await db.getMatches({ talent_id: user.id });
+        if (storedMatches && storedMatches.length > 0) {
+          allMatches = storedMatches.map((m: any) => ({
+            ...m,
+            match_score: m.match_score || 0,
+            skill_match_score: m.skill_match_score || 0,
+            experience_match_score: m.experience_match_score || 0,
+            location_match_score: m.location_match_score || 0,
+            matched_skills: m.matched_skills || [],
+            missing_skills: m.missing_skills || [],
+          }));
+          allMatches.sort((a, b) => b.match_score - a.match_score);
+        }
+      }
+
+      // Calculate stats
+      const excellent = allMatches.filter(m => m.match_score >= 80).length;
+      const good = allMatches.filter(m => m.match_score >= 60 && m.match_score < 80).length;
+      const avg = allMatches.length > 0
+        ? Math.round(allMatches.reduce((s, m) => s + m.match_score, 0) / allMatches.length)
+        : 0;
+
+      return {
+        matches: allMatches,
+        stats: { total: allMatches.length, excellent, good, avgScore: avg }
+      };
+    },
+    enabled: !!talent?.id,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  const matches = matchData?.matches || [];
+  const stats = matchData?.stats || { total: 0, excellent: 0, good: 0, avgScore: 0 };
+
+  // Only show loading on initial load (no cached data)
+  const isInitialLoading = isLoading && matches.length === 0;
 
   const formatSalary = (min?: number, max?: number) => {
     if (!min && !max) return null;
@@ -157,10 +151,12 @@ export const TalentMatchingPage = () => {
     return 'bg-slate-100 text-slate-600';
   };
 
-  if (loading) {
+  if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Calculating your matches..." />
+      <div className="min-h-screen bg-slate-50 p-6">
+        <div className="max-w-4xl mx-auto">
+          <DashboardSkeleton />
+        </div>
       </div>
     );
   }

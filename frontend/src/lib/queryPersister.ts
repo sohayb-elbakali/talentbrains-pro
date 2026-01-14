@@ -26,8 +26,8 @@ export const queryPersister = createSyncStoragePersister({
  */
 export const persistOptions = {
     persister: queryPersister,
-    // Maximum age of persisted data (1 hour)
-    maxAge: 1000 * 60 * 60,
+    // Maximum age of persisted data (24 hours) - data survives a long time
+    maxAge: 1000 * 60 * 60 * 24, // 24 hours
     // Only persist successful queries
     dehydrateOptions: {
         shouldDehydrateQuery: (query: any) => {
@@ -35,7 +35,7 @@ export const persistOptions = {
             return query.state.status === 'success' && query.state.data !== undefined;
         },
     },
-    // Persist when the window is hidden (user switches tabs)
+    // Empty buster means cache is never invalidated by version changes
     buster: '',
 };
 
