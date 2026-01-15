@@ -89,13 +89,20 @@ const JobDetailPage: React.FC = () => {
   const handleDeleteJob = async () => {
     if (!job) return;
 
-    if (
-      !confirm(
-        "Are you sure you want to delete this job? This action cannot be undone."
-      )
-    ) {
+    const confirmed = await notify.confirm(
+      "Delete this job?",
+      {
+        description: "This action cannot be undone.",
+        confirmText: "Delete",
+        cancelText: "Cancel"
+      }
+    );
+
+    if (!confirmed) {
       return;
     }
+
+    notify.showInfo("Deleting job...");
 
     try {
       const { error } = await db.deleteJob(jobId!);

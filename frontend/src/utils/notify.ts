@@ -307,6 +307,35 @@ class NotificationManager {
   }
 
   // ============================================
+  // CONFIRMATION DIALOG
+  // ============================================
+
+  /**
+   * Show a confirmation dialog using sonner toast with action buttons
+   * @returns Promise that resolves to true if confirmed, false if cancelled
+   */
+  confirm(message: string, options?: { 
+    confirmText?: string; 
+    cancelText?: string;
+    description?: string;
+  }): Promise<boolean> {
+    return new Promise((resolve) => {
+      toast(message, {
+        description: options?.description,
+        duration: 10000,
+        action: {
+          label: options?.confirmText || 'Confirm',
+          onClick: () => resolve(true),
+        },
+        cancel: {
+          label: options?.cancelText || 'Cancel',
+          onClick: () => resolve(false),
+        },
+      });
+    });
+  }
+
+  // ============================================
   // UTILITY METHODS
   // ============================================
 
