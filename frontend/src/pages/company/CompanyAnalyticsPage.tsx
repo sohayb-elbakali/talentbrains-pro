@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, Legend
@@ -50,7 +50,7 @@ const CompanyAnalyticsPage = () => {
     const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
 
     // Use React Query for caching - data persists across tab switches
-    const { data: analytics, isLoading, isFetching } = useQuery({
+    const { data: analytics, isLoading, isFetching, isPlaceholderData } = useQuery({
         queryKey: ['company-analytics', profile?.id, dateRange],
         queryFn: async (): Promise<AnalyticsData | null> => {
             if (!profile?.id) return null;
@@ -176,6 +176,7 @@ const CompanyAnalyticsPage = () => {
         gcTime: 2 * 60 * 60 * 1000, // 2 hours
         refetchOnWindowFocus: false,
         refetchOnMount: false,
+        placeholderData: keepPreviousData, // Keep showing previous data while fetching new range
     });
 
     // Calculate trends
@@ -272,7 +273,7 @@ const CompanyAnalyticsPage = () => {
 
                         {/* Date Range Selector */}
                         <div className="flex items-center gap-3">
-                            {isFetching && !isLoading && (
+                            {(isFetching || isPlaceholderData) && (
                                 <div className="flex items-center gap-2 text-sm text-primary">
                                     <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                                     <span>Updating...</span>
