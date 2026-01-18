@@ -49,6 +49,17 @@ def create_app() -> FastAPI:
     # Set up rate limiting
     setup_rate_limiting(app)
     
+    # Debug middleware to log requests (remove in production)
+    @app.middleware("http")
+    async def debug_auth_middleware(request: Request, call_next):
+        auth_header = request.headers.get("Authorization", "None")
+        if "matching" in request.url.path:
+            print(f"[DEBUG] Request to {request.url.path}")
+            print(f"[DEBUG] Authorization header present: {auth_header[:30] if auth_header != 'None' else 'None'}...")
+            print(f"[DEBUG] All headers: {dict(request.headers)}")
+        response = await call_next(request)
+        return response
+    
     # Global exception handler for unhandled errors
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):

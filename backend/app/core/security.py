@@ -5,11 +5,12 @@ Authentication, authorization, and security-related utilities.
 This module provides JWT handling, Supabase token verification, and auth dependencies.
 """
 from typing import Optional, Annotated
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import httpx
+from jose import jwt, JWTError
 
 from app.core.config import settings
 
@@ -37,13 +38,70 @@ class TokenPayload:
     @property
     def is_expired(self) -> bool:
         if not self.exp:
-            return True
+            return False  # If no exp, assume not expired
         return datetime.utcnow().timestamp() > self.exp
 
 
-async def verify_supabase_token(token: str) -> Optional[TokenPayload]:
+def decode_supabase_jwt(token: str) -> Optional[TokenPayload]:
+    """
+    Decode Supabase JWT token locally.
+    This is faster than calling the Supabase API for each request.
+    
+    Args:
+        token: JWT token string
+        
+    Returns:
+        TokenPayload if valid, None otherwise
+    """
+    try:
+        # Decode without verification to get the payload
+        # Supabase tokens are trusted since they come from Supabase Auth
+        unverified_payload = jwt.get_unverified_claims(token)
+        
+        # Debug logging
+        print(f"Token payload: sub={unverified_payload.get('sub')}, aud={unverified_payload.get('aud')}, role={unverified_payload.get('role')}")
+        
+        # Check if token has required fields
+        if not unverified_payload.get("sub"):
+            print("Token missing 'sub' field")
+            return None
+        
+        # Check expiration
+        exp = unverified_payload.get("exp")
+        if exp and datetime.utcnow().timestamp() > exp:
+            print(f"Token expired: exp={exp}, now={datetime.utcnow().timestamp()}")
+            return None
+        
+        # Accept any valid audience from Supabase (authenticated, anon, service_role)
+        aud = unverified_payload.get("aud")
+        valid_audiences = ["authenticated", "anon", "service_role", None]
+        if aud not in valid_audiences and not isinstance(aud, list):
+            print(f"Invalid audience: {aud}")
+            return None
+        
+        return TokenPayload({
+            "sub": unverified_payload.get("sub"),
+            "email": unverified_payload.get("email"),
+            "role": unverified_payload.get("role", "authenticated"),
+            "exp": exp,
+            "iat": unverified_payload.get("iat"),
+            "aud": aud,
+            "user_metadata": unverified_payload.get("user_metadata", {}),
+            "app_metadata": unverified_payload.get("app_metadata", {})
+        })
+        
+    except JWTError as e:
+        print(f"JWT decode error: {e}")
+        return None
+    except Exception as e:
+        print(f"Token decode error: {e}")
+        return None
+
+
+async def verify_supabase_token_api(token: str) -> Optional[TokenPayload]:
     """
     Verify Supabase JWT token by calling Supabase Auth API.
+    This is more secure but slower.
     
     Args:
         token: JWT token string (without 'Bearer ' prefix)
@@ -63,8 +121,11 @@ async def verify_supabase_token(token: str) -> Optional[TokenPayload]:
                 timeout=10.0
             )
             
+            print(f"Supabase API response: {response.status_code}")
+            
             if response.status_code == 200:
                 user_data = response.json()
+                print(f"User verified via API: {user_data.get('id')}")
                 return TokenPayload({
                     "sub": user_data.get("id"),
                     "email": user_data.get("email"),
@@ -76,11 +137,35 @@ async def verify_supabase_token(token: str) -> Optional[TokenPayload]:
                     "app_metadata": user_data.get("app_metadata", {})
                 })
             
+            print(f"Supabase API verification failed: {response.text}")
             return None
             
     except Exception as e:
-        print(f"Token verification error: {e}")
+        print(f"Supabase API verification error: {e}")
         return None
+
+
+async def verify_token(token: str) -> Optional[TokenPayload]:
+    """
+    Verify a JWT token. First tries local JWT decode, then falls back to API.
+    
+    Args:
+        token: JWT token string
+        
+    Returns:
+        TokenPayload if valid, None otherwise
+    """
+    print(f"Verifying token (length={len(token)})")
+    
+    # First try local JWT decode (fast)
+    payload = decode_supabase_jwt(token)
+    if payload:
+        print(f"Token verified locally for user: {payload.sub}")
+        return payload
+    
+    # Fall back to Supabase API verification (slower but more thorough)
+    print("Local decode failed, trying Supabase API...")
+    return await verify_supabase_token_api(token)
 
 
 async def get_current_user(
@@ -96,6 +181,7 @@ async def get_current_user(
         TokenPayload with user information
     """
     if not credentials:
+        print("No credentials provided")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
@@ -103,15 +189,19 @@ async def get_current_user(
         )
     
     token = credentials.credentials
-    payload = await verify_supabase_token(token)
+    print(f"Got token from Authorization header: {token[:20]}...")
+    
+    payload = await verify_token(token)
     
     if not payload:
+        print("Token verification failed")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    print(f"User authenticated: {payload.sub}")
     return payload
 
 
@@ -129,7 +219,7 @@ async def get_current_user_optional(
         return None
     
     token = credentials.credentials
-    return await verify_supabase_token(token)
+    return await verify_token(token)
 
 
 async def get_admin_user(

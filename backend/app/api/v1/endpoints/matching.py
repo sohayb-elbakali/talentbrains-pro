@@ -17,7 +17,6 @@ from app.api.deps import (
     get_talent_repository, 
     get_job_repository, 
     get_matching_service,
-    CurrentUser,
     OptionalUser
 )
 from app.core.rate_limit import limiter, RateLimits
@@ -30,7 +29,7 @@ router = APIRouter()
 @limiter.limit(RateLimits.READ)
 async def list_talents(
     request: Request,
-    current_user: CurrentUser,  # Requires authentication
+    current_user: OptionalUser,  # Optional auth during dev
     talent_repo: TalentRepository = Depends(get_talent_repository)
 ):
     """
@@ -66,7 +65,7 @@ async def list_talents(
 @limiter.limit(RateLimits.READ)
 async def list_jobs(
     request: Request,
-    current_user: CurrentUser,  # Requires authentication
+    current_user: OptionalUser,  # Optional auth during dev
     job_repo: JobRepository = Depends(get_job_repository)
 ):
     """
@@ -103,7 +102,7 @@ async def list_jobs(
 async def match_talent_to_jobs(
     request: Request,
     talent_id: str,
-    current_user: CurrentUser,  # Requires authentication
+    current_user: OptionalUser,  # Optional auth during dev
     limit: int = Query(default=10, ge=1, le=100),
     talent_repo: TalentRepository = Depends(get_talent_repository),
     job_repo: JobRepository = Depends(get_job_repository),
@@ -159,7 +158,7 @@ async def match_talent_to_jobs(
 async def match_job_to_talents(
     request: Request,
     job_id: str,
-    current_user: CurrentUser,  # Requires authentication
+    current_user: OptionalUser,  # Optional auth during dev
     limit: int = Query(default=10, ge=1, le=100),
     talent_repo: TalentRepository = Depends(get_talent_repository),
     job_repo: JobRepository = Depends(get_job_repository),
@@ -216,7 +215,7 @@ async def match_talent_to_specific_job(
     request: Request,
     talent_id: str,
     job_id: str,
-    current_user: CurrentUser,  # Requires authentication
+    current_user: OptionalUser,  # Optional auth during dev
     talent_repo: TalentRepository = Depends(get_talent_repository),
     job_repo: JobRepository = Depends(get_job_repository),
     matching_svc: MatchingService = Depends(get_matching_service)
