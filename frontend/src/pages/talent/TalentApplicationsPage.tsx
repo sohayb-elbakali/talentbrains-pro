@@ -352,7 +352,7 @@ const TalentApplicationsPage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="group relative bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg hover:border-primary transition-all duration-300 cursor-pointer"
+                  className="group relative bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden hover:shadow-xl hover:shadow-primary/5 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 ease-out cursor-pointer"
                   onClick={() => navigate(`/jobs/${app.job.id}`)}
                 >
                   {/* Status Badge */}
@@ -418,7 +418,7 @@ const TalentApplicationsPage = () => {
                           e.stopPropagation();
                           navigate(`/jobs/${app.job.id}`);
                         }}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-hover transition-colors"
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-hover transition-colors"
                       >
                         <Eye size={14} />
                         View
@@ -431,7 +431,7 @@ const TalentApplicationsPage = () => {
                             handleWithdraw(app.id, e);
                           }}
                           disabled={withdrawingId === app.id}
-                          className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                          className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors disabled:opacity-50"
                           title="Withdraw application"
                         >
                           {withdrawingId === app.id ? (

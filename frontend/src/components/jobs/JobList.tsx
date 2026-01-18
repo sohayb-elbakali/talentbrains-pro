@@ -354,7 +354,7 @@ const JobList: React.FC<JobListProps> = ({
                     setFilters(defaultFilters);
                     setSearchTerm("");
                   }}
-                  className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
                 >
                   Clear All Filters
                 </button>

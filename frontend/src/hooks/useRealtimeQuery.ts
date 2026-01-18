@@ -23,18 +23,15 @@ export function useRealtimeQuery<T>({
   const query = useQuery({
     queryKey,
     queryFn: async () => {
-      // Return cached data if available and fresh
-      const cachedData = queryClient.getQueryData<T>(queryKey);
-      if (cachedData) {
-        return cachedData;
-      }
+      // Always execute the query function to get fresh data
+      // React Query handles caching internally based on staleTime
       return queryFn();
     },
-    // Prevent unnecessary refetches
-    refetchOnMount: false,
+    // Allow refetches when query is invalidated
+    refetchOnMount: 'always',
     refetchOnWindowFocus: false,
-    staleTime: 30 * 60 * 1000, // 30 minutes default
-    gcTime: 2 * 60 * 60 * 1000, // 2 hours
+    staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache
     ...queryOptions,
   });
 
@@ -54,7 +51,9 @@ export function useRealtimeQuery<T>({
             ...(filter && { filter }),
           },
           () => {
+            // Invalidate and refetch immediately when realtime event occurs
             queryClient.invalidateQueries({ queryKey, exact: false });
+            queryClient.refetchQueries({ queryKey, exact: false });
           }
         )
         .subscribe();

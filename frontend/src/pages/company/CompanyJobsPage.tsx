@@ -3,6 +3,7 @@ import { PencilSimple, Plus, Trash, Briefcase, MapPin, Calendar, CurrencyDollar,
 import React, { useState } from 'react';
 import { notify } from "../../utils/notify";
 import { Link, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import { useNetworkStatus } from "../../hooks/useNetworkResilience";
 import { db } from "../../lib/supabase/index";
@@ -28,6 +29,7 @@ const CompanyJobsPage: React.FC = () => {
   const { user } = useAuth();
   const { isOnline } = useNetworkStatus();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<{ id: string; title: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -48,7 +50,7 @@ const CompanyJobsPage: React.FC = () => {
   });
 
   // Fetch jobs with real-time updates
-  const { data: jobs = [], isLoading: loading, error: jobsError } = useRealtimeQuery({
+  const { data: jobs = [], isLoading: loading, error: jobsError, refetch } = useRealtimeQuery({
     queryKey: ['company-jobs-with-counts', companyData?.id],
     queryFn: async () => {
       if (!companyData?.id) return [];
@@ -85,19 +87,31 @@ const CompanyJobsPage: React.FC = () => {
     if (!jobToDelete) return;
 
     setIsDeleting(true);
+    setDeleteModalOpen(false); // Close modal immediately for better UX
+
     try {
-      await notify.promise(
-        db.deleteJob(jobToDelete.id).then(({ error }) => {
-          if (error) throw error;
-          return { success: true };
-        }),
-        {
-          loading: `Deleting "${jobToDelete.title}"...`,
-          success: `"${jobToDelete.title}" deleted successfully`,
-          error: `Failed to delete "${jobToDelete.title}"`
+      const { error: deleteError } = await db.deleteJob(jobToDelete.id);
+
+      if (deleteError) {
+        notify.showError(`Failed to delete "${jobToDelete.title}"`);
+        throw deleteError;
+      }
+
+      // Invalidate ALL jobs queries using predicate to match any query key
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return key === 'company-jobs-with-counts' ||
+            key === 'company-jobs' ||
+            key === 'jobs' ||
+            key === 'company-dashboard';
         }
-      );
-      // Real-time subscription will automatically update the list
+      });
+
+      // Force refetch the current query
+      await refetch();
+
+      notify.showJobDeletedSuccess();
     } catch (err) {
       console.error('Delete error:', err);
     } finally {
@@ -227,7 +241,7 @@ const CompanyJobsPage: React.FC = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-white rounded-2xl shadow-sm border border-slate-200 hover:shadow-md hover:border-primary transition-all duration-200 overflow-hidden group"
+                className="bg-white rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 ease-out overflow-hidden group"
               >
                 {/* Status Bar */}
                 <div className={`h-1 ${job.status === 'active' ? 'bg-green-500' :

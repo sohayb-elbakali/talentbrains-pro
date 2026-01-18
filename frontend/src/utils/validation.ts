@@ -117,9 +117,121 @@ export const validateData = <T>(schema: z.ZodSchema<T>, data: unknown): { succes
   }
 }
 
+/**
+ * Comprehensive input sanitization to prevent XSS attacks.
+ * Removes HTML tags, script content, event handlers, and dangerous patterns.
+ * 
+ * @param input - The string to sanitize
+ * @returns Sanitized string safe for display
+ */
 export const sanitizeInput = (input: string): string => {
-  return input.trim().replace(/[<>]/g, '')
-}
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+
+  let sanitized = input;
+
+  // Remove HTML comments
+  sanitized = sanitized.replace(/<!--[\s\S]*?-->/g, '');
+
+  // Remove script tags and their content
+  sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+
+  // Remove style tags and their content
+  sanitized = sanitized.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+
+  // Remove all HTML tags
+  sanitized = sanitized.replace(/<[^>]*>/g, '');
+
+  // Remove event handlers (onclick, onerror, onload, etc.)
+  sanitized = sanitized.replace(/\bon\w+\s*=/gi, '');
+
+  // Remove javascript: and data: URLs
+  sanitized = sanitized.replace(/javascript:/gi, '');
+  sanitized = sanitized.replace(/data:/gi, '');
+  sanitized = sanitized.replace(/vbscript:/gi, '');
+
+  // Remove HTML entities that could be used for XSS
+  sanitized = sanitized.replace(/&lt;/gi, '<').replace(/</g, '');
+  sanitized = sanitized.replace(/&gt;/gi, '>').replace(/>/g, '');
+  sanitized = sanitized.replace(/&quot;/gi, '"');
+  sanitized = sanitized.replace(/&#x27;/gi, "'");
+  sanitized = sanitized.replace(/&#x2F;/gi, '/');
+
+  // Remove null bytes
+  sanitized = sanitized.replace(/\x00/g, '');
+
+  // Trim and normalize whitespace
+  sanitized = sanitized.trim().replace(/\s+/g, ' ');
+
+  return sanitized;
+};
+
+/**
+ * Sanitize HTML content while preserving safe tags (for rich text).
+ * Removes dangerous scripts, styles, event handlers, and dangerous URLs.
+ * 
+ * Note: For production use with rich text, consider using a library like DOMPurify.
+ * Safe tags that could be allowed: p, br, b, i, u, strong, em, ul, ol, li, a, span
+ * Safe attributes that could be allowed: href, class
+ * 
+ * @param html - HTML string to sanitize
+ * @returns Sanitized HTML string
+ */
+export const sanitizeHtml = (html: string): string => {
+  if (!html || typeof html !== 'string') {
+    return '';
+  }
+
+  let sanitized = html;
+
+  // Remove script tags and their content
+  sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+
+  // Remove style tags and their content
+  sanitized = sanitized.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+
+  // Remove event handlers (onclick, onerror, onload, etc.)
+  sanitized = sanitized.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
+  sanitized = sanitized.replace(/\s*on\w+\s*=\s*[^\s>]*/gi, '');
+
+  // Remove javascript: URLs from href
+  sanitized = sanitized.replace(/href\s*=\s*["']javascript:[^"']*["']/gi, 'href="#"');
+
+  // Remove data: URLs from href
+  sanitized = sanitized.replace(/href\s*=\s*["']data:[^"']*["']/gi, 'href="#"');
+
+  // Remove vbscript: URLs
+  sanitized = sanitized.replace(/href\s*=\s*["']vbscript:[^"']*["']/gi, 'href="#"');
+
+  return sanitized;
+};
+
+/**
+ * Escape special characters for safe display in HTML context.
+ * Use this when you need to display user input as text, not HTML.
+ * 
+ * @param text - Text to escape
+ * @returns HTML-escaped text
+ */
+export const escapeHtml = (text: string): string => {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+
+  const escapeMap: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    '=': '&#x3D;'
+  };
+
+  return text.replace(/[&<>"'`=/]/g, char => escapeMap[char] || char);
+};
 
 export const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -128,23 +240,23 @@ export const validateEmail = (email: string): boolean => {
 
 export const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
   const errors: string[] = []
-  
+
   if (password.length < 6) {
     errors.push('Password must be at least 6 characters long')
   }
-  
+
   if (!/[A-Z]/.test(password)) {
     errors.push('Password must contain at least one uppercase letter')
   }
-  
+
   if (!/[a-z]/.test(password)) {
     errors.push('Password must contain at least one lowercase letter')
   }
-  
+
   if (!/\d/.test(password)) {
     errors.push('Password must contain at least one number')
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors
@@ -158,13 +270,13 @@ export const validateFileUpload = (file: File, allowedTypes: string[], maxSize: 
       error: `File type not allowed. Allowed types: ${allowedTypes.join(', ')}`
     }
   }
-  
+
   if (file.size > maxSize) {
     return {
       isValid: false,
       error: `File size too large. Maximum size: ${maxSize / 1024 / 1024}MB`
     }
   }
-  
+
   return { isValid: true }
 }

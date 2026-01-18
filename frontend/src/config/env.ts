@@ -1,5 +1,31 @@
-// Environment configuration for local development
+/**
+ * Environment Configuration
+ * 
+ * SECURITY: All environment variables must be properly set.
+ * Never commit actual keys to source control.
+ */
+
+const getRequiredEnvVar = (key: string, fallback?: string): string => {
+  const value = import.meta.env[key] || fallback;
+  if (!value) {
+    console.error(`Missing required environment variable: ${key}`);
+    // In production, you might want to throw an error
+    // throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value || '';
+};
+
 export const env = {
-  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321',
-  VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11Y3dtdXFjeHFuZ2ltaXVlc3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3OTExNzIsImV4cCI6MjA2NjM2NzE3Mn0.0na5oVkgRBnRnJzinCbhF-Nzn66cLXLM0sLHHIVZ9hE'
-} 
+  // Supabase URL - required for API communication
+  VITE_SUPABASE_URL: getRequiredEnvVar('VITE_SUPABASE_URL'),
+
+  // Supabase Anon Key - required for client-side auth
+  // This is a public key but should still be set via environment variables
+  VITE_SUPABASE_ANON_KEY: getRequiredEnvVar('VITE_SUPABASE_ANON_KEY'),
+
+  // Check if we're in development mode
+  isDevelopment: import.meta.env.DEV || false,
+
+  // Check if we're in production mode
+  isProduction: import.meta.env.PROD || false,
+}; 
