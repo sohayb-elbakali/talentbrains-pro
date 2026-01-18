@@ -52,8 +52,8 @@ export default function ModernJobCard({
     };
 
     return (
-        <Link to={`/company/jobs/${job.id}`} className="block h-full">
-            <div className="relative bg-white rounded-lg border border-slate-200 overflow-hidden h-full flex flex-col hover:border-blue-200 transition-colors">
+        <Link to={`/company/jobs/${job.id}`} className="block h-full group">
+            <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden h-full flex flex-col hover:shadow-xl hover:shadow-primary/5 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 ease-out">
 
                 {/* Status Badge */}
                 <div className={`absolute top-3 right-3 px-2 py-0.5 ${getStatusColor(job.status)} text-white text-[10px] font-bold rounded z-10`}>
@@ -163,7 +163,7 @@ export default function ModernJobCard({
                         )}
 
                         {/* View Button */}
-                        <button className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors">
+                        <button className="w-full py-2 bg-blue-600 text-white rounded-xl font-medium text-sm hover:bg-blue-700 transition-colors">
                             View Details
                         </button>
                     </div>

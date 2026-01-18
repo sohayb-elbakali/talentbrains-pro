@@ -66,8 +66,8 @@ export const JobCard: React.FC<JobCardProps> = ({
   const statusConfig = application ? getStatusConfig(application.status) : null;
 
   return (
-    <Link to={linkTo || `/jobs/${job.id}`} className="block h-full">
-      <div className="relative bg-white rounded-lg border border-slate-200 overflow-hidden h-full flex flex-col hover:shadow-md hover:shadow-slate-200/50 transition-all duration-300">
+    <Link to={linkTo || `/jobs/${job.id}`} className="block h-full group">
+      <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden h-full flex flex-col hover:shadow-xl hover:shadow-primary/5 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 ease-out">
 
         {/* Match Score Badge - Top Right Circle */}
         {matchScore !== undefined && matchScore > 0 && !application && (
@@ -135,12 +135,12 @@ export const JobCard: React.FC<JobCardProps> = ({
                   onCancel(application.id);
                 }}
                 disabled={actionLoading}
-                className="w-full py-2 text-sm text-red-600 border border-red-200 hover:bg-red-50 rounded-lg font-medium transition-colors disabled:opacity-50"
+                className="w-full py-2 text-sm text-red-600 border border-red-200 hover:bg-red-50 rounded-xl font-medium transition-colors disabled:opacity-50"
               >
                 {actionLoading ? "Processing..." : "Withdraw"}
               </button>
             ) : !application && (
-              <div className="w-full py-2 text-sm bg-blue-600 text-white rounded-lg font-medium text-center hover:bg-blue-700 transition-colors">
+              <div className="w-full py-2 text-sm bg-blue-600 text-white rounded-xl font-medium text-center hover:bg-blue-700 transition-colors">
                 View Details
               </div>
             )}
