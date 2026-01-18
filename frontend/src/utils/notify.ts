@@ -134,8 +134,9 @@ class NotificationManager {
 
   showJobDeletedSuccess(): void {
     if (this.shouldShowNotification('job_delete')) {
-      toast.success('Job deleted', {
-        duration: 2000,
+      toast.success('Job deleted successfully', {
+        duration: 2500,
+        description: 'The job posting has been removed',
       });
     }
   }
@@ -289,17 +290,17 @@ class NotificationManager {
     }
   ): Promise<T> {
     const toastId = toast.loading(messages.loading);
-    
+
     try {
       const result = await promise;
-      const successMessage = typeof messages.success === 'function' 
-        ? messages.success(result) 
+      const successMessage = typeof messages.success === 'function'
+        ? messages.success(result)
         : messages.success;
       toast.success(successMessage, { id: toastId, duration: 2000 });
       return result;
     } catch (error) {
-      const errorMessage = typeof messages.error === 'function' 
-        ? messages.error(error) 
+      const errorMessage = typeof messages.error === 'function'
+        ? messages.error(error)
         : messages.error;
       toast.error(errorMessage, { id: toastId, duration: 3500 });
       throw error;
@@ -314,8 +315,8 @@ class NotificationManager {
    * Show a confirmation dialog using sonner toast with action buttons
    * @returns Promise that resolves to true if confirmed, false if cancelled
    */
-  confirm(message: string, options?: { 
-    confirmText?: string; 
+  confirm(message: string, options?: {
+    confirmText?: string;
     cancelText?: string;
     description?: string;
   }): Promise<boolean> {

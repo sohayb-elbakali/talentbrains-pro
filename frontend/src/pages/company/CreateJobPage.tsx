@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import React from 'react';
 import { notify } from "../../utils/notify";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import JobForm from '../../components/company/JobForm';
 import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/supabase/index";
@@ -10,6 +11,7 @@ import { Briefcase } from 'lucide-react';
 const CreateJobPage: React.FC = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (data: any) => {
     if (!user || !profile) {
@@ -63,6 +65,26 @@ const CreateJobPage: React.FC = () => {
         }
       }
     }
+
+    // Invalidate ALL jobs queries to trigger instant refresh on CompanyJobsPage
+    // Using predicate to match any query key that starts with these prefixes
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const key = query.queryKey[0];
+        return key === 'company-jobs-with-counts' ||
+          key === 'company-jobs' ||
+          key === 'jobs' ||
+          key === 'company-dashboard';
+      }
+    });
+
+    // Also remove stale data to force fresh fetch
+    queryClient.removeQueries({
+      predicate: (query) => {
+        const key = query.queryKey[0];
+        return key === 'company-jobs-with-counts' || key === 'company-jobs';
+      }
+    });
 
     notify.showSuccess("Job posted successfully!");
     navigate("/company/jobs");
