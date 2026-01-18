@@ -1,12 +1,14 @@
 """
 TalentBrains API - Application Entry Point
 
-This module creates and configures the FastAPI application.
+This module creates and configures the FastAPI application with security features.
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.core.config import settings
+from app.core.rate_limit import setup_rate_limiting
 from app.api.v1.router import api_router
 
 
@@ -21,19 +23,59 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         description="AI-Powered Talent Matching Platform API",
         version=settings.app_version,
-        docs_url="/docs",
-        redoc_url="/redoc",
-        openapi_url="/openapi.json"
+        docs_url="/docs" if settings.debug else None,  # Disable docs in production
+        redoc_url="/redoc" if settings.debug else None,
+        openapi_url="/openapi.json" if settings.debug else None
     )
     
-    # Configure CORS middleware
+    # Configure CORS middleware with specific origins and methods
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "X-Client-Info",
+            "X-Request-ID",
+            "Accept",
+            "Origin",
+        ],
+        expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
+        max_age=600,  # Cache preflight requests for 10 minutes
     )
+    
+    # Set up rate limiting
+    setup_rate_limiting(app)
+    
+    # Global exception handler for unhandled errors
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        """
+        Global exception handler that prevents leaking internal details.
+        """
+        # Log the actual error internally
+        print(f"Unhandled error: {type(exc).__name__}: {exc}")
+        
+        # Return a safe error message to the client
+        if settings.debug:
+            # In debug mode, show more details
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "detail": str(exc),
+                    "type": type(exc).__name__
+                }
+            )
+        else:
+            # In production, hide internal details
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "detail": "An internal error occurred. Please try again later."
+                }
+            )
     
     # Include API routers
     app.include_router(
@@ -49,7 +91,7 @@ def create_app() -> FastAPI:
             "name": settings.app_name,
             "version": settings.app_version,
             "status": "running",
-            "docs": "/docs"
+            "docs": "/docs" if settings.debug else "disabled"
         }
     
     @app.get("/health")

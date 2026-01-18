@@ -4,11 +4,21 @@ API Dependencies
 Common dependencies for API endpoints.
 Provides dependency injection for database connections, authentication, etc.
 """
-from typing import Generator
+from typing import Generator, Optional
 from fastapi import Depends, HTTPException, status
 from supabase import Client
 
 from app.core.database import get_supabase_client
+from app.core.security import (
+    get_current_user,
+    get_current_user_optional,
+    get_admin_user,
+    require_roles,
+    CurrentUser,
+    OptionalUser,
+    AdminUser,
+    TokenPayload
+)
 from app.repositories.talent_repo import TalentRepository
 from app.repositories.job_repo import JobRepository
 from app.services.matching_service import MatchingService
@@ -64,16 +74,18 @@ def get_matching_service() -> MatchingService:
     return MatchingService()
 
 
-# Placeholder for future authentication dependency
-# async def get_current_user(
-#     token: str = Depends(oauth2_scheme),
-#     client: Client = Depends(get_db_client)
-# ) -> dict:
-#     """Get current authenticated user from JWT token."""
-#     credentials_exception = HTTPException(
-#         status_code=status.HTTP_401_UNAUTHORIZED,
-#         detail="Could not validate credentials",
-#         headers={"WWW-Authenticate": "Bearer"},
-#     )
-#     # Implement JWT verification here
-#     pass
+# Re-export security dependencies for convenient access
+__all__ = [
+    "get_db_client",
+    "get_talent_repository",
+    "get_job_repository",
+    "get_matching_service",
+    "get_current_user",
+    "get_current_user_optional",
+    "get_admin_user",
+    "require_roles",
+    "CurrentUser",
+    "OptionalUser",
+    "AdminUser",
+    "TokenPayload"
+]
